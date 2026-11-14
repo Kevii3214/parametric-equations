@@ -3,7 +3,7 @@ import la from '../../../fixtures/buildings/233928/tour_sample.json'
 import wt from '../../../fixtures/buildings/233903/tour_sample.json'
 import jr from '../../../fixtures/buildings/jrr/tour_sample.json'
 import {
-  apiToSdk, calibrate, departAt, facingFor, gapPosition, matchSweep, moveFor, readTour, stateAt, wrap180, yawIsFlipped, yawToward,
+  apiToSdk, calibrate, departAt, facingFor, gapPosition, matchSweep, moveFor, readTour, startInScan, stateAt, wrap180, yawIsFlipped, yawToward,
   type SdkPoint, type Tour,
 } from './tour'
 
@@ -140,5 +140,26 @@ describe('matchSweep', () => {
   it('falls back to the nearest sweep within range, else nothing', () => {
     expect(matchSweep('zz', { x: 1.2, y: 2.1, z: 0 }, viewer)).toBe('a')
     expect(matchSweep('zz', { x: 40, y: 40, z: 0 }, viewer)).toBeNull()
+  })
+})
+
+describe('startInScan', () => {
+  it('cuts the unscanned opening of the Houston tours and starts the clock in the scan', () => {
+    for (const id of ['233928', '233903']) {
+      const { tour, skipped } = startInScan(tours[id])
+      expect(skipped.length).toBeGreaterThan(0)
+      expect(tour.keyframes[0].kind).toBe('scanned')
+      expect(tour.keyframes[0].t_ms).toBe(0)
+      expect(tour.keyframes.every((k) => k.kind === 'scanned')).toBe(true)
+      expect(tour.duration_ms).toBeLessThan(tours[id].duration_ms)
+      const last = tour.keyframes.at(-1)!
+      expect(tour.duration_ms).toBe(last.t_ms + last.dwell_ms)
+      expect(stateAt(tour, 0).inGap).toBe(false)
+    }
+  })
+  it('leaves a fully scanned tour alone', () => {
+    const { tour, skipped } = startInScan(tours.jrr)
+    expect(tour).toBe(tours.jrr)
+    expect(skipped).toEqual([])
   })
 })

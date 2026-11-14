@@ -228,3 +228,18 @@ export function matchSweep(
   }
   return best
 }
+
+/**
+ * A tour that opens inside the scan: the unscanned stops at the start (street,
+ * lobby, lift) are cut and the clock starts at the first scanned stop. Their
+ * captions are returned so the player can list them on a title card.
+ */
+export function startInScan(tour: Tour): { tour: Tour; skipped: string[] } {
+  const first = tour.keyframes.findIndex((k) => k.kind === 'scanned')
+  if (first <= 0) return { tour, skipped: [] }
+  const t0 = tour.keyframes[first].t_ms
+  const skipped = tour.keyframes.slice(0, first).filter((k) => k.waypoint && k.caption).map((k) => k.caption)
+  const keyframes = tour.keyframes.slice(first).map((k) => ({ ...k, t_ms: k.t_ms - t0 }))
+  // The first stop can carry the lift/stairs instruction that led here; keep its caption on screen.
+  return { tour: { ...tour, keyframes, duration_ms: tour.duration_ms - t0 }, skipped }
+}
