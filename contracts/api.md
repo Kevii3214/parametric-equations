@@ -32,3 +32,21 @@ Each entry in `routes.steps` has a `cue`:
 - `incidents.status`: `planning` | `routing` | `en_route` | `arrived`
 - `plan_steps.kind`: `plan` | `subagent` | `tool_call` | `tool_result` | `replan` | `final`
 - Person 1 uses the Supabase **anon** key (read only). The service-role key never leaves the server.
+
+## Fly-through tour (`routes.tour`)
+
+Each `routes` row can carry a `tour` (jsonb, added by `supabase/migrations/0002_route_tour.sql`; it is `null` or missing
+for a building with no scan data). It is built by code from the route, never by the model, and a re-plan (new
+`routes.version`) gets a new tour. The exact shape is `contracts/tour.schema.json`; samples are in
+`fixtures/buildings/<id>/tour_sample.json`.
+
+- `keyframes` are the stops, in order. `t_ms` is when the viewer should arrive, `dwell_ms` how long to stay.
+- `kind: "scanned"` stops have a `model_id` and a `sweep_id`: fly the Matterport viewer to that sweep, facing
+  `bearing_deg` (compass: 0 = +y of the scan's plan, 90 = +x, clockwise). `transition` is `fly` (a move the viewer can
+  make), `fade` (a cut: a change of level, or entering the scan from a gap) or `none`.
+- `kind: "gap"` stops are not covered by any scan (for example the street, lobby and elevator ride). Their position is
+  in the plan frame (`frame: "plan"`), with no sweep: show the 3D map or aerial view for the `segments` marked `gap`.
+- `waypoint: false` stops are in-between sweeps on the way between two route stops.
+- `caption` and `cue` are the instruction to show at that stop.
+- `models` has each scan's opening camera view (`bearing_deg`): use it once to check the viewer's compass against
+  the plan's before trusting the other bearings.

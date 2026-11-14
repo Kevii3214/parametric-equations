@@ -28,3 +28,7 @@ class BuildingProvider(Protocol):
     async def graph(self, building_id: str) -> dict:
         """Indoor routing graph (contracts/building_graph.schema.json). Raises LookupError if there is none."""
         ...
+
+    async def scans(self, building_id: str) -> dict:
+        """The scan's camera positions (sweeps) for the fly-through tour. Raises LookupError if there are none."""
+        ...

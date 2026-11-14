@@ -1,0 +1,241 @@
+{
+ "version": 1,
+ "speed_up": 6.0,
+ "duration_ms": 24966,
+ "segments": [
+  {
+   "kind": "gap",
+   "from_step": 0,
+   "to_step": 3,
+   "model_id": null,
+   "reason": "not scanned: show the map or aerial view here"
+  },
+  {
+   "kind": "scanned",
+   "from_step": 4,
+   "to_step": 6,
+   "model_id": "eJKnR3x44eh",
+   "reason": null
+  }
+ ],
+ "keyframes": [
+  {
+   "i": 0,
+   "t_ms": 0,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "gar1",
+   "step_index": -1,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": 46.0,
+    "y": 14.0,
+    "z": 0.0
+   },
+   "level": 1,
+   "bearing_deg": 270.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Start: Parking garage lobby",
+   "cue": null
+  },
+  {
+   "i": 1,
+   "t_ms": 3666,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "el1",
+   "step_index": 0,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": 18.0,
+    "y": 14.0,
+    "z": 0.0
+   },
+   "level": 1,
+   "bearing_deg": 270.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Walk 28 m to Elevators (floor 1).",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 2,
+   "t_ms": 13666,
+   "dwell_ms": 700,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "el56",
+   "step_index": 1,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": -0.16,
+    "y": 9.0,
+    "z": 0.0
+   },
+   "level": 56,
+   "bearing_deg": 180.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Take the elevator up to floor 56.",
+   "cue": "FLOOR_UP"
+  },
+  {
+   "i": 3,
+   "t_ms": 15566,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "hall56",
+   "step_index": 2,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": -0.16,
+    "y": 4.0,
+    "z": 0.0
+   },
+   "level": 56,
+   "bearing_deg": 180.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Walk 5 m to Floor 56 elevator corridor.",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 4,
+   "t_ms": 16766,
+   "dwell_ms": 700,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "door56",
+   "step_index": 3,
+   "waypoint": true,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "ymubn87r1z2ce562k13z7qzzd",
+   "position": {
+    "x": -0.009,
+    "y": -0.007,
+    "z": -0.019
+   },
+   "level": 56,
+   "bearing_deg": 213.3,
+   "pitch_deg": 0.0,
+   "transition": "fade",
+   "caption": "Walk 3.3 m, then turn right.",
+   "cue": "RIGHT"
+  },
+  {
+   "i": 5,
+   "t_ms": 18666,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p25",
+   "step_index": 4,
+   "waypoint": false,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "cu2ay9iz7s7ux6tnpy9apq9tb",
+   "position": {
+    "x": -1.38,
+    "y": -2.091,
+    "z": -0.007
+   },
+   "level": 56,
+   "bearing_deg": 247.6,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 6,
+   "t_ms": 19866,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p25",
+   "step_index": 4,
+   "waypoint": true,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "d5e27bdfqxiawc3ut0w6ezhrc",
+   "position": {
+    "x": -7.059,
+    "y": -4.43,
+    "z": -0.023
+   },
+   "level": 56,
+   "bearing_deg": 274.1,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 8.1 m to Lobby to Hallway passage.",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 7,
+   "t_ms": 21066,
+   "dwell_ms": 700,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p22",
+   "step_index": 5,
+   "waypoint": true,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "ycrziideatuhe911rqm4agfqc",
+   "position": {
+    "x": -15.99,
+    "y": -3.795,
+    "z": -0.009
+   },
+   "level": 56,
+   "bearing_deg": 2.8,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 9.3 m, then turn right.",
+   "cue": "RIGHT"
+  },
+  {
+   "i": 8,
+   "t_ms": 22966,
+   "dwell_ms": 2000,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "room29",
+   "step_index": 6,
+   "waypoint": true,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "skxz39y441g9d71rmfq2ps40d",
+   "position": {
+    "x": -15.945,
+    "y": -2.863,
+    "z": -0.002
+   },
+   "level": 56,
+   "bearing_deg": 2.8,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 1.7 m. Suite 5600 Conference Room (patient) is ahead.",
+   "cue": "ARRIVE"
+  }
+ ],
+ "models": {
+  "eJKnR3x44eh": {
+   "position": {
+    "x": -0.009,
+    "y": -0.007,
+    "z": 1.578
+   },
+   "bearing_deg": 0.0,
+   "pitch_deg": 5.2
+  }
+ }
+}

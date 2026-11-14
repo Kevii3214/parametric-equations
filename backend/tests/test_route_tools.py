@@ -176,3 +176,78 @@ def test_a_long_briefing_is_cut_to_about_ten_seconds(tools, db):
         briefing=" ".join(["word"] * 100),
     )
     assert len(db.rows("routes")[0]["briefing"].split()) <= 35
+
+
+def test_choose_route_also_saves_the_fly_through_tour(tools, db):
+    call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing="b",
+    )
+    tour = db.rows("routes")[0]["tour"]
+    assert tour["version"] == 1 and [s["kind"] for s in tour["segments"]] == ["gap", "scanned"]
+    assert tour["keyframes"][-1]["node"] == "phone_door" and tour["keyframes"][-1]["sweep_id"]
+
+
+def test_a_new_route_version_gets_its_own_tour(tools, db):
+    args = {
+        "building_id": BUILDING,
+        "start_node": "gar1",
+        "goal_node": "phone_door",
+        "briefing": "b",
+    }
+    call(tools["choose_route"], **args)
+    db.rows("closures").append({"incident_id": INCIDENT, "node_or_edge": "el1->el18"})
+    call(tools["choose_route"], **args)
+    first, second = (r["tour"] for r in db.rows("routes"))
+    assert second["duration_ms"] > first["duration_ms"]  # the climb by stairs takes longer
+
+
+def test_the_route_is_still_saved_when_the_database_has_no_tour_column_yet(tools, db):
+    db.missing_columns["routes"] = {"tour"}
+    result = call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing="b",
+    )
+    assert result["route_version"] == 1
+    (row,) = db.rows("routes")
+    assert "tour" not in row and row["total_seconds"] == 109
+    assert db.rows("incidents")[0]["status"] == "en_route"
+
+
+def test_a_building_with_no_scan_data_saves_a_route_without_a_tour(db):
+    class NoScans(SnapshotProvider):
+        async def scans(self, building_id):
+            raise LookupError("no scans")
+
+    tools = {t.name: t for t in make_route_tools(NoScans(), db, INCIDENT)}
+    call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing="b",
+    )
+    assert "tour" not in db.rows("routes")[0]
+
+
+def test_a_failing_tour_never_stops_the_route_being_saved(tools, db, monkeypatch):
+    import app.agent.tools as agent_tools
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("tour bug")
+
+    monkeypatch.setattr(agent_tools, "build_tour", boom)
+    result = call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing="b",
+    )
+    assert result["route_version"] == 1 and "tour" not in db.rows("routes")[0]

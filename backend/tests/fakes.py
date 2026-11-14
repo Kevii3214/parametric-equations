@@ -9,6 +9,9 @@ class FakeSupabase:
         self.tables = {name: [dict(r) for r in rows] for name, rows in tables.items()}
         self.ids = count(1)
         self.fail_tables: set[str] = set()
+        self.missing_columns: dict[
+            str, set[str]
+        ] = {}  # table -> columns the database does not have yet
 
     def table(self, name):
         return _Query(self, name)
@@ -44,6 +47,9 @@ class _Query:
         rows = self.db.rows(self.name)
         matching = [r for r in rows if all(r.get(c) == v for c, v in self.filters)]
         if self.action == "insert":
+            missing = self.db.missing_columns.get(self.name, set()) & set(self.payload)
+            if missing:
+                raise RuntimeError(f"Could not find the {min(missing)!r} column of {self.name!r}")
             row = {"id": next(self.db.ids), **self.payload}
             rows.append(row)
             return SimpleNamespace(data=[row])

@@ -1,0 +1,272 @@
+{
+  "$defs": {
+    "Keyframe": {
+      "properties": {
+        "i": {
+          "title": "I",
+          "type": "integer"
+        },
+        "t_ms": {
+          "title": "T Ms",
+          "type": "integer"
+        },
+        "dwell_ms": {
+          "title": "Dwell Ms",
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "scanned",
+            "gap"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "frame": {
+          "enum": [
+            "scan",
+            "plan"
+          ],
+          "title": "Frame",
+          "type": "string"
+        },
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "step_index": {
+          "title": "Step Index",
+          "type": "integer"
+        },
+        "waypoint": {
+          "title": "Waypoint",
+          "type": "boolean"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model Id"
+        },
+        "sweep_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Sweep Id"
+        },
+        "position": {
+          "$ref": "#/$defs/Point"
+        },
+        "level": {
+          "title": "Level",
+          "type": "integer"
+        },
+        "bearing_deg": {
+          "title": "Bearing Deg",
+          "type": "number"
+        },
+        "pitch_deg": {
+          "title": "Pitch Deg",
+          "type": "number"
+        },
+        "transition": {
+          "enum": [
+            "none",
+            "fly",
+            "fade"
+          ],
+          "title": "Transition",
+          "type": "string"
+        },
+        "caption": {
+          "title": "Caption",
+          "type": "string"
+        },
+        "cue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cue"
+        }
+      },
+      "required": [
+        "i",
+        "t_ms",
+        "dwell_ms",
+        "kind",
+        "frame",
+        "node",
+        "step_index",
+        "waypoint",
+        "model_id",
+        "sweep_id",
+        "position",
+        "level",
+        "bearing_deg",
+        "pitch_deg",
+        "transition",
+        "caption",
+        "cue"
+      ],
+      "title": "Keyframe",
+      "type": "object"
+    },
+    "Point": {
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "Segment": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "scanned",
+            "gap"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "from_step": {
+          "title": "From Step",
+          "type": "integer"
+        },
+        "to_step": {
+          "title": "To Step",
+          "type": "integer"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "kind",
+        "from_step",
+        "to_step"
+      ],
+      "title": "Segment",
+      "type": "object"
+    },
+    "StartPose": {
+      "description": "A scan's opening camera view: lets the frontend check the viewer's compass against the plan's.",
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/Point"
+        },
+        "bearing_deg": {
+          "title": "Bearing Deg",
+          "type": "number"
+        },
+        "pitch_deg": {
+          "title": "Pitch Deg",
+          "type": "number"
+        }
+      },
+      "required": [
+        "position",
+        "bearing_deg",
+        "pitch_deg"
+      ],
+      "title": "StartPose",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "speed_up": {
+      "title": "Speed Up",
+      "type": "number"
+    },
+    "duration_ms": {
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "segments": {
+      "items": {
+        "$ref": "#/$defs/Segment"
+      },
+      "title": "Segments",
+      "type": "array"
+    },
+    "keyframes": {
+      "items": {
+        "$ref": "#/$defs/Keyframe"
+      },
+      "title": "Keyframes",
+      "type": "array"
+    },
+    "models": {
+      "additionalProperties": {
+        "$ref": "#/$defs/StartPose"
+      },
+      "title": "Models",
+      "type": "object"
+    }
+  },
+  "required": [
+    "speed_up",
+    "duration_ms",
+    "segments",
+    "keyframes",
+    "models"
+  ],
+  "title": "Tour",
+  "type": "object"
+}

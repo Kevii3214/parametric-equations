@@ -1,0 +1,241 @@
+{
+ "version": 1,
+ "speed_up": 6.0,
+ "duration_ms": 25766,
+ "segments": [
+  {
+   "kind": "gap",
+   "from_step": 0,
+   "to_step": 3,
+   "model_id": null,
+   "reason": "not scanned: show the map or aerial view here"
+  },
+  {
+   "kind": "scanned",
+   "from_step": 4,
+   "to_step": 6,
+   "model_id": "LJn59uoV759",
+   "reason": null
+  }
+ ],
+ "keyframes": [
+  {
+   "i": 0,
+   "t_ms": 0,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "gar1",
+   "step_index": -1,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": 40.0,
+    "y": 12.0,
+    "z": 0.0
+   },
+   "level": 1,
+   "bearing_deg": 270.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Start: Parking garage lobby",
+   "cue": null
+  },
+  {
+   "i": 1,
+   "t_ms": 3333,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "el1",
+   "step_index": 0,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": 15.0,
+    "y": 12.0,
+    "z": 0.0
+   },
+   "level": 1,
+   "bearing_deg": 270.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Walk 25 m to Elevators (floor 1).",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 2,
+   "t_ms": 13333,
+   "dwell_ms": 700,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "el18",
+   "step_index": 1,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": -0.2,
+    "y": -25.0,
+    "z": 0.0
+   },
+   "level": 18,
+   "bearing_deg": 0.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Take the elevator up to floor 18.",
+   "cue": "FLOOR_UP"
+  },
+  {
+   "i": 3,
+   "t_ms": 16366,
+   "dwell_ms": 0,
+   "kind": "gap",
+   "frame": "plan",
+   "node": "hall18",
+   "step_index": 2,
+   "waypoint": true,
+   "model_id": null,
+   "sweep_id": null,
+   "position": {
+    "x": -0.2,
+    "y": -8.0,
+    "z": 0.0
+   },
+   "level": 18,
+   "bearing_deg": 0.0,
+   "pitch_deg": 0.0,
+   "transition": "none",
+   "caption": "Walk 17 m to Floor 18 corridor.",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 4,
+   "t_ms": 17566,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "door18",
+   "step_index": 3,
+   "waypoint": true,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "32tgheznxcqg37whh8h5kt6xa",
+   "position": {
+    "x": 1.725,
+    "y": -2.223,
+    "z": -0.009
+   },
+   "level": 18,
+   "bearing_deg": 322.8,
+   "pitch_deg": 0.0,
+   "transition": "fade",
+   "caption": "Walk 5.9 m to Regus Suite 1800 entrance.",
+   "cue": "STRAIGHT"
+  },
+  {
+   "i": 5,
+   "t_ms": 18766,
+   "dwell_ms": 700,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "rec_a",
+   "step_index": 4,
+   "waypoint": true,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "rnmm4pfqqcf84hf312bpyhyqc",
+   "position": {
+    "x": 0.007,
+    "y": 0.043,
+    "z": 0.007
+   },
+   "level": 18,
+   "bearing_deg": 111.0,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 2.1 m, then turn right.",
+   "cue": "RIGHT"
+  },
+  {
+   "i": 6,
+   "t_ms": 20666,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "rec_b",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "w32nu5kxn9rxnnrsrgr4nyxuc",
+   "position": {
+    "x": 6.746,
+    "y": -2.538,
+    "z": 0.001
+   },
+   "level": 18,
+   "bearing_deg": 20.5,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 7,
+   "t_ms": 21866,
+   "dwell_ms": 700,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "rec_b",
+   "step_index": 5,
+   "waypoint": true,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "99ma6g4dxa42f4h613bug5iib",
+   "position": {
+    "x": 7.687,
+    "y": -0.025,
+    "z": 0.005
+   },
+   "level": 18,
+   "bearing_deg": 200.5,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 5.7 m, then turn right.",
+   "cue": "RIGHT"
+  },
+  {
+   "i": 8,
+   "t_ms": 23766,
+   "dwell_ms": 2000,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "phone_door",
+   "step_index": 6,
+   "waypoint": true,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "w32nu5kxn9rxnnrsrgr4nyxuc",
+   "position": {
+    "x": 6.746,
+    "y": -2.538,
+    "z": 0.001
+   },
+   "level": 18,
+   "bearing_deg": 200.5,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "Walk 2.7 m. Regus Suite 1800 phone room (patient) is ahead.",
+   "cue": "ARRIVE"
+  }
+ ],
+ "models": {
+  "LJn59uoV759": {
+   "position": {
+    "x": 0.007,
+    "y": 0.043,
+    "z": 1.593
+   },
+   "bearing_deg": 268.9,
+   "pitch_deg": 3.6
+  }
+ }
+}

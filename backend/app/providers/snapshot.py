@@ -36,6 +36,9 @@ class SnapshotProvider:
     async def graph(self, building_id: str) -> dict:
         return json.loads(self._file(building_id, "graph.json").read_text(encoding="utf-8"))
 
+    async def scans(self, building_id: str) -> dict:
+        return json.loads(self._file(building_id, "sweeps.json").read_text(encoding="utf-8"))
+
     def _file(self, building_id: str, name: str) -> Path:
         # building_id becomes part of a path, so only plain ids are allowed.
         if not re.fullmatch(r"[A-Za-z0-9_-]+", building_id):
