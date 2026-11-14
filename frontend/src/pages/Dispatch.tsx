@@ -6,6 +6,7 @@ import Panel, { Chip } from '../components/Panel'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
 import { createIncident } from '../lib/api'
+import { fixtureIncident } from '../lib/fixtures'
 import { buildingById, buildingForNote, buildingForRoute, inCostar, patientFloor, SAMPLE_CALLS, type Building } from '../lib/buildings'
 import type { IncidentRow, PlanStepRow, RouteRow } from '../lib/contracts'
 import { useDemoBuilding, useDemoReason, useExitDemo, useIncidentParam, type DemoReason } from '../lib/demo'
@@ -22,6 +23,10 @@ export default function Dispatch() {
   const started = live.source === 'fixtures' || incidentId !== null
   const building = buildingById(live.incident?.building_id)
     ?? buildingForRoute(live.route?.steps.flatMap((s) => [s.from_node, s.to_node]) ?? [])
+  // The agent finished (a final step) but saved no route: it gave up.
+  const finalStep = live.planSteps.findLast((s) => s.kind === 'final')
+  const gaveUp = live.source === 'supabase' && !!finalStep && !live.route
+  const demoFor = buildingForNote(live.incident?.note ?? '')
   const working = started && live.incident?.status !== 'en_route' && live.incident?.status !== 'arrived'
     && !live.planSteps.some((s) => s.kind === 'final')
 
@@ -29,21 +34,37 @@ export default function Dispatch() {
     <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <div className="min-w-0 space-y-5">
         <CallIntake reason={reason} onCreated={setIncidentId} />
-        {live.incident && <IncidentBar incident={live.incident} source={live.source} />}
+        {live.incident && <IncidentBar incident={live.incident} source={live.source} gaveUp={gaveUp} />}
+        {gaveUp && (
+          <div role="alert" className="rounded-2xl border border-amber/30 bg-amber-soft px-4 py-3">
+            <p className="text-sm font-semibold text-ink">The agent finished without a route</p>
+            <p className="mt-1 text-sm text-ink-2">{finalStep!.title.replace(/^Final:\s*/, '')}</p>
+            <p className="mt-1 text-xs text-ink-3">
+              The server could not match this building, so nothing was routed. If the building is one of the demo
+              buildings, the server may be running an older snapshot.
+            </p>
+            {demoFor && (
+              <button type="button" onClick={() => setIncidentId(fixtureIncident.id, demoFor)}
+                className="mt-2.5 rounded-full bg-azure px-4 py-1.5 text-sm font-semibold text-white hover:bg-azure-deep">
+                Show the demo route for {buildingById(demoFor)?.record.name ?? 'this building'}
+              </button>
+            )}
+          </div>
+        )}
         {building ? (
           <>
             <SiteImagery building={building} entranceNode={live.route?.entrance_node ?? null}
               patientFloor={patientFloor(building, live.incident?.parsed ?? null)} steps={live.route?.steps} />
             <div className="grid gap-5 md:grid-cols-2">
               <CostarCard building={building} incident={live.incident} steps={live.planSteps} />
-              <RouteSummary route={live.route} started={started} />
+              <RouteSummary route={live.route} started={started && !gaveUp} />
             </div>
           </>
         ) : (
           <div className="grid gap-5 md:grid-cols-2">
-            <RecordCard incident={live.incident} steps={live.planSteps} started={started} />
-            <AerialCard route={live.route} started={started} />
-            <RouteSummary route={live.route} started={started} className="md:col-span-2" />
+            <RecordCard incident={live.incident} steps={live.planSteps} started={started && !gaveUp} />
+            <AerialCard route={live.route} started={started && !gaveUp} />
+            <RouteSummary route={live.route} started={started && !gaveUp} className="md:col-span-2" />
           </div>
         )}
       </div>
@@ -147,12 +168,12 @@ const statusTone: Record<string, 'neutral' | 'azure' | 'fern'> = {
   arrived: 'fern',
 }
 
-function IncidentBar({ incident, source }: { incident: IncidentRow; source: string }) {
+function IncidentBar({ incident, source, gaveUp }: { incident: IncidentRow; source: string; gaveUp?: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-sm">
-      <Chip tone={statusTone[incident.status ?? ''] ?? 'neutral'}>
+      <Chip tone={gaveUp ? 'amber' : statusTone[incident.status ?? ''] ?? 'neutral'}>
         <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
-        {(incident.status ?? 'unknown').replace('_', ' ')}
+        {gaveUp ? 'no route' : (incident.status ?? 'unknown').replace('_', ' ')}
       </Chip>
       <span className="min-w-0 truncate font-medium text-ink">{incident.note}</span>
       <span className="ml-auto font-mono text-[11px] text-ink-3">
