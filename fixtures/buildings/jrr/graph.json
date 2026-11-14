@@ -69,8 +69,8 @@
       "floor": 2,
       "x": -0.5,
       "y": -6.1,
-      "kind": "stairs",
-      "label": "Stairs (lower level, estimated position)",
+      "kind": "corridor",
+      "label": null,
       "tag_id": null
     },
     {
@@ -78,8 +78,8 @@
       "floor": 3,
       "x": 2.78,
       "y": -6.25,
-      "kind": "stairs",
-      "label": "Stairs (upper level, estimated position)",
+      "kind": "corridor",
+      "label": null,
       "tag_id": null
     },
     {
@@ -510,8 +510,8 @@
       "floor": 2,
       "x": 1.61,
       "y": 5.27,
-      "kind": "corridor",
-      "label": null,
+      "kind": "stairs",
+      "label": "Stairs (lower level; placed from the scan's opening view)",
       "tag_id": null
     },
     {
@@ -519,8 +519,8 @@
       "floor": 3,
       "x": 1.61,
       "y": 5.31,
-      "kind": "corridor",
-      "label": null,
+      "kind": "stairs",
+      "label": "Stairs (upper level; placed from the scan's opening view)",
       "tag_id": null
     },
     {
@@ -589,20 +589,11 @@
     {
       "id": "entrance1",
       "floor": 2,
-      "x": -12.34,
-      "y": -0.16,
+      "x": 15.21,
+      "y": 4.43,
       "kind": "entrance",
-      "label": "Entrance (door alcove on the atrium hall's edge; position inferred)",
+      "label": "Glass entrance (east side of the atrium hall; placed from the scan's opening view)",
       "tag_id": "TAG-ENTRANCE-01"
-    },
-    {
-      "id": "entrance1_door",
-      "floor": 2,
-      "x": -12.17,
-      "y": 0.06,
-      "kind": "door",
-      "label": "Entrance door into the atrium hall",
-      "tag_id": null
     }
   ],
   "edges": [
@@ -3520,63 +3511,63 @@
     },
     {
       "from": "entrance1",
-      "to": "entrance1_door",
-      "meters": 0.3,
+      "to": "s64",
+      "meters": 1.4,
       "kind": "door",
       "stretcher_ok": true,
-      "seconds": 1
+      "seconds": 2
     },
     {
-      "from": "entrance1_door",
+      "from": "s64",
       "to": "entrance1",
-      "meters": 0.3,
+      "meters": 1.4,
       "kind": "door",
       "stretcher_ok": true,
-      "seconds": 1
+      "seconds": 2
     },
     {
-      "from": "entrance1_door",
-      "to": "s42",
-      "meters": 1.1,
+      "from": "entrance1",
+      "to": "s4",
+      "meters": 3.9,
       "kind": "door",
       "stretcher_ok": true,
-      "seconds": 1
+      "seconds": 3
     },
     {
-      "from": "s42",
-      "to": "entrance1_door",
-      "meters": 1.1,
+      "from": "s4",
+      "to": "entrance1",
+      "meters": 3.9,
       "kind": "door",
       "stretcher_ok": true,
-      "seconds": 1
+      "seconds": 3
     },
     {
-      "from": "entrance1_door",
-      "to": "s47",
-      "meters": 4.4,
-      "kind": "door",
-      "stretcher_ok": true,
-      "seconds": 4
-    },
-    {
-      "from": "s47",
-      "to": "entrance1_door",
-      "meters": 4.4,
+      "from": "entrance1",
+      "to": "s30",
+      "meters": 4.0,
       "kind": "door",
       "stretcher_ok": true,
       "seconds": 4
     },
     {
-      "from": "s7",
-      "to": "s8",
+      "from": "s30",
+      "to": "entrance1",
+      "meters": 4.0,
+      "kind": "door",
+      "stretcher_ok": true,
+      "seconds": 4
+    },
+    {
+      "from": "s57",
+      "to": "s58",
       "meters": 12,
       "kind": "stairs",
       "stretcher_ok": true,
       "seconds": 30
     },
     {
-      "from": "s8",
-      "to": "s7",
+      "from": "s58",
+      "to": "s57",
       "meters": 12,
       "kind": "stairs",
       "stretcher_ok": true,
