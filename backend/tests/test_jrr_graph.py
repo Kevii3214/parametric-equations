@@ -59,18 +59,36 @@ def test_waypoints_sit_where_the_scan_camera_stood(graph):
         assert min(math.hypot(n.x - x, n.y - y) for x, y in camera) < 0.02, n.id
 
 
-def test_the_entrance_door_sits_on_a_measured_doorway(graph):
+def test_the_glass_entrance_is_on_the_east_wall_where_the_opening_view_shows_it(graph):
+    """From the scan's start (0, 0) facing bearing 55.5 deg, the arched glass doors are right of centre."""
+    entrance = next(n for n in graph.nodes if n.kind == "entrance")
+    assert entrance.floor == 2 and 14.0 < entrance.x < 15.7 and 2.0 < entrance.y < 7.0
     model = json.loads((JRR / "interior.json").read_text(encoding="utf-8"))["models"][0]
-    doors = []
-    for room in model["rooms"]:
-        for e in (room.get("boundary") or {}).get("edges", []):
-            (ax, ay), (bx, by) = ((v["position"]["x"], v["position"]["y"]) for v in e["vertices"])
-            for o in e.get("openings") or []:
-                if o["type"] == "doorway":
-                    t = o["relativeCenter"]
-                    doors.append((ax + (bx - ax) * t, ay + (by - ay) * t))
-    door = next(n for n in graph.nodes if n.id == "entrance1_door")
-    assert min(math.hypot(door.x - x, door.y - y) for x, y in doors) < 0.05
+    camera = [(l["position"]["x"], l["position"]["y"]) for l in model["locations"]]
+    assert (
+        min(math.hypot(entrance.x - x, entrance.y - y) for x, y in camera) < 2.5
+    )  # people scanned right there
+
+
+def test_the_stairs_are_where_the_opening_view_shows_the_glass_staircase(graph):
+    """To the left of the start's view, 6 to 9 m out, against the north wall; the levels' scan positions stack there."""
+    stairs = [n for n in graph.nodes if n.kind == "stairs"]
+    assert {n.floor for n in stairs} == {2, 3}
+    for n in stairs:
+        assert math.hypot(n.x - 2.5, n.y - 6.5) < 3.0
+    lower, upper = sorted(stairs, key=lambda n: n.floor)
+    assert math.hypot(lower.x - upper.x, lower.y - upper.y) < 0.5
+
+
+def test_the_classroom_route_goes_in_the_glass_entrance_across_the_hall_and_up_the_stairs(
+    graph, patients
+):
+    classroom = next(n for label, n in patients.items() if "Classroom" in label)
+    steps = find_route(graph, "entrance1", classroom.id)
+    visited = [steps[0].from_node] + [s.to_node for s in steps]
+    stairs = [n.id for n in graph.nodes if n.kind == "stairs"]
+    assert all(s in visited for s in stairs)
+    assert total_seconds(steps) < 70
 
 
 def test_there_are_five_patient_locations_on_two_levels(patients):

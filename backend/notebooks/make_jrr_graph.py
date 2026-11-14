@@ -7,8 +7,10 @@ Writes fixtures/buildings/jrr/graph.json (contracts/building_graph.schema.json s
 MEASURED: walkable waypoints are the scan's camera positions (the camera stood on walkable floor); two
 waypoints are joined only if the straight line stays inside the walkable floor outline and does not cross a
 wall except at a measured doorway. The exterior doors are the scan's doorways that belong to only one room.
-ESTIMATED: where the stairs between the two scanned levels are (anchored on the single scan position taken
-mid-flight), and the time to climb them. The scan shows no elevator, so none is invented.
+LOCATED FROM A DESCRIPTION: the glass entrance and the staircase. The scan marks neither, so they are placed
+from the scan's opening view (the camera pose Matterport stores for the thumbnail) and what a person who knows
+the building sees in it: the arched glass doors behind the orange tables, and the glass staircase to the left.
+Both positions are good to a few metres. The climb time is assumed. The scan shows no elevator, so none is invented.
 """
 
 import json
@@ -26,7 +28,25 @@ INSIDE_TOLERANCE_M = 0.4
 DOOR_SLACK_M = 0.35  # a line may cross a wall this close to a doorway's edge
 SAME_SPOT_M = 0.6
 STAIRS_UP_S, STAIRS_DOWN_S, STAIRS_M = 30, 25, 12  # ASSUMED: one level (4 m) with a stretcher
-STAIRS_ANCHOR = (1.4, -9.1)  # the single scan position taken between the two levels (z = 2 m)
+# The scan's opening view (thumbnail): the camera stands at the origin, 1.35 m up, looking toward compass bearing
+# 55.5 degrees (0 = +y, 90 = +x), slightly downward. The thumbnail is 2000 px wide with about a 90 degree view.
+START = (0.0, 0.0)
+START_BEARING = 55.5
+THUMB_HALF_FOV = 45.0
+ENTRANCE_PX = (
+    1330  # the middle of the arched glass doors, behind the orange tables, right of centre
+)
+STAIRS_PX = 300  # the foot of the glass staircase, left of centre
+STAIRS_DISTANCE_M = 7.0  # about this far from the camera
+ENTRANCE_INSET_M = 0.4  # keep the entrance node just inside the hall outline
+
+
+def bearing_at(px: float) -> float:
+    """Compass bearing of a pixel column of the opening view."""
+    return START_BEARING + math.degrees(
+        math.atan(((px - 1000) / 1000) * math.tan(math.radians(THUMB_HALF_FOV)))
+    )
+
 
 model = json.loads((FIXTURES / "interior.json").read_text(encoding="utf-8"))["models"][0]
 level_of_floor = {f["id"]: int(f["label"].split()[-1]) for f in model["floors"]}  # "Floor 2" -> 2
@@ -134,37 +154,33 @@ for n, loc in enumerate(model["locations"]):
         continue
     add_node(f"s{n}", level, x, y, "corridor")
 
-# ---- the way in: the scan marks no exterior doorway, so the entrance is INFERRED. On the lower level there is
-# one tiny alcove (well under 2.5 m2) with a single doorway on the hall's edge: a door vestibule.
+# ---- the way in: the scan marks no exterior doorway, so the glass entrance is placed from the opening view
 lower = min(level_nodes)
 upper = max(level_nodes)
-doorways_of: dict[int, list[tuple[float, float]]] = defaultdict(list)
-for room, x, y in door_points:
-    doorways_of[room].append((x, y))
-alcoves = [
-    i
-    for i in outline
-    if level_of_room.get(i) == lower
-    and kind_of[i] != "Hallway"
-    and outline[i] is not None
-    and outline[i].area < 2.5
-    and len(doorways_of[i]) == 1
-]
-for k, i in enumerate(alcoves, start=1):
-    door_x, door_y = doorways_of[i][0]
-    far = outline[i].representative_point()
-    add_node(
-        f"entrance{k}",
-        lower,
-        far.x,
-        far.y,
-        "entrance",
-        "Entrance (door alcove on the atrium hall's edge; position inferred)",
-        "TAG-ENTRANCE-01" if k == 1 else None,
-    )
-    add_node(
-        f"entrance{k}_door", lower, door_x, door_y, "door", "Entrance door into the atrium hall"
-    )
+hall_index = next(i for i in outline if level_of_room.get(i) == lower and kind_of[i] == "Hallway")
+hall = outline[hall_index]
+heading = (
+    math.sin(math.radians(bearing_at(ENTRANCE_PX))),
+    math.cos(math.radians(bearing_at(ENTRANCE_PX))),
+)
+hits = LineString([START, (START[0] + heading[0] * 80, START[1] + heading[1] * 80)]).intersection(
+    hall.exterior
+)
+hit = min(
+    [hits] if hits.geom_type == "Point" else list(hits.geoms),
+    key=lambda p: Point(START).distance(p),
+)
+entrance_x = hit.x - heading[0] * ENTRANCE_INSET_M
+entrance_y = hit.y - heading[1] * ENTRANCE_INSET_M
+add_node(
+    "entrance1",
+    lower,
+    entrance_x,
+    entrance_y,
+    "entrance",
+    "Glass entrance (east side of the atrium hall; placed from the scan's opening view)",
+    "TAG-ENTRANCE-01",
+)
 
 # ---- edges
 edges: list[dict] = []
@@ -196,18 +212,20 @@ for level, ids in level_nodes.items():
             if d <= MAX_LINK_M and can_walk(level, pos[a], pos[b]):
                 link(a, b)
                 joined += 1
-# the entrance alcove joins the hall through its doorway, whatever the wall test says
-for k in range(1, len(alcoves) + 1):
-    link(f"entrance{k}", f"entrance{k}_door", "door")
-    door_id = f"entrance{k}_door"
-    inside = [i for i in level_nodes[lower] if not i.startswith("entrance")]
-    for i in sorted(
-        inside, key=lambda i: math.hypot(pos[i][0] - pos[door_id][0], pos[i][1] - pos[door_id][1])
-    )[:2]:
-        link(door_id, i, "door")
+# the entrance joins the hall floor around it, whatever the wall test says
+inside = [i for i in level_nodes[lower] if not i.startswith("entrance")]
+for i in sorted(
+    inside,
+    key=lambda i: math.hypot(pos[i][0] - pos["entrance1"][0], pos[i][1] - pos["entrance1"][1]),
+)[:3]:
+    link("entrance1", i, "door")
 
-# ---- the stairs (estimated): anchored on the single mid-flight scan position
-anchor = mid_flight or STAIRS_ANCHOR
+# ---- the stairs: located from the opening view (the glass staircase to the left of the start)
+stairs_bearing = bearing_at(STAIRS_PX)
+anchor = (
+    START[0] + STAIRS_DISTANCE_M * math.sin(math.radians(stairs_bearing)),
+    START[1] + STAIRS_DISTANCE_M * math.cos(math.radians(stairs_bearing)),
+)
 
 
 def nearest(level, point):
@@ -220,9 +238,13 @@ def nearest(level, point):
 stair_low, stair_up = nearest(lower, anchor), nearest(upper, anchor)
 for node in nodes:
     if node["id"] == stair_low:
-        node.update(kind="stairs", label="Stairs (lower level, estimated position)")
+        node.update(
+            kind="stairs", label="Stairs (lower level; placed from the scan's opening view)"
+        )
     if node["id"] == stair_up:
-        node.update(kind="stairs", label="Stairs (upper level, estimated position)")
+        node.update(
+            kind="stairs", label="Stairs (upper level; placed from the scan's opening view)"
+        )
 edges += [
     {
         "from": stair_low,
@@ -290,6 +312,6 @@ print(
     f"wrote graph.json: {len(nodes)} nodes ({len(level_nodes[lower])} lower, {len(level_nodes[upper])} upper), {len(edges)} edges ({joined} walking links)"
 )
 print(
-    f"skipped {skipped} camera positions outside the room outlines | entrance alcoves: {len(alcoves)} | stairs anchor {tuple(round(v, 1) for v in anchor)}: {stair_low} -> {stair_up}"
+    f"skipped {skipped} camera positions outside the room outlines | entrance at ({entrance_x:.1f}, {entrance_y:.1f}) | stairs anchor {tuple(round(v, 1) for v in anchor)}: {stair_low} -> {stair_up}"
 )
 print("patient locations:", {k: by_id[v]["label"] for k, v in destinations.items()})
