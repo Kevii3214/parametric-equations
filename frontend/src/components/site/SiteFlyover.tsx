@@ -49,6 +49,8 @@ interface Props {
   mode?: 'dispatch' | 'medic'
   /** Change this number to start the route flythrough from outside. */
   flyToken?: number
+  /** False hides this view's own buttons, legend and captions (when another player owns the controls). */
+  chrome?: boolean
 }
 
 /**
@@ -56,7 +58,7 @@ interface Props {
  * drawn through the building (street to entrance, up the shaft, along the
  * floor), the crew's position, and camera flights over all of it.
  */
-export default function SiteFlyover({ building, entranceNode, patientFloor, steps = [], currentStep = 0, position, mode = 'dispatch', flyToken = 0 }: Props) {
+export default function SiteFlyover({ building, entranceNode, patientFloor, steps = [], currentStep = 0, position, mode = 'dispatch', flyToken = 0, chrome = true }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const run = useRef(0)
@@ -350,12 +352,12 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
         <div ref={box} className="h-full w-full" />
       </div>
       {!ready && <div className="absolute inset-0 grid place-items-center text-sm text-ink-3">Loading 3D map…</div>}
-      {caption && (
+      {chrome && caption && (
         <div key={caption} className="trace-in pointer-events-none absolute top-3 right-14 left-3 flex">
           <span className="rounded-2xl bg-ink/80 px-3 py-1.5 text-sm font-medium text-white backdrop-blur">{caption}</span>
         </div>
       )}
-      <div className="absolute bottom-8 left-3 flex flex-wrap gap-2">
+      <div className={`absolute bottom-8 left-3 flex flex-wrap gap-2 ${chrome ? '' : 'hidden'}`}>
         {steps.length > 0 && (
           <button type="button" onClick={() => void flyRoute()} disabled={!ready}
             className="flex items-center gap-2 rounded-full bg-azure py-1.5 pr-3.5 pl-1.5 text-sm font-semibold text-white shadow-card transition hover:bg-azure-deep disabled:opacity-50">
@@ -371,7 +373,7 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
           </button>
         )}
       </div>
-      <div className="pointer-events-none absolute right-3 bottom-8 flex flex-col items-end gap-1 rounded-xl bg-card/90 px-2.5 py-2 text-[11px] text-ink-2 shadow-card">
+      <div className={`pointer-events-none absolute right-3 bottom-8 flex-col ${chrome ? 'flex' : 'hidden'} items-end gap-1 rounded-xl bg-card/90 px-2.5 py-2 text-[11px] text-ink-2 shadow-card`}>
         <span className="flex items-center gap-1.5"><span className="h-2 w-3 rounded-sm bg-azure" />Route</span>
         <span className="flex items-center gap-1.5"><span className="h-2 w-3 rounded-sm bg-fern" />{position ? 'Crew · patient floor' : 'Patient floor'}</span>
         <span className="flex items-center gap-1.5"><span className="h-2 w-3 rounded-sm bg-alert" />Patient</span>

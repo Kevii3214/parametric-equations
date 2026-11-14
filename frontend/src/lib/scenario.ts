@@ -5,6 +5,12 @@ import { buildingById, demoBuilding, type Building } from './buildings'
 import type { IncidentRow, PlanStepRow, RouteRow } from './contracts'
 import { fixtureIncident } from './fixtures'
 import { findRoute, routeSeconds } from './router'
+import laTour from '../../../fixtures/buildings/233928/tour_sample.json'
+import wtTour from '../../../fixtures/buildings/233903/tour_sample.json'
+import jrTour from '../../../fixtures/buildings/jrr/tour_sample.json'
+
+/** The server's sample tours, for the demo routes (they match the demo goals). */
+const SAMPLE_TOURS: Record<string, unknown> = { '233928': laTour, '233903': wtTour, jrr: jrTour }
 
 export interface Scenario {
   incident: IncidentRow
@@ -100,6 +106,7 @@ function build(b: Building): Scenario {
     total_seconds: routeSeconds(best.steps),
     briefing: null,
     created_at: at(11),
+    tour: SAMPLE_TOURS[b.id] ?? null,
   }
   return { incident, planSteps, route }
 }

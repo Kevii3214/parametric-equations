@@ -102,6 +102,12 @@ export interface RouteRow {
   total_seconds: number
   briefing: string | null
   created_at: string
+  /**
+   * Fly-through tour (contracts/tour.schema.json). Null for a building with
+   * no scan data, and missing until the server adds the column; read it with
+   * readTour() from lib/tour.ts.
+   */
+  tour?: unknown
 }
 
 export interface PositionRow {
