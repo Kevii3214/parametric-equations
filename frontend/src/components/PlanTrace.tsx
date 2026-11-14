@@ -42,7 +42,9 @@ function Detail({ step }: { step: PlanStepRow }) {
 }
 
 /** The agent's steps (plan_steps) as a timeline, in seq order. */
-export default function PlanTrace({ steps, waiting }: { steps: PlanStepRow[]; waiting: boolean }) {
+export default function PlanTrace({ steps: rows, waiting }: { steps: PlanStepRow[]; waiting: boolean }) {
+  // Realtime rows can arrive out of order; always show them by seq.
+  const steps = [...rows].sort((a, b) => a.seq - b.seq)
   return (
     <ol className="relative">
       {steps.map((s, i) => {

@@ -1,13 +1,31 @@
 import { useSearchParams } from 'react-router-dom'
 import { supabaseConfigured } from './supabase'
 
+export type DemoReason = 'param' | 'no-supabase' | null
+
 /**
- * Demo mode replays the fixtures instead of reading Supabase. It is on when
- * Supabase is not configured, or when the URL has ?demo=1.
+ * Why the app is showing sample data instead of live data, if it is:
+ * ?demo=1 in the URL, or a build without Supabase env vars.
  */
-export function useDemo(): boolean {
+export function useDemoReason(): DemoReason {
   const [params] = useSearchParams()
-  return !supabaseConfigured || params.get('demo') === '1'
+  if (params.get('demo') === '1') return 'param'
+  return supabaseConfigured ? null : 'no-supabase'
+}
+
+/** Demo mode replays the fixtures instead of reading Supabase. */
+export function useDemo(): boolean {
+  return useDemoReason() !== null
+}
+
+/** Leave ?demo=1 (and the sample incident) and go back to live data. */
+export function useExitDemo(): () => void {
+  const [, setParams] = useSearchParams()
+  return () => setParams((p) => {
+    p.delete('demo')
+    p.delete('incident')
+    return p
+  })
 }
 
 /** The incident both pages follow, kept in ?incident=<uuid>. */
