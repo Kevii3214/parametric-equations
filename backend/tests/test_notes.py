@@ -66,3 +66,14 @@ def test_agent_notes_tools_save_and_find():
         return await search.ainvoke({"building_id": "B1", "query": "lift"})
 
     assert asyncio.run(go()) == {"notes": ["Lift 3 is reserved for stretchers"]}
+
+
+def test_saving_a_note_creates_the_building_row_once():
+    db = FakeSupabase(notes=[], buildings=[])
+
+    async def go():
+        await save_note(db, embed, "B1", "one")
+        await save_note(db, embed, "B1", "two")
+
+    asyncio.run(go())
+    assert [b["id"] for b in db.rows("buildings")] == ["B1"]
