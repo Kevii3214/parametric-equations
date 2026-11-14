@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Beeline server: FastAPI, AI agent and data"
 requires-python = ">=3.11"
 dependencies = [
+    "deepagents>=0.7.38",
     "fastapi>=0.162.7",
+    "langchain-google-genai>=4.5.0",
+    "networkx>=3.6.1",
     "pydantic-settings>=2.16.3",
     "supabase>=2.34.1",
     "uvicorn[standard]>=0.54.0",
@@ -21,9 +24,13 @@ line-length = 100
 dev = [
     "httpx>=0.28.1",
     "ipykernel>=7.4.0",
+    "matplotlib>=3.11.2",
     "nbclient>=0.11.0",
     "nbformat>=5.11.1",
     "pytest>=9.2.0",
     "ruff>=0.17.5",
     "shapely>=2.2.0",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["SIM115", "BLE001", "ISC004"]  # exploratory scripts: bare open() and broad except are fine here

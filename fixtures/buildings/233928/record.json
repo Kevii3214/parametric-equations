@@ -1,0 +1,231 @@
+{
+  "building_id": "233928",
+  "source": "CoStar hackathon data kit",
+  "snapshot_date": "2026-11-14",
+  "name": "1415 Louisiana",
+  "address": "1415 Louisiana St",
+  "city": "Houston",
+  "state": "TX",
+  "postcode": "77002",
+  "latitude": 29.7547798,
+  "longitude": -95.3698082,
+  "property_type": "Office",
+  "building_class": 1,
+  "building_rating": 4,
+  "stories_above_grade": 43,
+  "gross_area_sqft": 536626.0,
+  "typical_floor_sqft": 12000.0,
+  "data_quality_notes": [
+    "CoStar lists 45 floors named 1, 18, 21, 24..67 for a 43-story building, and tenant floor names do not match suite numbers, so CoStar floor names are not used. Trust stories_above_grade and the suite numbers.",
+    "Elevator counts are building totals; which elevator serves which floors is not in the data."
+  ],
+  "elevators": [
+    {
+      "type": "Passenger",
+      "count": 15,
+      "exists": true
+    },
+    {
+      "type": "Freight",
+      "count": 1,
+      "exists": true
+    },
+    {
+      "type": "Escalator",
+      "count": null,
+      "exists": true
+    }
+  ],
+  "parking": [
+    {
+      "type": "Surface",
+      "spaces": null,
+      "monthly_fee": null
+    },
+    {
+      "type": "Covered",
+      "spaces": 1604,
+      "monthly_fee": 180.0
+    },
+    {
+      "type": "Reserved",
+      "spaces": null,
+      "monthly_fee": 275.0
+    }
+  ],
+  "matterport_model_ids": [
+    "LJn59uoV759",
+    "qgHrw7d3MJ1",
+    "sEmBqaiPBba",
+    "tMswvfbZK8C",
+    "vh1XhRJyZPW",
+    "yPnykGhkJf6"
+  ],
+  "current_tenants": [
+    {
+      "suite": "3000",
+      "floor_guess_from_suite": 30,
+      "company": "WEDGE Group"
+    },
+    {
+      "suite": "3700",
+      "floor_guess_from_suite": 37,
+      "company": "Harrison, Bettis, Staff, McFarland & Weems, L.L.P."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Eagle Rock"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Eagle Rock Energy Partners, L.P."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hirsch & Westheimer"
+    },
+    {
+      "suite": "2400",
+      "floor_guess_from_suite": 24,
+      "company": "Houston Energy, L.P."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Eagle Rock Energy Partners, L.P."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Consolidated Asset Management Service"
+    },
+    {
+      "suite": "2200",
+      "floor_guess_from_suite": 22,
+      "company": "Pagel, Davis & Hill, P.C."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Gateway Energy LLC"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "WEDGE Group"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Kobelco Compressors America"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Strato 550 Restaurant/ Conference Center"
+    },
+    {
+      "suite": "100",
+      "floor_guess_from_suite": 1,
+      "company": "Terra"
+    },
+    {
+      "suite": "2375",
+      "floor_guess_from_suite": 23,
+      "company": "Utegration"
+    },
+    {
+      "suite": "4150",
+      "floor_guess_from_suite": 41,
+      "company": null
+    },
+    {
+      "suite": "3460",
+      "floor_guess_from_suite": 34,
+      "company": "NAESB"
+    },
+    {
+      "suite": "1900",
+      "floor_guess_from_suite": 19,
+      "company": "Legacy Trust"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Royston Rayzor"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "WEDGE Group"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Helis Foundation"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": null
+    },
+    {
+      "suite": "2325",
+      "floor_guess_from_suite": 23,
+      "company": null
+    },
+    {
+      "suite": "1800",
+      "floor_guess_from_suite": 18,
+      "company": "Regus"
+    },
+    {
+      "suite": "2350",
+      "floor_guess_from_suite": 23,
+      "company": "Fragomen"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Edelman"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Celesium Capital"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "ClifyX"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Grace Youn Furr, DDS & M. Eileen Pope, DDS"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Kasowitz"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Quintana Resources"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "L&R Lindamood & Robinson, P.C."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "PDH Law"
+    }
+  ]
+}
