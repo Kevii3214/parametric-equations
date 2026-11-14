@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Beeline server: FastAPI, AI agent and data"
 requires-python = ">=3.11"
 dependencies = [
+    "deepagents>=0.7.38",
     "fastapi>=0.162.7",
     "langchain-google-genai>=4.5.0",
     "networkx>=3.6.1",
