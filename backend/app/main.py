@@ -10,7 +10,8 @@ app = FastAPI(title="Beeline")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.web_origin],
+    allow_origins=[o.strip().rstrip("/") for o in settings.web_origin.split(",") if o.strip()],
+    allow_origin_regex=settings.web_origin_regex or None,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -44,7 +44,8 @@ for `incidents`, `plan_steps`, `routes`, `positions` and `cues`.
 | `GOOGLE_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | Gemini for the agent, note parsing and `/ask`. Fallbacks are comma separated |
 | `GEMINI_EMBEDDING_MODEL` | Embeddings for crew notes (default `gemini-embedding-001`, 768 dimensions) |
 | `STRIDE_M` | Metres per step used by the position engine (default 0.7) |
-| `WEB_ORIGIN` | Allowed browser origin for CORS |
+| `WEB_ORIGIN` | Allowed browser origins for CORS, comma separated (add your Vercel URL) |
+| `WEB_ORIGIN_REGEX` | Optional pattern for Vercel preview URLs, e.g. `https://beeline-.*\.vercel\.app` |
 | `MATTERPORT_*`, `VEXCEL_API_KEY`, `COSTAR_*` | Only needed to re-pull data with `backend/notebooks/make_snapshot.py` |
 
 Try it without hardware: create an incident, wait for its route, then run the mock wearable.
