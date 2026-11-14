@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
+import Icon from '../components/Icon'
 import CueIcon from '../components/CueIcon'
 import FloorMap from '../components/FloorMap'
 import FindDoor from '../components/site/FindDoor'
@@ -8,7 +9,7 @@ import type { Cue, RouteStep } from '../lib/contracts'
 import { useDemo, useDemoBuilding, useIncidentParam } from '../lib/demo'
 import { closures, graphFor } from '../lib/incident'
 import { useRouteReplay } from '../lib/replay'
-import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint } from '../lib/route'
+import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint, tidy } from '../lib/route'
 import { useIncidentLive } from '../lib/useIncidentLive'
 
 // MapLibre is large, so the 3D route view loads only when opened.
@@ -25,6 +26,7 @@ export default function Medic() {
   const position = replay?.position ?? live.position
   const [pickedFloor, setPickedFloor] = useState<number | null>(null)
   const [view, setView] = useState<'plan' | 'route3d' | 'scan'>('plan')
+  const [flyToken, setFlyToken] = useState(0)
 
   // The Matterport scan of the destination suite, when this building has one.
   const site = buildingById(live.incident?.building_id) ?? buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
@@ -76,6 +78,19 @@ export default function Medic() {
           <Stat label="Floor" value={currentFloor} />
           <Stat label="Step" value={`${stepIndex + 1} / ${steps.length}`} />
         </div>
+        {site && (
+          <button type="button" onClick={() => { setView('route3d'); setFlyToken((t) => t + 1) }}
+            className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-azure to-azure-deep px-4 py-3 text-left text-white shadow-card transition hover:brightness-110">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15"><Icon name="route" className="h-5 w-5" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">Fly the indoor route</span>
+              <span className="block truncate text-sm text-white/75">
+                3D walk-through from the entrance to the patient, floor {patientFloor(site, live.incident?.parsed ?? null) ?? '?'}
+              </span>
+            </span>
+            <Icon name="play" className="h-5 w-5 shrink-0" />
+          </button>
+        )}
         {replay && (
           <div className="flex items-center gap-2 rounded-2xl border border-line bg-card px-3 py-2 text-sm shadow-card">
             <span className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
@@ -83,12 +98,12 @@ export default function Medic() {
               Demo replay
             </span>
             <div className="ml-auto flex gap-1">
-              <CtlButton onClick={() => replay.jump(-1)} label="Previous step">‹</CtlButton>
+              <CtlButton onClick={() => replay.jump(-1)} label="Previous step"><Icon name="prev" /></CtlButton>
               <CtlButton onClick={replay.toggle} label={replay.playing ? 'Pause' : 'Play'}>
-                {replay.playing ? '❚❚' : '▶'}
+                <Icon name={replay.playing ? 'pause' : 'play'} />
               </CtlButton>
-              <CtlButton onClick={() => replay.jump(1)} label="Next step">›</CtlButton>
-              <CtlButton onClick={replay.restart} label="Restart">↺</CtlButton>
+              <CtlButton onClick={() => replay.jump(1)} label="Next step"><Icon name="next" /></CtlButton>
+              <CtlButton onClick={replay.restart} label="Restart"><Icon name="restart" /></CtlButton>
             </div>
           </div>
         )}
@@ -115,7 +130,7 @@ export default function Medic() {
               <button key={f} type="button" onClick={() => setPickedFloor(f === currentFloor ? null : f)}
                 className={`min-w-10 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   f === floor ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
-                {f}{f === currentFloor && pickedFloor !== null && pickedFloor !== f ? ' •' : ''}
+                {f}{f === currentFloor && pickedFloor !== null && pickedFloor !== f && <span className="ml-1 inline-block h-1 w-1 rounded-full bg-azure align-middle" />}
               </button>
             ))}
           </div>
@@ -125,7 +140,7 @@ export default function Medic() {
             <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading 3D route…</div>}>
               <SiteFlyover building={site} entranceNode={route.entrance_node} mode="medic"
                 patientFloor={patientFloor(site, live.incident?.parsed ?? null)}
-                steps={steps} currentStep={stepIndex} position={point} />
+                steps={steps} currentStep={stepIndex} position={point} flyToken={flyToken} />
             </Suspense>
           </div>
         ) : view === 'scan' && scans.length ? (
@@ -166,7 +181,7 @@ function NextTurn({ cue, distance, text, offRoute, then }: {
           <div className="text-3xl font-semibold leading-tight tracking-tight">{cueLabel[cue]}</div>
         </div>
       </div>
-      <p className="relative mt-4 text-[15px] leading-snug text-white/95">{text}</p>
+      <p className="relative mt-4 text-[15px] leading-snug text-white/95">{tidy(text)}</p>
       {then && (
         <p className="relative mt-3 flex items-center gap-1.5 border-t border-white/15 pt-3 text-sm text-white/70">
           Then <CueIcon cue={then.cue} className="h-4 w-4" /> {cueLabel[then.cue].toLowerCase()}
@@ -185,9 +200,9 @@ function Upcoming({ steps, current, arrived }: { steps: RouteStep[]; current: nu
           <li key={s.index} className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm ${
             state === 'now' ? 'bg-azure-soft font-medium text-azure-deep' : state === 'done' ? 'text-ink-3' : 'text-ink'}`}>
             {state === 'done'
-              ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-fern-soft text-[10px] text-fern">✓</span>
+              ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-fern-soft text-fern"><Icon name="check" className="h-3 w-3" /></span>
               : <CueIcon cue={s.cue} className={`h-4 w-4 shrink-0 ${state === 'now' ? 'text-azure' : 'text-ink-3'}`} />}
-            <span className={`min-w-0 flex-1 truncate ${state === 'done' ? 'line-through decoration-line-strong' : ''}`}>{s.text}</span>
+            <span className={`min-w-0 flex-1 truncate ${state === 'done' ? 'line-through decoration-line-strong' : ''}`}>{tidy(s.text)}</span>
           </li>
         )
       })}

@@ -1,4 +1,5 @@
-import { obliqueShowing, sideOf, viewedFrom, type Building, type SiteMarker } from '../../lib/buildings'
+import { entranceSide, obliqueShowing, viewedFrom, type Building, type SiteMarker } from '../../lib/buildings'
+import Icon from '../Icon'
 
 /**
  * "Find this door": before the first turn, show the Vexcel oblique that looks
@@ -8,7 +9,7 @@ import { obliqueShowing, sideOf, viewedFrom, type Building, type SiteMarker } fr
 export default function FindDoor({ building, entrance, onDismiss }: {
   building: Building; entrance: SiteMarker; onDismiss: () => void
 }) {
-  const side = sideOf(building, entrance.at)
+  const side = entranceSide(building, entrance)
   const photo = obliqueShowing(side)
   const note = building.obliqueNotes[photo]
   return (
@@ -23,7 +24,7 @@ export default function FindDoor({ building, entrance, onDismiss }: {
           Find this door
         </span>
         <button type="button" onClick={onDismiss} aria-label="Hide door photo"
-          className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-ink-2 shadow-card hover:text-ink">✕</button>
+          className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-ink-2 shadow-card hover:text-ink"><Icon name="close" /></button>
         <div className="absolute inset-x-0 bottom-0 p-4 text-white">
           <div className="text-xl font-semibold leading-tight tracking-tight drop-shadow">{entrance.label}</div>
           <div className="mt-0.5 text-sm text-white/85">
@@ -33,7 +34,7 @@ export default function FindDoor({ building, entrance, onDismiss }: {
       </div>
       {note && (
         <p className="flex gap-2 border-b border-line bg-amber-soft/60 px-4 py-2.5 text-sm text-ink">
-          <span aria-hidden="true">👀</span>{note}
+          <Icon name="info" className="mt-0.5 h-4 w-4 shrink-0 text-amber" />{note}
         </p>
       )}
       <p className="px-4 py-2.5 text-xs text-ink-3">

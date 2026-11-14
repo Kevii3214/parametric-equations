@@ -16,6 +16,14 @@ import wtNorth from '../../../fixtures/buildings/233903/oblique-north.jpg'
 import wtSouth from '../../../fixtures/buildings/233903/oblique-south.jpg'
 import wtWest from '../../../fixtures/buildings/233903/oblique-west.jpg'
 import wtRecord from '../../../fixtures/buildings/233903/record.json'
+import jrAerial from '../../../fixtures/buildings/jrr/aerial.json'
+import jrOrtho from '../../../fixtures/buildings/jrr/aerial.jpg'
+import jrGraph from '../../../fixtures/buildings/jrr/graph.json'
+import jrEast from '../../../fixtures/buildings/jrr/oblique-east.jpg'
+import jrNorth from '../../../fixtures/buildings/jrr/oblique-north.jpg'
+import jrSouth from '../../../fixtures/buildings/jrr/oblique-south.jpg'
+import jrWest from '../../../fixtures/buildings/jrr/oblique-west.jpg'
+import jrRecord from '../../../fixtures/buildings/jrr/record.json'
 import type { BuildingGraph } from './contracts'
 
 export type LngLat = [number, number]
@@ -30,11 +38,13 @@ export interface CostarRecord {
   latitude: number
   longitude: number
   property_type: string
-  building_class: number
-  building_rating: number
-  stories_above_grade: number
-  gross_area_sqft: number
-  typical_floor_sqft: number
+  /** Missing for buildings that are not in the CoStar kit (record written by hand). */
+  source?: string
+  building_class?: number | null
+  building_rating?: number | null
+  stories_above_grade: number | null
+  gross_area_sqft?: number | null
+  typical_floor_sqft?: number | null
   data_quality_notes: string[]
   elevators: { type: string; count: number | null; exists: boolean }[]
   parking: { type: string; spaces: number | null; monthly_fee: number | null }[]
@@ -57,6 +67,8 @@ export interface SiteMarker {
   at: LngLat
   /** Placed by eye from the imagery, not measured. */
   estimated: boolean
+  /** Which side of the building the door faces, when known better than the pin's offset says. */
+  side?: Direction
 }
 
 export interface Building {
@@ -85,6 +97,11 @@ export interface Building {
   matterport: MatterportModel[]
   /** The default patient node for the demo replay. */
   demoGoal?: string
+  /**
+   * With a single entrance pin the plan's rotation can't be fitted, so give
+   * it: degrees clockwise from the plan's +y axis to true north.
+   */
+  graphRotationDeg?: number
 }
 
 function parseWkt(wkt: string): LngLat[] {
@@ -195,7 +212,52 @@ const williams: Building = {
   demoGoal: 'room29',
 }
 
-const buildings: Record<string, Building> = { [louisiana.id]: louisiana, [williams.id]: williams }
+// Rabinowitz Hall is not in the CoStar kit: the record is written by hand,
+// and the graph comes from the Matterport scan (see its GRAPH_NOTES.md). The
+// scan origin is taken as the record's point; the notes put the stairs at
+// compass bearing 20 degrees where the plan says 16.8, so the plan is turned
+// 3.2 degrees clockwise. The entrance (east wall of the atrium) is then placed
+// from its plan position. Estimated to a few metres.
+const jrRec = jrRecord as unknown as CostarRecord
+const jrParcel = parseWkt(jrAerial.parcel_wkt)
+const JR_ROT = 3.2
+const jrPlan = (x: number, y: number): LngLat => {
+  const t = (JR_ROT * Math.PI) / 180
+  return offset([jrRec.longitude, jrRec.latitude], x * Math.cos(t) + y * Math.sin(t), -x * Math.sin(t) + y * Math.cos(t))
+}
+const rabinowitz: Building = {
+  id: 'jrr',
+  record: jrRec,
+  graph: jrGraph as BuildingGraph,
+  ortho: jrOrtho,
+  obliques: { north: jrNorth, east: jrEast, south: jrSouth, west: jrWest },
+  obliqueCaptured: (jrAerial as { images?: Record<string, { captured?: string }> }).images?.['oblique-north']?.captured ?? null,
+  obliqueNotes: {},
+  obliqueFocus: {},
+  collection: jrAerial.collection,
+  parcel: jrParcel,
+  orthoBounds: orthoBoundsFor(jrParcel, 10),
+  imageryMatches: true,
+  markers: [
+    { node: 'entrance1', label: 'Glass entrance', at: jrPlan(15.2, 4.4), estimated: true, side: 'east' },
+  ],
+  matterport: [
+    { id: 'P3S6VUTP3qB', title: 'Rabinowitz Hall', subtitle: 'Atrium hall and upper corridor', destination: true },
+  ],
+  demoGoal: 's20',
+  graphRotationDeg: JR_ROT,
+}
+
+const buildings: Record<string, Building> = {
+  [louisiana.id]: louisiana, [williams.id]: williams, [rabinowitz.id]: rabinowitz,
+}
+
+/** Whether the record came from CoStar (not written by hand). */
+export const inCostar = (b: Building) => !/not in the CoStar kit/i.test(b.record.source ?? '')
+
+/** Storeys above grade: CoStar's count, else the highest floor in the graph. */
+export const storiesOf = (b: Building) =>
+  b.record.stories_above_grade ?? Math.max(...b.graph.nodes.map((n) => n.floor))
 
 export function buildingById(id: string | null | undefined): Building | null {
   return (id && buildings[id]) || null
@@ -233,6 +295,9 @@ export function sideOf(b: Building, at: LngLat): Direction {
   if (Math.abs(east) > Math.abs(north)) return east > 0 ? 'east' : 'west'
   return north > 0 ? 'north' : 'south'
 }
+
+/** The side of the building an entrance is on. */
+export const entranceSide = (b: Building, m: SiteMarker): Direction => m.side ?? sideOf(b, m.at)
 
 /**
  * Vexcel names each oblique by the direction the camera looks (checked

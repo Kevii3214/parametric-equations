@@ -1,5 +1,5 @@
 import type { BuildingGraph, GraphNode, RouteStep } from '../lib/contracts'
-import { nodeMap, type Point } from '../lib/route'
+import { nodeMap, tidy, type Point } from '../lib/route'
 
 interface Props {
   graph: BuildingGraph
@@ -114,7 +114,7 @@ export default function FloorMap({
             const dx = anchor === 'start' ? -1.2 : anchor === 'end' ? 1.2 : 0
             return (
               <text x={n.x + dx} y={sy(n.y) + (above ? -2.3 : 3.4)} textAnchor={anchor} fontSize={1.4}
-                className="fill-ink-2">{n.label.replace(/ \(floor \d+\)$/, '')}</text>
+                className="fill-ink-2">{tidy(n.label)}</text>
             )
           })()}
         </g>

@@ -20,6 +20,7 @@ const id = fixtureIncident.id
 const CALLS: Record<string, { complaint: string; age: string }> = {
   '233928': { complaint: 'chest pain', age: '65M' },
   '233903': { complaint: 'fall, head injury', age: '58F' },
+  jrr: { complaint: 'seizure', age: '20M' },
 }
 
 function build(b: Building): Scenario {
@@ -27,7 +28,9 @@ function build(b: Building): Scenario {
   const goalNode = b.graph.nodes.find((n) => n.id === goal)!
   const suiteTenant = b.record.current_tenants.find((t) => t.floor_guess_from_suite === goalNode.floor && t.company)
     ?? b.record.current_tenants.find((t) => t.floor_guess_from_suite === goalNode.floor)
-  const suite = suiteTenant?.suite ?? String(goalNode.floor * 100)
+  // Buildings outside CoStar have no tenant list: name the room instead of a suite.
+  const suite = suiteTenant?.suite ?? null
+  const place = (goalNode.label ?? 'the patient').replace(/ \(patient\)$/, '')
   const call = CALLS[b.id] ?? { complaint: 'unresponsive', age: '60M' }
 
   const tries = b.markers.map((m) => ({ m, steps: findRoute(b.graph, m.node, goal) }))
@@ -39,8 +42,8 @@ function build(b: Building): Scenario {
   const incident: IncidentRow = {
     id,
     created_at: at(0),
-    note: `${call.age} ${call.complaint}, Suite ${suite}, ${r.address}`,
-    parsed: { address: r.address, suite, floor: goalNode.floor, complaint: call.complaint, access_notes: null },
+    note: `${call.age} ${call.complaint}, ${suite ? `Suite ${suite}` : place}, ${suite ? r.address : `${r.name}, ${r.address}`}`,
+    parsed: { address: r.address, suite, floor: goalNode.floor, complaint: call.complaint, location: place, access_notes: null },
     building_id: b.id,
     status: 'en_route',
   }
@@ -60,7 +63,9 @@ function build(b: Building): Scenario {
         'Route from each entrance and pick the fastest',
       ],
     }),
-    step(4, 'subagent', `records subagent: ${r.name} is ${r.stories_above_grade} stories; Suite ${suite} is ${suiteTenant?.company ?? 'listed'} on floor ${goalNode.floor}`, {
+    step(4, 'subagent', suite
+      ? `records subagent: ${r.name} is ${r.stories_above_grade} stories; Suite ${suite} is ${suiteTenant?.company ?? 'listed'} on floor ${goalNode.floor}`
+      : `records subagent: ${r.name} is not in CoStar; using the hand-written record, ${place} is on floor ${goalNode.floor}`, {
       subagent: 'records',
       building_id: b.id,
       result: {
@@ -76,12 +81,13 @@ function build(b: Building): Scenario {
         subagent: 'aerial', collection: b.collection, entrances: b.markers.map((m) => m.label) })
       : step(6, 'subagent', 'aerial subagent: the Vexcel parcel is a neighbouring building, so entrances are estimated from the map footprint', {
         subagent: 'aerial', collection: b.collection, entrances: b.markers.map((m) => m.label), warning: 'parcel mismatch' }),
-    step(8, 'subagent', `interior subagent: Suite ${suite} matched to Matterport scan ${destModel?.id ?? 'n/a'}`, {
+    step(8, 'subagent', `interior subagent: ${suite ? `Suite ${suite}` : place} matched to Matterport scan ${destModel?.id ?? 'n/a'}`, {
       subagent: 'interior', models: b.matterport.length, destination_model: destModel?.id ?? null }),
     ...tries.map((t) => step(9, 'tool_call', `route(${b.id}, ${t.m.node}, ${goal})`, { tool: 'route', args: { start_node: t.m.node, goal_node: goal } })),
     step(10, 'tool_result', tries.map((t) => `${t.m.label} ${routeSeconds(t.steps)} s`).join(', '), {
       tool: 'route', ...Object.fromEntries(tries.map((t) => [t.m.node, routeSeconds(t.steps)])) }),
-    step(11, 'final', `Final: enter at the ${best.m.label.toLowerCase()}, elevators to floor ${goalNode.floor}, then to ${goalNode.label ?? 'the patient'}`, {
+    step(11, 'final', `Final: enter at the ${best.m.label.toLowerCase()}, ${
+      best.steps.some((st) => st.text.startsWith('Climb')) ? 'stairs' : 'elevators'} to floor ${goalNode.floor}, then to ${place}`, {
       route_version: 1, total_seconds: routeSeconds(best.steps) }),
   ]
 
