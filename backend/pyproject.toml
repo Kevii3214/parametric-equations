@@ -1,0 +1,25 @@
+[project]
+name = "beeline-backend"
+version = "0.1.0"
+description = "Beeline server: FastAPI, AI agent and data"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.162.7",
+    "pydantic-settings>=2.16.3",
+    "supabase>=2.34.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]
