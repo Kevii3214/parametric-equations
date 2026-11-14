@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -33,3 +35,16 @@ class ParsedNote(BaseModel):
     access_notes: str | None = Field(
         default=None, description="Anything about getting in: gate codes, entrances, hazards"
     )
+
+
+class Telemetry(BaseModel):
+    """One wearable sample (contracts/telemetry.schema.json), about 5 per second."""
+
+    t: int = Field(ge=0, description="Milliseconds since the wearable booted")
+    steps: int = Field(ge=0, description="Running step count since boot")
+    heading: float = Field(
+        ge=0, le=360, description="Degrees from the gyroscope; relative, drifts slowly"
+    )
+    pressure: float = Field(gt=0, description="Air pressure in pascals")
+    btn: Literal[0, 1, 2] = Field(description="0 none, 1 confirm, 2 elevator out")
+    tag: str | None = Field(default=None, description="RFID tag UID scanned in this sample")
