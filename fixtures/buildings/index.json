@@ -12,5 +12,16 @@
       "2800 post oak blvd",
       "williams tower"
     ]
+  },
+  "jrr": {
+    "name": "Rabinowitz Hall (JRR)",
+    "aliases": [
+      "jrr",
+      "jrr building",
+      "rabinowitz",
+      "rabinowitz hall",
+      "rabinowitz building",
+      "julis romo rabinowitz"
+    ]
   }
 }

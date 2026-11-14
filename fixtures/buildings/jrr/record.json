@@ -1,0 +1,29 @@
+{
+  "building_id": "jrr",
+  "source": "written by hand: not in the CoStar kit",
+  "snapshot_date": "2026-11-14",
+  "name": "Rabinowitz Hall (JRR)",
+  "address": "Princeton University",
+  "city": "Princeton",
+  "state": "NJ",
+  "postcode": "08544",
+  "latitude": 40.3490893,
+  "longitude": -74.6554659,
+  "property_type": "Education",
+  "stories_above_grade": null,
+  "floor_names": [
+    "Floor 2",
+    "Floor 3"
+  ],
+  "elevators": [],
+  "parking": [],
+  "matterport_model_ids": [
+    "P3S6VUTP3qB"
+  ],
+  "current_tenants": [],
+  "data_quality_notes": [
+    "Not a CoStar building: this record was written by hand from the Matterport scan. The street address, number of floors and elevators are unknown.",
+    "The scan covers two levels, which it calls Floor 2 (the open atrium hall) and Floor 3 (a ring corridor around the atrium, with a classroom). Whether these are the building's real second and third floors is not known.",
+    "No elevator is recorded: the scan does not show one."
+  ]
+}
