@@ -24,6 +24,7 @@ import jrNorth from '../../../fixtures/buildings/jrr/oblique-north.jpg'
 import jrSouth from '../../../fixtures/buildings/jrr/oblique-south.jpg'
 import jrWest from '../../../fixtures/buildings/jrr/oblique-west.jpg'
 import jrRecord from '../../../fixtures/buildings/jrr/record.json'
+import buildingIndex from '../../../fixtures/buildings/index.json'
 import type { BuildingGraph } from './contracts'
 
 export type LngLat = [number, number]
@@ -325,3 +326,23 @@ export function matterportUrl(id: string, opts: { autoplay?: boolean; tour?: boo
 }
 
 export const matterportThumb = (id: string) => `https://my.matterport.com/api/v1/player/models/${id}/thumb`
+
+/**
+ * Which demo building a call note is about, using the same aliases the
+ * server matches (fixtures/buildings/index.json).
+ */
+export function buildingForNote(note: string): string | null {
+  const text = note.toLowerCase()
+  const index = buildingIndex as Record<string, { name: string; aliases: string[] }>
+  for (const [id, entry] of Object.entries(index)) {
+    if ([entry.name, ...entry.aliases].some((a) => text.includes(a.toLowerCase()))) return id
+  }
+  return null
+}
+
+/** One ready-made call per demo building, written to match the server's aliases. */
+export const SAMPLE_CALLS: { building: string; label: string; note: string }[] = [
+  { building: '233928', label: '1415 Louisiana', note: '65M chest pain, Suite 1800, 1415 Louisiana St, Houston, patient is in the phone room' },
+  { building: '233903', label: 'Williams Tower', note: '58F fall with head injury, Suite 5600, Williams Tower, 2800 Post Oak Blvd, Houston, patient is in the conference room' },
+  { building: 'jrr', label: 'Rabinowitz Hall', note: '20M seizure, Rabinowitz Hall, Princeton University, patient is in the classroom on the upper level' },
+]
