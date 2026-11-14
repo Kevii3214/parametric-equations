@@ -55,7 +55,7 @@ export default function FloorPlan({ building, graph, floor, steps, currentStep, 
   const routePts: XY[] = segs.flatMap(({ a, b }) => [[a.x, a.y], [b.x, b.y]] as XY[])
   // Without a scan, frame the whole floor of the graph; with one, the walls and the route.
   const floorPts: XY[] = graph.nodes.filter((n) => n.floor === floor).map((n) => [n.x, n.y])
-  const box = bounds(plan, plan ? routePts : [...floorPts, ...routePts], plan ? 1.5 : 4)
+  const box = bounds(plan, plan ? routePts : [...floorPts, ...routePts], plan ? 1.5 : 6)
   const W = box.x1 - box.x0
   const H = box.y1 - box.y0
   const sy = (y: number) => box.y1 + box.y0 - y
@@ -137,10 +137,16 @@ export default function FloorPlan({ building, graph, floor, steps, currentStep, 
         )}
 
         {/* Landmark labels */}
-        {landmarks.map((n) => (
-          <text key={`l${n.id}`} x={n.x} y={sy(n.y) - unit * 2.3} textAnchor="middle" fontSize={unit * 1.3} fontWeight={600}
-            className="fill-ink" stroke="var(--color-paper)" strokeWidth={unit * 0.35} paintOrder="stroke">{tidy(n.label!)}</text>
-        ))}
+        {landmarks.map((n) => {
+          // Keep labels inside the view: near an edge, anchor them inward.
+          const room = W * 0.22
+          const anchor = n.x - box.x0 < room ? 'start' : box.x1 - n.x < room ? 'end' : 'middle'
+          const dx = anchor === 'start' ? -unit * 1.2 : anchor === 'end' ? unit * 1.2 : 0
+          return (
+            <text key={`l${n.id}`} x={n.x + dx} y={sy(n.y) - unit * 2.3} textAnchor={anchor} fontSize={unit * 1.3} fontWeight={600}
+              className="fill-ink" stroke="var(--color-paper)" strokeWidth={unit * 0.35} paintOrder="stroke">{tidy(n.label!)}</text>
+          )
+        })}
 
         {/* The patient */}
         {showGoal && goal && (
