@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BuildingGraph",
+  "description": "Indoor graph of one building. The router runs A* over it. Coordinates are metres on that floor's plan (x east, y north). Corridors are listed in both directions because edges are directed.",
+  "type": "object",
+  "required": ["building_id", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "building_id": { "type": "string", "description": "The CoStar property id." },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "floor", "x", "y", "kind", "label", "tag_id"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "floor": { "type": "integer" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "kind": {
+            "type": "string",
+            "enum": ["entrance", "corridor", "door", "elevator", "stairs", "aed"]
+          },
+          "label": { "type": ["string", "null"] },
+          "tag_id": {
+            "type": ["string", "null"],
+            "description": "RFID tag UID placed at this node (entrance and suite door in the demo)."
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "meters", "kind", "stretcher_ok", "seconds"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "meters": { "type": "number", "minimum": 0 },
+          "kind": {
+            "type": "string",
+            "enum": ["corridor", "door", "elevator", "stairs"]
+          },
+          "stretcher_ok": { "type": "boolean" },
+          "seconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Travel time. For elevator and stair edges it includes wait or climb time."
+          }
+        }
+      }
+    }
+  }
+}

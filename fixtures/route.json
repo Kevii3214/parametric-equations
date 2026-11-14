@@ -1,0 +1,9 @@
+[
+  { "index": 0, "from_node": "n1",  "to_node": "n12", "cue": "STRAIGHT", "meters": 6,  "seconds": 5,  "floor": 1,  "text": "Walk straight 6 m. The AED is on your right." },
+  { "index": 1, "from_node": "n12", "to_node": "n2",  "cue": "LEFT",     "meters": 6,  "seconds": 5,  "floor": 1,  "text": "Continue 6 m, then turn left at the lobby." },
+  { "index": 2, "from_node": "n2",  "to_node": "n3",  "cue": "STRAIGHT", "meters": 9,  "seconds": 7,  "floor": 1,  "text": "Walk 9 m to Elevator A." },
+  { "index": 3, "from_node": "n3",  "to_node": "n7",  "cue": "FLOOR_UP", "meters": 0,  "seconds": 45, "floor": 14, "text": "Take Elevator A up to floor 14." },
+  { "index": 4, "from_node": "n7",  "to_node": "n8",  "cue": "RIGHT",    "meters": 11, "seconds": 8,  "floor": 14, "text": "Exit and walk 11 m, then turn right." },
+  { "index": 5, "from_node": "n8",  "to_node": "n9",  "cue": "LEFT",     "meters": 18, "seconds": 14, "floor": 14, "text": "Walk 18 m down the east corridor, then turn left." },
+  { "index": 6, "from_node": "n9",  "to_node": "n10", "cue": "ARRIVE",   "meters": 8,  "seconds": 6,  "floor": 14, "text": "Walk 8 m. Suite 1420 is the door ahead." }
+]

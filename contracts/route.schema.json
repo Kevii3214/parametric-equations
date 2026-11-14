@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RouteSteps",
+  "description": "The value of routes.steps: the turn-by-turn list. See api.md for how cue is chosen.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["index", "from_node", "to_node", "cue", "meters", "seconds", "floor", "text"],
+    "additionalProperties": false,
+    "properties": {
+      "index": { "type": "integer", "minimum": 0 },
+      "from_node": { "type": "string" },
+      "to_node": { "type": "string" },
+      "cue": {
+        "type": "string",
+        "enum": ["LEFT", "RIGHT", "STRAIGHT", "UTURN", "FLOOR_UP", "FLOOR_DOWN", "ARRIVE", "OFF_ROUTE"]
+      },
+      "meters": { "type": "number", "minimum": 0 },
+      "seconds": { "type": "number", "minimum": 0 },
+      "floor": { "type": "integer", "description": "Floor the paramedic is on when this step ends." },
+      "text": { "type": "string", "description": "Human-readable instruction for this step." }
+    }
+  }
+}

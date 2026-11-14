@@ -1,0 +1,14 @@
+{
+  "id": "00000000-0000-0000-0000-000000000001",
+  "created_at": "2026-11-14T10:00:00Z",
+  "note": "65M chest pain, Suite 1420, 1000 Main St",
+  "parsed": {
+    "address": "1000 Main St",
+    "suite": "1420",
+    "floor": 14,
+    "complaint": "chest pain",
+    "access_notes": null
+  },
+  "building_id": "fixture-building-1",
+  "status": "en_route"
+}

@@ -1,0 +1,45 @@
+{
+  "building_id": "fixture-building-1",
+  "nodes": [
+    { "id": "n1",  "floor": 1,  "x": 0,  "y": 0,  "kind": "entrance", "label": "Main St entrance",      "tag_id": "TAG-ENTRANCE-01" },
+    { "id": "n12", "floor": 1,  "x": 6,  "y": 0,  "kind": "aed",      "label": "Lobby AED",             "tag_id": null },
+    { "id": "n2",  "floor": 1,  "x": 12, "y": 0,  "kind": "corridor", "label": "Lobby",                 "tag_id": null },
+    { "id": "n3",  "floor": 1,  "x": 12, "y": 9,  "kind": "elevator", "label": "Elevator A (floor 1)",  "tag_id": null },
+    { "id": "n6",  "floor": 1,  "x": 20, "y": 9,  "kind": "stairs",   "label": "Stairwell B (floor 1)", "tag_id": null },
+    { "id": "n5",  "floor": 1,  "x": 40, "y": 9,  "kind": "corridor", "label": "Service corridor",      "tag_id": null },
+    { "id": "n4",  "floor": 1,  "x": 40, "y": 0,  "kind": "entrance", "label": "Loading dock entrance", "tag_id": null },
+    { "id": "n7",  "floor": 14, "x": 12, "y": 9,  "kind": "elevator", "label": "Elevator A (floor 14)", "tag_id": null },
+    { "id": "n11", "floor": 14, "x": 20, "y": 9,  "kind": "stairs",   "label": "Stairwell B (floor 14)","tag_id": null },
+    { "id": "n8",  "floor": 14, "x": 12, "y": 20, "kind": "corridor", "label": "14th floor hall",       "tag_id": null },
+    { "id": "n9",  "floor": 14, "x": 30, "y": 20, "kind": "corridor", "label": "East corridor",         "tag_id": null },
+    { "id": "n10", "floor": 14, "x": 30, "y": 28, "kind": "door",     "label": "Suite 1420",            "tag_id": "TAG-SUITE-1420" }
+  ],
+  "edges": [
+    { "from": "n1",  "to": "n12", "meters": 6,  "kind": "corridor", "stretcher_ok": true, "seconds": 5 },
+    { "from": "n12", "to": "n1",  "meters": 6,  "kind": "corridor", "stretcher_ok": true, "seconds": 5 },
+    { "from": "n12", "to": "n2",  "meters": 6,  "kind": "corridor", "stretcher_ok": true, "seconds": 5 },
+    { "from": "n2",  "to": "n12", "meters": 6,  "kind": "corridor", "stretcher_ok": true, "seconds": 5 },
+    { "from": "n2",  "to": "n3",  "meters": 9,  "kind": "corridor", "stretcher_ok": true, "seconds": 7 },
+    { "from": "n3",  "to": "n2",  "meters": 9,  "kind": "corridor", "stretcher_ok": true, "seconds": 7 },
+    { "from": "n3",  "to": "n6",  "meters": 8,  "kind": "corridor", "stretcher_ok": true, "seconds": 6 },
+    { "from": "n6",  "to": "n3",  "meters": 8,  "kind": "corridor", "stretcher_ok": true, "seconds": 6 },
+    { "from": "n3",  "to": "n5",  "meters": 28, "kind": "corridor", "stretcher_ok": true, "seconds": 22 },
+    { "from": "n5",  "to": "n3",  "meters": 28, "kind": "corridor", "stretcher_ok": true, "seconds": 22 },
+    { "from": "n4",  "to": "n5",  "meters": 9,  "kind": "corridor", "stretcher_ok": true, "seconds": 7 },
+    { "from": "n5",  "to": "n4",  "meters": 9,  "kind": "corridor", "stretcher_ok": true, "seconds": 7 },
+
+    { "from": "n3",  "to": "n7",  "meters": 0,  "kind": "elevator", "stretcher_ok": true, "seconds": 45 },
+    { "from": "n7",  "to": "n3",  "meters": 0,  "kind": "elevator", "stretcher_ok": true, "seconds": 40 },
+    { "from": "n6",  "to": "n11", "meters": 60, "kind": "stairs",   "stretcher_ok": true, "seconds": 200 },
+    { "from": "n11", "to": "n6",  "meters": 60, "kind": "stairs",   "stretcher_ok": true, "seconds": 150 },
+
+    { "from": "n7",  "to": "n8",  "meters": 11, "kind": "corridor", "stretcher_ok": true, "seconds": 8 },
+    { "from": "n8",  "to": "n7",  "meters": 11, "kind": "corridor", "stretcher_ok": true, "seconds": 8 },
+    { "from": "n11", "to": "n8",  "meters": 14, "kind": "corridor", "stretcher_ok": true, "seconds": 11 },
+    { "from": "n8",  "to": "n11", "meters": 14, "kind": "corridor", "stretcher_ok": true, "seconds": 11 },
+    { "from": "n8",  "to": "n9",  "meters": 18, "kind": "corridor", "stretcher_ok": true, "seconds": 14 },
+    { "from": "n9",  "to": "n8",  "meters": 18, "kind": "corridor", "stretcher_ok": true, "seconds": 14 },
+    { "from": "n9",  "to": "n10", "meters": 8,  "kind": "corridor", "stretcher_ok": true, "seconds": 6 },
+    { "from": "n10", "to": "n9",  "meters": 8,  "kind": "corridor", "stretcher_ok": true, "seconds": 6 }
+  ]
+}
