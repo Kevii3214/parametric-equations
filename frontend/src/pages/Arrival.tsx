@@ -1,11 +1,10 @@
 import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import CueIcon from '../components/CueIcon'
-import FloorMap from '../components/FloorMap'
+import FloorPlan from '../components/FloorPlan'
 import Icon from '../components/Icon'
 import { sendEvent } from '../lib/api'
 import type { RouteRow, RouteStep } from '../lib/contracts'
-import { closures } from '../lib/incident'
 import { replanAround, type Problem } from '../lib/replan'
 import { useRouteReplay } from '../lib/replay'
 import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint, tidy, type Point } from '../lib/route'
@@ -131,8 +130,8 @@ export default function Arrival() {
       {/* The floor, following the current step */}
       {graph && (
         <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
-          <FloorMap graph={graph} floor={floor} steps={steps} currentStep={i} position={point} offRoute={offRoute}
-            closures={closures(inc.live.planSteps)} className="aspect-[16/11] w-full bg-sunk" />
+          <FloorPlan building={inc.site} graph={graph} floor={floor} steps={steps} currentStep={i} position={point}
+            offRoute={offRoute} className="aspect-[4/3] w-full bg-sunk" />
           {inc.site && (
             <button type="button" onClick={() => setPreview(true)}
               className="flex w-full items-center gap-2 border-t border-line px-3 py-2.5 text-sm font-semibold text-azure hover:bg-azure-soft">

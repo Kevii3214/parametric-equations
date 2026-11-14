@@ -53,3 +53,29 @@ describe('demo re-plan', () => {
     expect(replanAround(graph, route.steps, last, 'elevator_out')).toBeNull()
   })
 })
+
+describe('floor plans from the scans', () => {
+  it.each([['233928', 18], ['233903', 56], ['jrr', 2], ['jrr', 3]] as const)('%s floor %i has walls, doorways and rooms', async (id, floor) => {
+    const { planFor } = await import('./floorplan')
+    const b = buildingById(id)!
+    const src = b.floorPlans![floor]
+    const plan = planFor(await b.loadInterior!(), src.modelId, src.scanFloor)!
+    expect(plan.walls.length).toBeGreaterThan(5)
+    expect(plan.rooms.length).toBeGreaterThan(1)
+    expect(plan.doorways.length).toBeGreaterThan(0)
+  })
+  it('returns null for a model that is not in the file', async () => {
+    const { planFor } = await import('./floorplan')
+    expect(planFor(await buildingById('233928')!.loadInterior!(), 'nope')).toBeNull()
+  })
+})
+
+describe('room outlines', () => {
+  it('chains the scan edges into closed rings for most rooms', async () => {
+    const { planFor } = await import('./floorplan')
+    const b = buildingById('233903')!
+    const plan = planFor(await b.loadInterior!(), 'eJKnR3x44eh')!
+    const closed = plan.rooms.filter((r) => r.ring.length > 2).length
+    expect(closed / plan.rooms.length).toBeGreaterThan(0.8)
+  })
+})
