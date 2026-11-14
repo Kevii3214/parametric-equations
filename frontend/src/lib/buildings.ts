@@ -107,7 +107,7 @@ export interface Building {
    * Floors covered by a Matterport scan, keyed by graph floor: the scan model
    * and its floor label. The graph for those floors uses the scan's frame.
    */
-  floorPlans?: Record<number, { modelId: string; scanFloor?: string }>
+  floorPlans?: Record<number, { modelId: string; scanFloor?: string; scanFloorIndex?: number }>
   /** Loads the building's interior.json on demand (it is large). */
   loadInterior?: () => Promise<unknown>
 }
@@ -257,7 +257,10 @@ const rabinowitz: Building = {
     { id: 'P3S6VUTP3qB', title: 'Rabinowitz Hall', subtitle: 'Atrium hall and upper corridor', destination: true },
   ],
   demoGoal: 's20',
-  floorPlans: { 2: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 2' }, 3: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 3' } },
+  floorPlans: {
+    2: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 2', scanFloorIndex: 1 },
+    3: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 3', scanFloorIndex: 2 },
+  },
   loadInterior: () => import('../../../fixtures/buildings/jrr/interior.json').then((m) => m.default),
   graphRotationDeg: JR_ROT,
 }

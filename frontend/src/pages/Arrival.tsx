@@ -13,6 +13,9 @@ import { useIncident } from '../lib/useIncident'
 
 const TourPlayer = lazy(() => import('../components/tour/TourPlayer'))
 const SiteFlyover = lazy(() => import('../components/site/SiteFlyover'))
+// The scan-from-above view loads the Matterport SDK, so it is split out too.
+const ScanPlan = lazy(() => import('../components/ScanPlan'))
+const SCAN_KEY = (import.meta.env.VITE_MATTERPORT_SDK_KEY as string | undefined) || ''
 
 /** Inside the building: one instruction at a time, Next / Back, and what to do when the way is blocked. */
 export default function Arrival() {
@@ -20,6 +23,8 @@ export default function Arrival() {
   const { search } = useLocation()
   const [notice, setNotice] = useState<string | null>(null)
   const [preview, setPreview] = useState(false)
+  // Scanned floors open on the scan seen from above; the drawn plan is the toggle and the fallback.
+  const [planView, setPlanView] = useState<'scan' | 'drawn'>('scan')
   // Demo re-plans are worked out here; live ones come back from the server as a new route version.
   const [demoRoute, setDemoRoute] = useState<{ steps: RouteStep[]; n: number; base: string } | null>(null)
 
@@ -57,6 +62,7 @@ export default function Arrival() {
     : from ? { x: from.x, y: from.y, floor: from.floor } : null
   const floor = point?.floor ?? from?.floor ?? step.floor
   const last = i === steps.length - 1
+  const scanned = !!SCAN_KEY && !!inc.site?.floorPlans?.[floor]
 
   async function report(problem: Problem) {
     if (!route || !graph) return
@@ -130,8 +136,27 @@ export default function Arrival() {
       {/* The floor, following the current step */}
       {graph && (
         <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
-          <FloorPlan building={inc.site} graph={graph} floor={floor} steps={steps} currentStep={i} position={point}
-            offRoute={offRoute} className="aspect-[4/3] w-full bg-sunk" />
+          {scanned && (
+            <div className="flex gap-0.5 border-b border-line bg-card p-1.5">
+              {(['scan', 'drawn'] as const).map((v) => (
+                <button key={v} type="button" onClick={() => setPlanView(v)}
+                  className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    planView === v ? 'bg-azure-soft text-azure-deep' : 'text-ink-2 hover:text-ink'}`}>
+                  {v === 'scan' ? 'Scan from above' : 'Drawn plan'}
+                </button>
+              ))}
+            </div>
+          )}
+          {scanned && planView === 'scan' && inc.site ? (
+            <Suspense fallback={<div className="grid aspect-[4/3] w-full place-items-center bg-sunk text-sm text-ink-3">Loading the scan…</div>}>
+              <ScanPlan key={`${inc.site.id}:${floor}`} building={inc.site} graph={graph} floor={floor} steps={steps}
+                currentStep={i} position={point} className="aspect-[4/3] w-full"
+                onFail={(why) => { setPlanView('drawn'); setNotice(`Could not show the scan from above (${why}); showing the drawn plan.`) }} />
+            </Suspense>
+          ) : (
+            <FloorPlan building={inc.site} graph={graph} floor={floor} steps={steps} currentStep={i} position={point}
+              offRoute={offRoute} className="aspect-[4/3] w-full bg-sunk" />
+          )}
           {inc.site && (
             <button type="button" onClick={() => setPreview(true)}
               className="flex w-full items-center gap-2 border-t border-line px-3 py-2.5 text-sm font-semibold text-azure hover:bg-azure-soft">
