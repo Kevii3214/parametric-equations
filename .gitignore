@@ -9,3 +9,7 @@ node_modules/
 .pytest_cache/
 .ipynb_checkpoints/
 .vercel
+
+# Large hackathon data and vendor docs: never commit
+backend/data/
+backend/docs/
