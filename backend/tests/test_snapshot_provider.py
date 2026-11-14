@@ -78,7 +78,14 @@ def test_interior_has_the_lobby_scan_with_walls(provider):
     assert len(edges) > 0
 
 
-@pytest.mark.parametrize("method", ["record", "aerial", "interior"])
+@pytest.mark.parametrize("method", ["record", "aerial", "interior", "graph"])
 def test_unknown_building_id_raises(provider, method):
     with pytest.raises(LookupError):
         run(getattr(provider, method)("does-not-exist"))
+
+
+def test_graph_is_the_routing_graph_for_the_building(provider):
+    graph = run(provider.graph(DEMO_ID))
+    assert graph["building_id"] == DEMO_ID
+    assert {n["id"] for n in graph["nodes"]} >= {"st_main", "gar1", "phone_door"}
+    assert graph["edges"]

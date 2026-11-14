@@ -24,3 +24,7 @@ class BuildingProvider(Protocol):
     async def interior(self, building_id: str) -> dict:
         """Matterport scan data. Raises LookupError if the building is unknown."""
         ...
+
+    async def graph(self, building_id: str) -> dict:
+        """Indoor routing graph (contracts/building_graph.schema.json). Raises LookupError if there is none."""
+        ...

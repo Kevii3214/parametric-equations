@@ -6,7 +6,7 @@ from deepagents import create_deep_agent
 from langchain.agents.middleware import ModelCallLimitMiddleware, ModelFallbackMiddleware
 
 from app.agent.subagents import records_subagent
-from app.agent.tools import make_plan_tool
+from app.agent.tools import make_plan_tool, make_route_tools
 from app.agent.trace import PlanTrace, TraceHandler
 from app.config import get_settings
 from app.intake import model_names
@@ -19,14 +19,21 @@ RECURSION_LIMIT = 60  # LangGraph's own cap on steps
 MODEL_TIMEOUT_S = 25
 
 MAIN_PROMPT = """You plan how an ambulance crew gets to a patient inside a building.
-You do not choose the walking route: a separate, tested router does that later. Your job is to gather facts.
+You never invent the walking route: a separate, tested router computes it. You choose between router
+results and write the briefing.
 
 1. Call make_plan first, listing the real work steps you will take (not the act of planning itself).
 2. Delegate the building and suite lookup to the records subagent with the task tool, giving it the
    street address and suite from the call.
-3. Finish with two or three plain sentences: which building, which suite and floor, how sure you are, and
-   anything the crew should know (for example a floor that is only a guess).
-Never invent facts the tools did not return."""
+3. Call list_entrances, then find_destination_nodes to pick the goal node. Use the most specific place the
+   call gives: a room beats a suite. If the call only names a suite, choose that suite's entrance and say
+   so in the briefing.
+4. Call plan_route from every entrance to the goal and compare total_seconds.
+5. Call choose_route for the fastest one, with a briefing of two or three plain sentences for the crew:
+   which entrance, the key turns and floor changes, and anything uncertain (such as a floor that is only
+   a guess).
+6. Finish with one or two sentences saying what was saved.
+If a tool returns an error, say so plainly and stop; never invent a building, node, route or time."""
 
 
 def default_models() -> tuple:
@@ -58,7 +65,7 @@ def _guard_middleware(fallback_models) -> list:
 def build_agent(*, model, fallback_models, provider, db, incident_id: str):
     return create_deep_agent(
         model=model,
-        tools=[make_plan_tool()],
+        tools=[make_plan_tool(), *make_route_tools(provider, db, incident_id)],
         system_prompt=MAIN_PROMPT,
         subagents=[
             records_subagent(provider, db, incident_id, model, _guard_middleware(fallback_models))

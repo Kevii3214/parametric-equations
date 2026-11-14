@@ -165,3 +165,75 @@ def test_subagents_fail_over_to_the_fallback_model_too():
     assert kinds[0] == "plan" and kinds[-1] == "final"
     assert "subagent" in kinds and "stopped" not in db.rows("plan_steps")[-1]["title"].lower()
     assert db.rows("incidents")[0]["building_id"] == "233928"
+
+
+ROUTE_PATH = [
+    tool_call(
+        "make_plan", {"steps": ["Find entrances", "Compare routes", "Save the fastest"]}, "1"
+    ),
+    tool_call("list_entrances", {"building_id": "233928"}, "2"),
+    tool_call("find_destination_nodes", {"building_id": "233928", "text": "phone room"}, "3"),
+    tool_call(
+        "plan_route",
+        {"building_id": "233928", "start_node": "st_main", "goal_node": "phone_door"},
+        "4",
+    ),
+    tool_call(
+        "plan_route",
+        {"building_id": "233928", "start_node": "gar1", "goal_node": "phone_door"},
+        "5",
+    ),
+    tool_call(
+        "choose_route",
+        {
+            "building_id": "233928",
+            "start_node": "gar1",
+            "goal_node": "phone_door",
+            "briefing": "Use the garage entrance, take the elevator to 18, then the phone room is ahead.",
+        },
+        "6",
+    ),
+    AIMessage(content="Route saved: garage entrance, about 109 seconds."),
+]
+
+
+def test_agent_compares_entrances_and_saves_the_routers_fastest_route():
+    db = new_db()
+    run(db, script(*ROUTE_PATH))
+    steps = db.rows("plan_steps")
+    called = [s["detail"]["tool"] for s in steps if s["kind"] == "tool_call"]
+    assert called == [
+        "list_entrances",
+        "find_destination_nodes",
+        "plan_route",
+        "plan_route",
+        "choose_route",
+    ]
+    (route,) = db.rows("routes")
+    assert (route["entrance_node"], route["total_seconds"], route["version"]) == ("gar1", 109, 1)
+    assert route["steps"][-1]["cue"] == "ARRIVE" and "garage" in route["briefing"].lower()
+    assert db.rows("incidents")[0]["status"] == "en_route"
+    assert steps[-1]["kind"] == "final" and "109" in steps[-1]["title"]
+
+
+def test_agent_run_does_not_save_a_route_it_was_not_given_by_the_router():
+    """A made-up node means no route is saved, and the agent is told why."""
+    db = new_db()
+    bad = [
+        tool_call(
+            "choose_route",
+            {
+                "building_id": "233928",
+                "start_node": "made_up",
+                "goal_node": "phone_door",
+                "briefing": "b",
+            },
+            "1",
+        ),
+        AIMessage(content="I could not save a route."),
+    ]
+    run(db, script(*bad))
+    assert db.rows("routes") == []
+    assert any(
+        "unknown node" in s["detail"].get("output", "").lower() for s in db.rows("plan_steps")
+    )
