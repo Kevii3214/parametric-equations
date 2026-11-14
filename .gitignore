@@ -8,3 +8,7 @@ node_modules/
 .ruff_cache/
 .pytest_cache/
 .ipynb_checkpoints/
+
+# Large hackathon data and vendor docs: never commit
+backend/data/
+backend/docs/
