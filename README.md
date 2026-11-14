@@ -1,12 +1,12 @@
-# Beeline
+# Pairatech
 
-Beeline gets a paramedic from the ambulance to the patient's door inside an unfamiliar building as fast as possible.
+Pairatech gets a paramedic from the ambulance to the patient's door inside an unfamiliar building as fast as possible.
 Built for HackPrinceton Fall 2026 (CoStar "Inside and Out").
 
 A dispatcher types a call note ("65M chest pain, Suite 1800, 1415 Louisiana St"). An AI agent combines CoStar
 building data, Vexcel aerial imagery and a Matterport interior scan, a deterministic router finds the fastest
 stretcher-safe path, and a forearm wearable tells the crew where to turn. If the crew reports "elevator out" or
-leaves the route, Beeline re-plans.
+leaves the route, Pairatech re-plans.
 
 ```
 Dispatcher / medic web app (frontend/)  ──HTTP──▶  FastAPI server (backend/)  ◀──telemetry──  wearable + Raspberry Pi
@@ -45,7 +45,7 @@ for `incidents`, `plan_steps`, `routes`, `positions` and `cues`.
 | `GEMINI_EMBEDDING_MODEL` | Embeddings for crew notes (default `gemini-embedding-001`, 768 dimensions) |
 | `STRIDE_M` | Metres per step used by the position engine (default 0.7) |
 | `WEB_ORIGIN` | Allowed browser origins for CORS, comma separated (add your Vercel URL) |
-| `WEB_ORIGIN_REGEX` | Optional pattern for Vercel preview URLs, e.g. `https://beeline-.*\.vercel\.app` |
+| `WEB_ORIGIN_REGEX` | Optional pattern for Vercel preview URLs, e.g. `https://pairatech-.*\.vercel\.app` |
 | `MATTERPORT_*`, `VEXCEL_API_KEY`, `COSTAR_*` | Only needed to re-pull data with `backend/notebooks/make_snapshot.py` |
 
 Try it without hardware: create an incident, wait for its route, then run the mock wearable.

@@ -1,10 +1,10 @@
-# Beeline: Devpost, technical half
+# Pairatech: Devpost, technical half
 
 Paste these sections into the Devpost "How we built it", "Challenges" and "What we learned" fields.
 
 ## How we built it
 
-Beeline is a FastAPI server with a LangChain `deepagents` agent on Gemini, a NetworkX router, a position engine
+Pairatech is a FastAPI server with a LangChain `deepagents` agent on Gemini, a NetworkX router, a position engine
 fed by a forearm wearable, and Supabase Realtime pushing everything to a React web app.
 
 **Three CoStar data layers, combined.** For the demo building, 1415 Louisiana in Houston, we use CoStar building
