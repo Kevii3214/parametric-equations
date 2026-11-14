@@ -1,0 +1,521 @@
+{
+  "building_id": "233903",
+  "source": "CoStar hackathon data kit",
+  "snapshot_date": "2026-11-14",
+  "name": "Williams Tower",
+  "address": "2800 Post Oak Blvd",
+  "city": "Houston",
+  "state": "TX",
+  "postcode": "77056",
+  "latitude": 29.7375702,
+  "longitude": -95.461339,
+  "property_type": "Office",
+  "building_class": 1,
+  "building_rating": 5,
+  "stories_above_grade": 64,
+  "gross_area_sqft": 1655703.0,
+  "typical_floor_sqft": 22700.0,
+  "data_quality_notes": [
+    "CoStar lists 45 floors named 1, 18, 21, 24..67 for a 43-story building, and tenant floor names do not match suite numbers, so CoStar floor names are not used. Trust stories_above_grade and the suite numbers.",
+    "Elevator counts are building totals; which elevator serves which floors is not in the data."
+  ],
+  "elevators": [
+    {
+      "type": "Passenger",
+      "count": 39,
+      "exists": true
+    },
+    {
+      "type": "Escalator",
+      "count": null,
+      "exists": false
+    }
+  ],
+  "parking": [
+    {
+      "type": "Covered",
+      "spaces": null,
+      "monthly_fee": 75.0
+    },
+    {
+      "type": "Reserved",
+      "spaces": null,
+      "monthly_fee": 125.0
+    }
+  ],
+  "matterport_model_ids": [
+    "eJKnR3x44eh"
+  ],
+  "current_tenants": [
+    {
+      "suite": "6000",
+      "floor_guess_from_suite": 60,
+      "company": null
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Pai Hsien-Yung Foundation For Chinese Cultural Her"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Rockwater Energy Solutions"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Rockwater Energy Solutions"
+    },
+    {
+      "suite": "6400",
+      "floor_guess_from_suite": 64,
+      "company": "Hall Maines Lugrin"
+    },
+    {
+      "suite": "6400",
+      "floor_guess_from_suite": 64,
+      "company": "Hall Maines Lugrin"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Total Interior Contractor Inc"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Contraband, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Tile Grout Cleaning Of Houston"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Paradise Cards & Gifts"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "RBC Dominion Securities"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines REIT, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Murphy's Deli"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Hines Interest LP"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Industrial and Commercial Bank of China (USA)"
+    },
+    {
+      "suite": "1940",
+      "floor_guess_from_suite": 19,
+      "company": null
+    },
+    {
+      "suite": "4025",
+      "floor_guess_from_suite": 40,
+      "company": "Count Group"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Consulate General Of Denmark"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "ROM Commercial Properties"
+    },
+    {
+      "suite": "6300",
+      "floor_guess_from_suite": 63,
+      "company": "Alterna Securities"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Trammell Crow Company"
+    },
+    {
+      "suite": "5900",
+      "floor_guess_from_suite": 59,
+      "company": "Centurion Financial"
+    },
+    {
+      "suite": "5925",
+      "floor_guess_from_suite": 59,
+      "company": null
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LyondellBasell"
+    },
+    {
+      "suite": "475",
+      "floor_guess_from_suite": 4,
+      "company": null
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": null
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Merrill"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Merrill"
+    },
+    {
+      "suite": "6400",
+      "floor_guess_from_suite": 64,
+      "company": "Hall Maines Lugrin"
+    },
+    {
+      "suite": "5700",
+      "floor_guess_from_suite": 57,
+      "company": "Roberts Markel Weinberg Butler Hailey PC"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Camden Property Trust"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Camden Property Trust"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Camden Property Trust"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Camden Property Trust"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Camden Property Trust"
+    },
+    {
+      "suite": "6100",
+      "floor_guess_from_suite": 61,
+      "company": "Tri-Star"
+    },
+    {
+      "suite": "1930",
+      "floor_guess_from_suite": 19,
+      "company": null
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Morgan Stanley"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Morgan Stanley"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Morgan Stanley"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Morgan Stanley"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Houston Custom Installers"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Commerceworks Technology Corp"
+    },
+    {
+      "suite": "5600",
+      "floor_guess_from_suite": 56,
+      "company": "Titan Global Advisory"
+    },
+    {
+      "suite": "5200",
+      "floor_guess_from_suite": 52,
+      "company": "Parkland Supply Corp"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Servcorp"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Inpex"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Partners Group"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "CBRE"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "CBRE"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "CBRE"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "CBRE"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "The Williams Companies, Inc."
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "MMBG Investment Advisors"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "LieberLieber"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "NEWMEDIA.com"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "Westward360"
+    },
+    {
+      "suite": null,
+      "floor_guess_from_suite": null,
+      "company": "DiCecco Law Partners"
+    },
+    {
+      "suite": "2600",
+      "floor_guess_from_suite": 26,
+      "company": "Quanta Energized Services"
+    },
+    {
+      "suite": "3400",
+      "floor_guess_from_suite": 34,
+      "company": "Methanex Corporation"
+    }
+  ]
+}

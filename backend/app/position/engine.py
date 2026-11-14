@@ -10,6 +10,7 @@ from app.graph.schema import RouteStep
 from app.models import Telemetry
 
 CUE_DISTANCE_M = 6.0  # write a turn cue once the turn is this close
+ARRIVAL_TOLERANCE_M = 1.0  # strides vary, so the last step counts as done this close to its end
 OVERSHOOT_M = 5.0  # walking this far past a turn without turning means off route
 TURN_DEGREES = 60.0  # a heading change this big, in the expected direction, confirms a turn
 UTURN_DEGREES = 150.0
@@ -109,10 +110,11 @@ class PositionEngine:
             remaining = step.meters - self.progress_m
             if i not in self._cued and remaining <= CUE_DISTANCE_M:
                 self._write_cue(i, max(remaining, 0.0), s, cues)
-            if remaining > 0:
+            last = i == len(self.steps) - 1
+            if remaining > (ARRIVAL_TOLERANCE_M if last else 0):
                 return
 
-            if i == len(self.steps) - 1:
+            if last:
                 self._arrive(s, cues, effects)
                 return
             if step.cue in TURN_DIRECTION:
