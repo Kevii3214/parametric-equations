@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
+from app.agent.replan import replan
 from app.config import get_settings
 from app.db import get_db
 from app.graph.schema import RouteStep
@@ -23,6 +24,9 @@ class _Tracked:
         self.engine = engine
         self.version = version
         self.checked_at = time.monotonic()
+        self.replanned_version: int | None = (
+            None  # route version already re-planned for elevator_out
+        )
         self.lock = asyncio.Lock()  # samples for one incident are handled one at a time, in order
 
 
@@ -47,6 +51,9 @@ class EngineRegistry:
             return False
         self._buildings[incident_id] = rows.data[0].get("building_id")
         return True
+
+    def building_of(self, incident_id: str) -> str | None:
+        return self._buildings.get(incident_id)
 
     async def get(self, incident_id: str, db) -> _Tracked | None:
         """The engine for this incident's newest route, or None while it has no route yet."""
@@ -131,11 +138,6 @@ async def _save(db, incident_id: str, version: int, update: Update) -> None:
             )
         except Exception:
             logger.exception("Could not mark incident %s arrived", incident_id)
-    if "elevator_out" in update.effects:
-        logger.info(
-            "Elevator out reported for incident %s (re-planning comes with the events endpoint)",
-            incident_id,
-        )
 
 
 @router.post("/incidents/{incident_id}/telemetry")
@@ -153,4 +155,21 @@ async def telemetry(
     async with tracked.lock:
         update = tracked.engine.update(sample)
         await _save(db, incident_id, tracked.version, update)
+        # the button is held for several samples: re-plan once per route version
+        building_id = registry.building_of(incident_id)
+        if (
+            "elevator_out" in update.effects
+            and building_id
+            and tracked.replanned_version != tracked.version
+        ):
+            tracked.replanned_version = tracked.version
+            await replan(
+                db,
+                registry.provider,
+                incident_id,
+                building_id,
+                "elevator_out",
+                tracked.engine,
+                None,
+            )
     return {"ok": True}

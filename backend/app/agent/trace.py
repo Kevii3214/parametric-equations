@@ -43,6 +43,19 @@ class PlanTrace:
         self._seq = 0
         self._lock = asyncio.Lock()
 
+    @classmethod
+    async def resume(cls, db, incident_id: str) -> "PlanTrace":
+        """A trace that carries on numbering after the plan steps already saved for this incident."""
+        trace = cls(db, incident_id)
+        try:
+            rows = await asyncio.to_thread(
+                lambda: db.table("plan_steps").select("*").eq("incident_id", incident_id).execute()
+            )
+            trace._seq = max((r["seq"] for r in rows.data), default=0)
+        except Exception:
+            logger.exception("Could not read existing plan steps for %s", incident_id)
+        return trace
+
     async def add(self, kind: str, title: str, detail: dict | None = None) -> None:
         async with self._lock:  # keeps seq in step with the order rows are written
             self._seq += 1

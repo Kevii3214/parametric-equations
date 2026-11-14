@@ -48,3 +48,10 @@ class Telemetry(BaseModel):
     pressure: float = Field(gt=0, description="Air pressure in pascals")
     btn: Literal[0, 1, 2] = Field(description="0 none, 1 confirm, 2 elevator out")
     tag: str | None = Field(default=None, description="RFID tag UID scanned in this sample")
+
+
+class EventIn(BaseModel):
+    """Body of POST /incidents/{id}/events: something the crew reports."""
+
+    type: Literal["elevator_out", "obstacle", "note", "arrived"]
+    text: str | None = Field(default=None, max_length=1000)

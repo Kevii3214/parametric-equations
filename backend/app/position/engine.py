@@ -66,6 +66,11 @@ class PositionEngine:
         self._pressure_ref: float | None = None
         self._last_position_t: int | None = None
 
+    @property
+    def current_node(self) -> str:
+        """The last route node the crew has reached (where a re-plan starts from)."""
+        return self.steps[self.step_index].from_node
+
     # ------------------------------------------------------------------ public
 
     def update(self, sample: Telemetry) -> Update:
