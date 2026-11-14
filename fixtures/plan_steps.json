@@ -1,0 +1,71 @@
+[
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 1,
+    "kind": "plan",
+    "title": "Plan: find the building, read all three data layers, route to the suite",
+    "detail": {
+      "steps": [
+        "Parse the call note",
+        "Pull the CoStar building record",
+        "Find entrances from the aerial image",
+        "Load the interior graph from the Matterport scan",
+        "Route from each entrance and pick the fastest"
+      ]
+    },
+    "created_at": "2026-11-14T10:00:01Z"
+  },
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 2,
+    "kind": "subagent",
+    "title": "records subagent: Suite 1420 is on floor 14, served by Elevator A",
+    "detail": {
+      "subagent": "records",
+      "building_id": "fixture-building-1",
+      "result": { "floor": 14, "suite": "1420", "elevators": ["Elevator A"], "parking": "street only" }
+    },
+    "created_at": "2026-11-14T10:00:04Z"
+  },
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 3,
+    "kind": "tool_call",
+    "title": "route(fixture-building-1, n1, n10)",
+    "detail": {
+      "tool": "route",
+      "args": { "building_id": "fixture-building-1", "start_node": "n1", "goal_node": "n10" }
+    },
+    "created_at": "2026-11-14T10:00:07Z"
+  },
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 4,
+    "kind": "tool_result",
+    "title": "Route found: 90 s from the Main St entrance",
+    "detail": { "tool": "route", "entrance_node": "n1", "total_seconds": 90, "steps": 7 },
+    "created_at": "2026-11-14T10:00:07Z"
+  },
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 5,
+    "kind": "replan",
+    "title": "Replan: Elevator A reported out, rerouting via Stairwell B",
+    "detail": {
+      "trigger": "elevator_out",
+      "closure": "n3->n7",
+      "from_node": "n3",
+      "new_route_version": 2,
+      "total_seconds": 265
+    },
+    "created_at": "2026-11-14T10:01:12Z"
+  },
+  {
+    "incident_id": "00000000-0000-0000-0000-000000000001",
+    "seq": 6,
+    "kind": "final",
+    "title": "Final: take Stairwell B to floor 14, then east to Suite 1420",
+    "detail": { "route_version": 2, "total_seconds": 265 },
+    "created_at": "2026-11-14T10:01:13Z"
+  }
+]

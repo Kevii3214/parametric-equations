@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Telemetry",
+  "description": "One wearable sample, sent by the Raspberry Pi bridge to POST /incidents/{id}/telemetry about 5 times per second.",
+  "type": "object",
+  "required": ["t", "steps", "heading", "pressure", "btn", "tag"],
+  "additionalProperties": false,
+  "properties": {
+    "t": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Milliseconds since the wearable booted."
+    },
+    "steps": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Running step count since boot. The server computes deltas."
+    },
+    "heading": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360,
+      "description": "Degrees from the gyroscope. Relative and drifts slowly: use changes, never absolute values."
+    },
+    "pressure": {
+      "type": "number",
+      "description": "Air pressure in pascals. About 40-50 Pa drop per floor climbed."
+    },
+    "btn": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "0 none, 1 confirm (checkpoint or elevator ride), 2 'elevator out'."
+    },
+    "tag": {
+      "type": ["string", "null"],
+      "description": "RFID tag UID if a tag was scanned in this sample, else null."
+    }
+  },
+  "examples": [
+    { "t": 182340, "steps": 57, "heading": 271.5, "pressure": 100982.4, "btn": 0, "tag": null }
+  ]
+}
