@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import AerialSite from '../components/AerialSite'
 import CueIcon from '../components/CueIcon'
-import Panel from '../components/Panel'
+import Panel, { Chip } from '../components/Panel'
 import PlanTrace from '../components/PlanTrace'
 import { createIncident } from '../lib/api'
 import type { IncidentRow, PlanStepRow, RouteRow } from '../lib/contracts'
@@ -21,19 +21,19 @@ export default function Dispatch() {
     && !live.planSteps.some((s) => s.kind === 'final')
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <div className="min-w-0 space-y-4">
+    <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-5">
         <CallIntake demo={demo} onCreated={setIncidentId} />
         {live.incident && <IncidentBar incident={live.incident} source={live.source} />}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           <RecordCard incident={live.incident} steps={live.planSteps} started={started} />
           <AerialCard route={live.route} started={started} />
           <RouteSummary route={live.route} started={started} className="md:col-span-2" />
         </div>
       </div>
-      <Panel title="Agent plan trace" className="xl:sticky xl:top-0 xl:max-h-[calc(100vh-6rem)]"
-        aside={<span className="text-xs text-slate-500">{live.planSteps.length} steps</span>}>
-        <div className="xl:max-h-[calc(100vh-10rem)] xl:overflow-y-auto">
+      <Panel title="Agent plan trace" className="xl:sticky xl:top-20 xl:max-h-[calc(100vh-7rem)]"
+        aside={<Chip>{live.planSteps.length} steps</Chip>}>
+        <div className="-mr-2 pr-2 xl:max-h-[calc(100vh-11.5rem)] xl:overflow-y-auto">
           {started || live.planSteps.length
             ? <PlanTrace steps={live.planSteps} waiting={working} />
             : <Empty>The agent's steps appear here as it works.</Empty>}
@@ -67,50 +67,53 @@ function CallIntake({ demo, onCreated }: { demo: boolean; onCreated: (id: string
     }
   }
 
-  const tone = { ok: 'text-emerald-400', warn: 'text-amber-400', err: 'text-red-400' }
+  const tone = { ok: 'text-fern-deep', warn: 'text-amber', err: 'text-alert' }
 
   return (
-    <form onSubmit={submit} className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-      <label htmlFor="call-note" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-        Call intake
-      </label>
+    <form onSubmit={submit} className="rounded-2xl border border-line bg-card p-4 shadow-card">
+      <div className="flex items-baseline justify-between">
+        <label htmlFor="call-note" className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+          Call intake
+        </label>
+        <span className="hidden text-[11px] text-ink-3 sm:inline">⌘ / Ctrl + Enter to send</span>
+      </div>
       <textarea id="call-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2}
         placeholder={`e.g. ${SAMPLE_NOTE}`}
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void submit() }}
-        className="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-sky-500 focus:outline-none" />
-      <div className="mt-2 flex flex-wrap items-center gap-3">
+        className="mt-2 w-full resize-y rounded-xl border border-line bg-paper/60 px-3.5 py-2.5 text-[15px] text-ink placeholder:text-ink-3 transition focus:border-azure focus:bg-card focus:ring-4 focus:ring-azure-soft focus:outline-none" />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <button type="submit" disabled={busy || !note.trim()}
-          className="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40">
+          className="rounded-full bg-azure px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-azure-deep disabled:cursor-not-allowed disabled:bg-line-strong disabled:shadow-none">
           {busy ? 'Sending…' : 'Dispatch'}
         </button>
         {!note && (
           <button type="button" onClick={() => setNote(SAMPLE_NOTE)}
-            className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline">
+            className="rounded-full px-3 py-2 text-sm text-ink-2 transition hover:bg-sunk hover:text-ink">
             Use sample call
           </button>
         )}
         {msg && <span className={`text-sm ${tone[msg.tone]}`}>{msg.text}</span>}
-        <span className="ml-auto hidden text-xs text-slate-600 sm:inline">⌘/Ctrl + Enter</span>
       </div>
     </form>
   )
 }
 
-const statusStyle: Record<string, string> = {
-  planning: 'bg-slate-700 text-slate-100',
-  routing: 'bg-indigo-900 text-indigo-200',
-  en_route: 'bg-sky-900 text-sky-200',
-  arrived: 'bg-emerald-900 text-emerald-200',
+const statusTone: Record<string, 'neutral' | 'azure' | 'fern'> = {
+  planning: 'neutral',
+  routing: 'azure',
+  en_route: 'azure',
+  arrived: 'fern',
 }
 
 function IncidentBar({ incident, source }: { incident: IncidentRow; source: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-      <span className={`rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${statusStyle[incident.status ?? ''] ?? 'bg-slate-800 text-slate-300'}`}>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-sm">
+      <Chip tone={statusTone[incident.status ?? ''] ?? 'neutral'}>
+        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
         {(incident.status ?? 'unknown').replace('_', ' ')}
-      </span>
-      <span className="min-w-0 truncate text-slate-200">{incident.note}</span>
-      <span className="ml-auto font-mono text-xs text-slate-500">
+      </Chip>
+      <span className="min-w-0 truncate font-medium text-ink">{incident.note}</span>
+      <span className="ml-auto font-mono text-[11px] text-ink-3">
         {incident.id.slice(0, 8)}{source === 'fixtures' && ' · sample data'}
       </span>
     </div>
@@ -118,14 +121,14 @@ function IncidentBar({ incident, source }: { incident: IncidentRow; source: stri
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="py-6 text-center text-sm text-slate-500">{children}</p>
+  return <p className="py-8 text-center text-sm text-ink-3">{children}</p>
 }
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="truncate text-sm text-slate-100">{value ?? <span className="text-slate-600">—</span>}</dd>
+      <dt className="text-[11px] text-ink-3">{label}</dt>
+      <dd className="mt-0.5 truncate text-[15px] font-medium text-ink">{value ?? <span className="text-ink-3">—</span>}</dd>
     </div>
   )
 }
@@ -140,11 +143,11 @@ function RecordCard({ incident, steps, started }: { incident: IncidentRow | null
 
   return (
     <Panel title="CoStar building record"
-      aside={rec ? <span className="text-xs text-emerald-400">records subagent</span> : null}>
+      aside={rec ? <Chip tone="fern">✓ records subagent</Chip> : null}>
       {!has ? (
         <Empty>{started ? 'Waiting for the records subagent…' : 'Building facts appear after a call.'}</Empty>
       ) : (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5">
           <div className="col-span-2"><Field label="Address" value={note.address} /></div>
           <Field label="Suite" value={scalar(rec?.suite) ?? note.suite} />
           <Field label="Floor" value={scalar(rec?.floor) ?? note.floor} />
@@ -164,12 +167,13 @@ function AerialCard({ route, started }: { route: RouteRow | null; started: boole
   const entrance = graph && route ? nodeMap(graph).get(route.entrance_node) : null
   return (
     <Panel title="Aerial · chosen entrance"
-      aside={<span className="text-xs text-slate-500" title="The Vexcel image is wired in with P2-2">schematic</span>}>
+      aside={<span title="The Vexcel image is wired in with P2-2"><Chip>schematic</Chip></span>}>
       {graph && route ? (
         <figure>
-          <AerialSite graph={graph} entranceNode={route.entrance_node} className="w-full rounded-lg" />
-          <figcaption className="mt-2 text-sm text-slate-300">
-            Stop at <span className="font-semibold text-sky-300">{entrance?.label ?? route.entrance_node}</span>
+          <AerialSite graph={graph} entranceNode={route.entrance_node} className="w-full rounded-xl" />
+          <figcaption className="mt-3 flex items-center gap-2 text-sm text-ink-2">
+            <span className="h-2 w-2 rounded-full bg-fern" />
+            Stop at <span className="font-semibold text-ink">{entrance?.label ?? route.entrance_node}</span>
           </figcaption>
         </figure>
       ) : (
@@ -194,7 +198,7 @@ function RouteSummary({ route, started, className }: { route: RouteRow | null; s
 
   return (
     <Panel title="Route" className={className}
-      aside={<span className="text-xs text-slate-500">version {route.version}</span>}>
+      aside={<Chip tone="azure">version {route.version}</Chip>}>
       <div className="flex flex-wrap gap-x-8 gap-y-2">
         <Stat label="Door to patient" value={formatSeconds(route.total_seconds)} big />
         <Stat label="Walking" value={`${meters} m`} />
@@ -202,14 +206,17 @@ function RouteSummary({ route, started, className }: { route: RouteRow | null; s
         <Stat label="Entrance" value={nodes?.get(route.entrance_node)?.label ?? route.entrance_node} />
       </div>
       {route.briefing && (
-        <p className="mt-3 rounded-lg border border-sky-900 bg-sky-950/40 p-2.5 text-sm text-sky-100">{route.briefing}</p>
+        <p className="mt-4 rounded-xl border border-azure-line bg-azure-soft p-3 text-sm text-azure-deep">{route.briefing}</p>
       )}
-      <ol className="mt-3 divide-y divide-slate-800/70">
+      <ol className="mt-4 divide-y divide-line">
         {route.steps.map((s) => (
-          <li key={s.index} className="flex items-center gap-3 py-1.5">
-            <CueIcon cue={s.cue} className="h-5 w-5 shrink-0 text-sky-400" />
-            <span className="min-w-0 flex-1 text-sm text-slate-200">{s.text}</span>
-            <span className="shrink-0 font-mono text-xs text-slate-500">
+          <li key={s.index} className="flex items-center gap-3 py-2">
+            <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
+              s.cue === 'ARRIVE' ? 'bg-fern-soft text-fern' : 'bg-azure-soft text-azure'}`}>
+              <CueIcon cue={s.cue} className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 text-sm text-ink">{s.text}</span>
+            <span className="shrink-0 font-mono text-[11px] text-ink-3 tabular-nums">
               {s.meters ? `${s.meters} m · ` : ''}{s.seconds} s
             </span>
           </li>
@@ -222,8 +229,8 @@ function RouteSummary({ route, started, className }: { route: RouteRow | null; s
 function Stat({ label, value, big }: { label: string; value: React.ReactNode; big?: boolean }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={big ? 'text-2xl font-bold text-slate-50' : 'text-sm font-medium text-slate-100'}>{value}</div>
+      <div className="text-[11px] text-ink-3">{label}</div>
+      <div className={big ? 'mt-0.5 text-3xl font-semibold tracking-tight text-fern-deep tabular-nums' : 'mt-1 text-[15px] font-medium text-ink'}>{value}</div>
     </div>
   )
 }

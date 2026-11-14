@@ -1,9 +1,53 @@
 @import "tailwindcss";
 
+/*
+ * Palette: warm cream paper, near-white cards, deep green-black ink.
+ * azure (blue) = navigation, the route, interactive controls.
+ * fern (green) = go, done, confirmed, the destination.
+ * Red and amber are kept for real alerts only (off route, replans).
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-paper: #fbf5e6;
+  --color-card: #fffdf8;
+  --color-sunk: #f1ead9;
+  --color-line: #e6dcc6;
+  --color-line-strong: #d6c9ad;
+  --color-ink: #1d231c;
+  --color-ink-2: #5a5f52;
+  --color-ink-3: #938f80;
+
+  --color-azure: #2357d6;
+  --color-azure-deep: #183f9f;
+  --color-azure-soft: #e7eefc;
+  --color-azure-line: #c4d4f6;
+
+  --color-fern: #0e8a5f;
+  --color-fern-deep: #0a5e41;
+  --color-fern-soft: #e2f3ea;
+  --color-fern-line: #b8e0cb;
+
+  --color-alert: #c93c3c;
+  --color-alert-soft: #fbeaea;
+  --color-amber: #a86a12;
+  --color-amber-soft: #fbf0dc;
+
+  --shadow-card: 0 1px 2px rgb(60 48 20 / 0.05), 0 6px 18px -10px rgb(60 48 20 / 0.12);
+}
+
 html,
 body,
 #root {
   height: 100%;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
 }
 
 /* New plan_steps rows slide in as they arrive. */

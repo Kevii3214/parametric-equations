@@ -17,12 +17,12 @@ interface Props {
 const PAD = 4
 
 const nodeStyle: Record<GraphNode['kind'], string> = {
-  entrance: 'fill-sky-400',
-  corridor: 'fill-slate-500',
-  door: 'fill-rose-400',
-  elevator: 'fill-amber-400',
-  stairs: 'fill-violet-400',
-  aed: 'fill-emerald-400',
+  entrance: 'fill-azure',
+  corridor: 'fill-line-strong',
+  door: 'fill-fern',
+  elevator: 'fill-ink',
+  stairs: 'fill-ink-2',
+  aed: 'fill-fern',
 }
 
 const nodeLetter: Partial<Record<GraphNode['kind'], string>> = {
@@ -87,25 +87,25 @@ export default function FloorMap({
         const isClosed = closed.has(`${e.from}->${e.to}`) || closed.has(`${e.to}->${e.from}`)
         return (
           <line key={`${e.from}-${e.to}`} x1={a.x} y1={sy(a.y)} x2={b.x} y2={sy(b.y)}
-            strokeWidth={2.6} strokeLinecap="round"
-            className={isClosed ? 'stroke-red-900' : 'stroke-slate-800'} />
+            strokeWidth={3} strokeLinecap="round"
+            className={isClosed ? 'stroke-alert/30' : 'stroke-card'} />
         )
       })}
       {routeSegs.map(({ s, a, b }) => (
         <line key={`r${s.index}`} x1={a!.x} y1={sy(a!.y)} x2={b!.x} y2={sy(b!.y)}
-          strokeWidth={1.2} strokeLinecap="round"
-          className={s.index < currentStep ? 'stroke-sky-900' : 'stroke-sky-400'} />
+          strokeWidth={1.1} strokeLinecap="round"
+          className={s.index < currentStep ? 'stroke-azure-line' : 'stroke-azure'} />
       ))}
       {onFloor.map((n) => (
         <g key={n.id}>
           {n.id === goal && (
-            <circle cx={n.x} cy={sy(n.y)} r={2.6} className="fill-none stroke-rose-400" strokeWidth={0.4} />
+            <circle cx={n.x} cy={sy(n.y)} r={2.6} className="fill-fern/15 stroke-fern" strokeWidth={0.35} />
           )}
           <circle cx={n.x} cy={sy(n.y)} r={nodeLetter[n.kind] ? 1.5 : routeNodes.has(n.id) ? 0.9 : 0.6}
             className={nodeStyle[n.kind]} />
           {nodeLetter[n.kind] && (
             <text x={n.x} y={sy(n.y) + 0.65} textAnchor="middle" fontSize={1.8} fontWeight={700}
-              className="fill-slate-950">{nodeLetter[n.kind]}</text>
+              className="fill-card">{nodeLetter[n.kind]}</text>
           )}
           {n.label && labelled.has(n.id) && (() => {
             // The outermost nodes anchor inward so labels stay in frame.
@@ -114,7 +114,7 @@ export default function FloorMap({
             const dx = anchor === 'start' ? -1.2 : anchor === 'end' ? 1.2 : 0
             return (
               <text x={n.x + dx} y={sy(n.y) + (above ? -2.3 : 3.4)} textAnchor={anchor} fontSize={1.4}
-                className="fill-slate-400">{n.label.replace(/ \(floor \d+\)$/, '')}</text>
+                className="fill-ink-2">{n.label.replace(/ \(floor \d+\)$/, '')}</text>
             )
           })()}
         </g>
@@ -122,11 +122,11 @@ export default function FloorMap({
       {position && position.floor === floor && (
         <g>
           <circle cx={position.x} cy={sy(position.y)} r={2.4}
-            className={offRoute ? 'fill-red-500/30' : 'fill-white/20'}>
+            className={offRoute ? 'fill-alert/25' : 'fill-azure/20'}>
             <animate attributeName="r" values="1.6;3;1.6" dur="1.6s" repeatCount="indefinite" />
           </circle>
           <circle cx={position.x} cy={sy(position.y)} r={1.2}
-            className={offRoute ? 'fill-red-500 stroke-white' : 'fill-white stroke-sky-500'} strokeWidth={0.4} />
+            className={offRoute ? 'fill-alert stroke-card' : 'fill-azure stroke-card'} strokeWidth={0.45} />
         </g>
       )}
     </svg>

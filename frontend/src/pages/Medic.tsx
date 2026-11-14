@@ -21,10 +21,10 @@ export default function Medic() {
 
   if (!route) {
     return (
-      <div className="mx-auto max-w-md py-16 text-center text-slate-400">
+      <div className="mx-auto max-w-md py-16 text-center text-ink-2">
         {incidentId
           ? 'Waiting for the route…'
-          : <>No incident selected. Open this page from Dispatch, or add <code className="text-slate-300">?incident=&lt;id&gt;</code>.</>}
+          : <>No incident selected. Open this page from Dispatch, or add <code className="rounded bg-sunk px-1 font-mono text-ink">?incident=&lt;id&gt;</code>.</>}
       </div>
     )
   }
@@ -51,8 +51,8 @@ export default function Medic() {
   const floor = pickedFloor ?? currentFloor
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <div className="space-y-4">
+    <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="min-w-0 space-y-4">
         <NextTurn cue={cue} distance={distance} text={text} offRoute={offRoute}
           then={!arrived && !offRoute ? steps[stepIndex + 1] : undefined} />
         <div className="grid grid-cols-3 gap-2 text-center">
@@ -61,8 +61,11 @@ export default function Medic() {
           <Stat label="Step" value={`${stepIndex + 1} / ${steps.length}`} />
         </div>
         {replay && (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-700 px-3 py-2 text-sm">
-            <span className="text-xs text-amber-400">Demo replay</span>
+          <div className="flex items-center gap-2 rounded-2xl border border-line bg-card px-3 py-2 text-sm shadow-card">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
+              <span className={`h-1.5 w-1.5 rounded-full ${replay.playing ? 'animate-pulse bg-azure' : 'bg-ink-3'}`} />
+              Demo replay
+            </span>
             <div className="ml-auto flex gap-1">
               <CtlButton onClick={() => replay.jump(-1)} label="Previous step">‹</CtlButton>
               <CtlButton onClick={replay.toggle} label={replay.playing ? 'Pause' : 'Play'}>
@@ -76,14 +79,14 @@ export default function Medic() {
         <Upcoming steps={steps} current={stepIndex} arrived={arrived} />
       </div>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-        <header className="mb-2 flex items-center gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Floor map</h2>
-          <div className="ml-auto flex gap-1">
+      <section className="min-w-0 self-start rounded-2xl border border-line bg-card p-4 shadow-card">
+        <header className="mb-3 flex items-center gap-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Floor map</h2>
+          <div className="ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5">
             {floors.map((f) => (
               <button key={f} type="button" onClick={() => setPickedFloor(f === currentFloor ? null : f)}
-                className={`min-w-9 rounded px-2 py-1 text-xs font-semibold ${
-                  f === floor ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
+                className={`min-w-10 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                  f === floor ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
                 {f}{f === currentFloor && pickedFloor !== null && pickedFloor !== f ? ' •' : ''}
               </button>
             ))}
@@ -92,13 +95,13 @@ export default function Medic() {
         {graph ? (
           <FloorMap graph={graph} floor={floor} steps={steps} currentStep={stepIndex}
             position={point} offRoute={offRoute} closures={closures(live.planSteps)}
-            className="aspect-[4/3] w-full rounded-lg bg-slate-950" />
+            className="aspect-[4/3] w-full rounded-xl bg-sunk" />
         ) : (
-          <p className="py-16 text-center text-sm text-slate-500">No floor plan for this building yet.</p>
+          <p className="py-16 text-center text-sm text-ink-3">No floor plan for this building yet.</p>
         )}
         {pickedFloor !== null && pickedFloor !== currentFloor && (
           <button type="button" onClick={() => setPickedFloor(null)}
-            className="mt-2 text-xs text-sky-400 hover:underline">Follow my floor ({currentFloor})</button>
+            className="mt-3 text-xs font-medium text-azure hover:underline">Follow my floor ({currentFloor})</button>
         )}
       </section>
     </div>
@@ -111,19 +114,21 @@ function NextTurn({ cue, distance, text, offRoute, then }: {
   const showDist = !offRoute && cue !== 'ARRIVE' && !isFloorChange(cue) && distance > 0.5
   return (
     <section aria-live="polite"
-      className={`rounded-2xl border p-4 ${offRoute ? 'border-red-700 bg-red-950/60' : 'border-sky-800 bg-sky-950/40'}`}>
-      <div className="flex items-center gap-4">
-        <div className={`grid h-20 w-20 shrink-0 place-items-center rounded-xl ${offRoute ? 'bg-red-600' : 'bg-sky-600'} text-white`}>
-          <CueIcon cue={cue} className="h-12 w-12" />
+      className={`relative overflow-hidden rounded-3xl p-5 text-white shadow-[0_12px_32px_-14px_rgb(24_63_159_/_0.55)] ${
+        offRoute ? 'bg-alert' : cue === 'ARRIVE' ? 'bg-gradient-to-br from-fern to-fern-deep' : 'bg-gradient-to-br from-azure to-azure-deep'}`}>
+      <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10" aria-hidden="true" />
+      <div className="relative flex items-center gap-4">
+        <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+          <CueIcon cue={cue} className="h-11 w-11" />
         </div>
         <div className="min-w-0">
-          {showDist && <div className="text-sm font-medium text-slate-300">In {Math.round(distance)} m</div>}
-          <div className="text-3xl font-bold leading-tight text-white">{cueLabel[cue]}</div>
+          {showDist && <div className="text-sm font-medium text-white/75 tabular-nums">In {Math.round(distance)} m</div>}
+          <div className="text-3xl font-semibold leading-tight tracking-tight">{cueLabel[cue]}</div>
         </div>
       </div>
-      <p className="mt-3 text-base text-slate-100">{text}</p>
+      <p className="relative mt-4 text-[15px] leading-snug text-white/95">{text}</p>
       {then && (
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
+        <p className="relative mt-3 flex items-center gap-1.5 border-t border-white/15 pt-3 text-sm text-white/70">
           Then <CueIcon cue={then.cue} className="h-4 w-4" /> {cueLabel[then.cue].toLowerCase()}
         </p>
       )}
@@ -133,14 +138,16 @@ function NextTurn({ cue, distance, text, offRoute, then }: {
 
 function Upcoming({ steps, current, arrived }: { steps: RouteStep[]; current: number; arrived: boolean }) {
   return (
-    <ol className="space-y-1">
+    <ol className="space-y-0.5 rounded-2xl border border-line bg-card p-1.5 shadow-card">
       {steps.map((s) => {
         const state = arrived || s.index < current ? 'done' : s.index === current ? 'now' : 'next'
         return (
-          <li key={s.index} className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm ${
-            state === 'now' ? 'bg-slate-800 text-white' : state === 'done' ? 'text-slate-600' : 'text-slate-300'}`}>
-            <CueIcon cue={s.cue} className={`h-4 w-4 shrink-0 ${state === 'now' ? 'text-sky-400' : ''}`} />
-            <span className="min-w-0 flex-1 truncate">{s.text}</span>
+          <li key={s.index} className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm ${
+            state === 'now' ? 'bg-azure-soft font-medium text-azure-deep' : state === 'done' ? 'text-ink-3' : 'text-ink'}`}>
+            {state === 'done'
+              ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-fern-soft text-[10px] text-fern">✓</span>
+              : <CueIcon cue={s.cue} className={`h-4 w-4 shrink-0 ${state === 'now' ? 'text-azure' : 'text-ink-3'}`} />}
+            <span className={`min-w-0 flex-1 truncate ${state === 'done' ? 'line-through decoration-line-strong' : ''}`}>{s.text}</span>
           </li>
         )
       })}
@@ -150,9 +157,9 @@ function Upcoming({ steps, current, arrived }: { steps: RouteStep[]; current: nu
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-2 py-1.5">
-      <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="text-lg font-semibold text-slate-100">{value}</div>
+    <div className="rounded-2xl border border-line bg-card px-2 py-2.5 shadow-card">
+      <div className="text-[11px] text-ink-3">{label}</div>
+      <div className="mt-0.5 text-lg font-semibold tracking-tight text-ink tabular-nums">{value}</div>
     </div>
   )
 }
@@ -160,7 +167,7 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 function CtlButton({ onClick, label, children }: { onClick: () => void; label: string; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick} aria-label={label} title={label}
-      className="grid h-8 w-8 place-items-center rounded bg-slate-800 text-slate-200 hover:bg-slate-700">
+      className="grid h-8 w-8 place-items-center rounded-full text-ink-2 transition hover:bg-sunk hover:text-azure">
       {children}
     </button>
   )
