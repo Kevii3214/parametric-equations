@@ -13,6 +13,11 @@ const SiteFlyover = lazy(() => import('../site/SiteFlyover'))
 /** Matterport SDK key (VITE_MATTERPORT_SDK_KEY). Without it the player falls back to plain embeds. */
 const SDK_KEY = (import.meta.env.VITE_MATTERPORT_SDK_KEY as string | undefined) || ''
 
+/** The showcase URL the SDK connects to; https always (the SDK's own default is protocol-relative). */
+const sdkEmbedUrl = (modelId: string) => `https://my.matterport.com/show/?${new URLSearchParams({
+  m: modelId, play: '1', qs: '1', help: '0', brand: '0', mls: '0', title: '0', dh: '0', hr: '0', applicationKey: SDK_KEY,
+})}`
+
 type Viewer =
   | { kind: 'loading' }
   | { kind: 'sdk'; sdk: MpSdk; yaw: (bearing: number) => number }
@@ -31,7 +36,9 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
   const [wantPlay, setPlaying] = useState(true)
   const [viewer, setViewer] = useState<Viewer>(SDK_KEY ? { kind: 'loading' } : { kind: 'plain', reason: 'no SDK key' })
   const [skipped, setSkipped] = useState(0)
-  const box = useRef<HTMLDivElement>(null)
+  const frame = useRef<HTMLIFrameElement>(null)
+  // React's development double-run would connect twice; connect once per model.
+  const connectedFor = useRef<string | null>(null)
   const s = stateAt(tour, t)
   // The clock stops by itself at the end of the tour.
   const playing = wantPlay && !s.done
@@ -53,19 +60,21 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
 
   // Connect the Matterport SDK once, then calibrate the compass from the opening view.
   useEffect(() => {
-    if (!SDK_KEY || !modelId || !box.current) return
+    if (!SDK_KEY || !modelId || !frame.current || connectedFor.current === modelId) return
+    connectedFor.current = modelId
+    const iframe = frame.current
     let cancelled = false
     let sdk: MpSdk | null = null
     void (async () => {
       try {
         const { setupSdk } = await import('@matterport/sdk')
-        sdk = await setupSdk(SDK_KEY, {
-          container: box.current!,
-          space: modelId,
-          iframeQueryParams: { qs: 1, play: 1, help: 0, brand: 0, mls: 0, title: 0, dh: 0, hr: 0 },
-          iframeAttributes: { style: 'width:100%;height:100%;border:0', allow: 'fullscreen; xr-spatial-tracking' },
-        })
-        await sdk.App.state.waitUntil((st) => st.phase === sdk!.App.Phase.PLAYING)
+        // With an existing iframe, setupSdk only connects: the iframe's src (with the key) is set below.
+        sdk = await setupSdk(SDK_KEY, { iframe, space: modelId })
+        // Never stall: if the scan has not started in 20 s, use the plain embed instead.
+        await Promise.race([
+          sdk.App.state.waitUntil((st) => st.phase === sdk!.App.Phase.PLAYING),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('scan did not start in 20 s')), 20_000)),
+        ])
         // The viewer opens at the scan's start pose, which faces models[id].bearing_deg.
         const pose = await new Promise<MpSdk.Camera.Pose>((res) => {
           const sub = sdk!.Camera.pose.subscribe((p) => { sub.cancel(); res(p) })
@@ -77,7 +86,13 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
         if (!cancelled) setViewer({ kind: 'plain', reason: 'SDK could not connect' })
       }
     })()
-    return () => { cancelled = true; try { sdk?.disconnect() } catch { /* already gone */ } }
+    return () => {
+      // Under the development double-run the same iframe stays: keep the connection.
+      if (iframe.isConnected) return
+      cancelled = true
+      connectedFor.current = null
+      try { sdk?.disconnect() } catch { /* already gone */ }
+    }
   }, [modelId, tour.models])
 
   // Drive the viewer: each time a new scanned stop becomes the target, move to it.
@@ -122,7 +137,8 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
       {/* The Matterport viewer: SDK-driven, or a plain embed per stop. */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${showScan ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
         {viewer.kind !== 'plain'
-          ? <div ref={box} className="h-full w-full" />
+          ? modelId && <iframe ref={frame} title="Matterport fly-through" className="h-full w-full border-0"
+            allow="fullscreen; xr-spatial-tracking; autoplay" src={sdkEmbedUrl(modelId)} />
           : plainUrl && <iframe key={plainUrl} title="Matterport fly-through" src={plainUrl} className="h-full w-full border-0"
             allow="fullscreen; xr-spatial-tracking" />}
       </div>
