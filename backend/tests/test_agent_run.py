@@ -237,3 +237,25 @@ def test_agent_run_does_not_save_a_route_it_was_not_given_by_the_router():
     assert any(
         "unknown node" in s["detail"].get("output", "").lower() for s in db.rows("plan_steps")
     )
+
+
+def test_a_failure_after_the_route_was_saved_is_reported_as_saved():
+    """The crew's route matters most: a model error while writing the summary must not look like a failure."""
+    db = new_db()
+    saved_then_dies = [
+        tool_call(
+            "choose_route",
+            {
+                "building_id": "233928",
+                "start_node": "gar1",
+                "goal_node": "phone_door",
+                "briefing": "b",
+            },
+            "1",
+        )
+    ]  # the model has nothing more to say, so the next call fails
+    run(db, script(*saved_then_dies))
+    assert len(db.rows("routes")) == 1
+    final = db.rows("plan_steps")[-1]
+    assert final["kind"] == "final" and final["title"].startswith("Route saved")
+    assert "error" in final["detail"]

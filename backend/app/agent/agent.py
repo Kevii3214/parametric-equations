@@ -28,7 +28,8 @@ results and write the briefing.
 3. Call list_entrances, then find_destination_nodes to pick the goal node. Use the most specific place the
    call gives: a room beats a suite. If the call only names a suite, choose that suite's entrance and say
    so in the briefing.
-4. Call plan_route from every entrance to the goal and compare total_seconds.
+4. Call plan_route for EVERY entrance in the same step (parallel tool calls, not one after another), then
+   compare total_seconds.
 5. Call choose_route for the fastest one, with a briefing of two or three plain sentences for the crew:
    which entrance, the key turns and floor changes, and anything uncertain (such as a floor that is only
    a guess).
@@ -123,4 +124,18 @@ async def run_incident(
         await trace.add("final", f"Final: {answer}", {"answer": answer})
     except Exception as error:
         logger.exception("Agent failed for incident %s", incident_id)
-        await trace.add("final", f"Agent stopped: {type(error).__name__}", {"error": str(error)})
+        if await _route_saved(db, incident_id):  # the crew's route exists; only the write-up failed
+            title = "Route saved; the summary could not be written"
+        else:
+            title = f"Agent stopped: {type(error).__name__}"
+        await trace.add("final", title, {"error": str(error)})
+
+
+async def _route_saved(db, incident_id: str) -> bool:
+    try:
+        rows = await asyncio.to_thread(
+            lambda: db.table("routes").select("*").eq("incident_id", incident_id).execute()
+        )
+        return bool(rows.data)
+    except Exception:  # noqa: BLE001 - if we cannot tell, report it as a stop
+        return False
