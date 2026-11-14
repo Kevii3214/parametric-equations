@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { headsUp, routeGlance, spokenSummary } from './briefing'
+import { routeGlance } from './briefing'
 import { buildingById } from './buildings'
 import { replanAround } from './replan'
 import { scenarioFor } from './scenario'
@@ -30,23 +30,12 @@ describe('step cursor', () => {
 })
 
 describe('briefing', () => {
-  const { route, planSteps } = scenarioFor('233928')
-  const b = buildingById('233928')
+  const { route } = scenarioFor('233928')
   it('sums up the route', () => {
     const g = routeGlance(route.steps)
     expect(g.seconds).toBe(route.total_seconds)
     expect(g.climb).toBe('elevator')
     expect(g.floors).toContain(18)
-  })
-  it('warns about estimated data and stairs, and reassures about stretcher-safe paths', () => {
-    const h = headsUp(b, route.steps, planSteps)
-    expect(h.some((x) => /estimated/i.test(x.text))).toBe(true)
-    expect(h.at(-1)?.tone).toBe('ok')
-    const jr = scenarioFor('jrr')
-    expect(headsUp(buildingById('jrr'), jr.route.steps, jr.planSteps).some((x) => /stair chair/i.test(x.text))).toBe(true)
-  })
-  it('writes a spoken summary', () => {
-    expect(spokenSummary(route.steps, 'Parking garage lobby', 'phone room')).toMatch(/elevator to floor 18/)
   })
 })
 

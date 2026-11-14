@@ -19,8 +19,6 @@ const SiteFlyover = lazy(() => import('../components/site/SiteFlyover'))
 export default function Arrival() {
   const inc = useIncident()
   const { search } = useLocation()
-  const [startedAt] = useState(() => Date.now())
-  const [foundAt, setFoundAt] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [preview, setPreview] = useState(false)
   // Demo re-plans are worked out here; live ones come back from the server as a new route version.
@@ -54,7 +52,7 @@ export default function Arrival() {
   const step = steps[i]
   const from = nodes?.get(step.from_node)
   const offRoute = inc.live.position?.off_route ?? false
-  const arrived = foundAt !== null || inc.live.incident?.status === 'arrived'
+  const arrived = inc.live.incident?.status === 'arrived'
   const remaining = steps.slice(i).reduce((t, s) => t + s.seconds, 0)
   const point: Point | null = position && nodes ? positionPoint(position, steps, nodes)
     : from ? { x: from.x, y: from.y, floor: from.floor } : null
@@ -78,27 +76,16 @@ export default function Arrival() {
     }
   }
 
-  async function found() {
-    setFoundAt(Date.now())
-    if (!inc.demo && inc.incidentId && inc.live.source === 'supabase') {
-      try { await sendEvent(inc.incidentId, 'arrived', null, false) } catch { /* the screen still shows arrival */ }
-    }
-  }
+
 
   if (arrived) {
-    // Elapsed time is known when the medic tapped "Found"; a server-side arrival has no local timestamp.
-    const secs = foundAt !== null ? Math.round((foundAt - startedAt) / 1000) : null
     return (
       <div className="mx-auto max-w-xl">
         <section className="rounded-3xl bg-gradient-to-br from-fern to-fern-deep p-6 text-white shadow-card">
           <CueIcon cue="ARRIVE" className="h-12 w-12" />
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">Patient reached</h1>
-          {secs !== null && <p className="mt-2 text-lg text-white/85">{formatSeconds(secs)} from the entrance</p>}
           <p className="mt-1 text-sm text-white/70">{tidy(nodes?.get(steps.at(-1)!.to_node)?.label ?? '')}</p>
         </section>
-        <button type="button" onClick={() => setFoundAt(null)} className="mt-4 text-sm font-medium text-azure hover:underline">
-          Back to directions
-        </button>
       </div>
     )
   }
@@ -135,17 +122,10 @@ export default function Arrival() {
           className="flex h-14 items-center justify-center gap-1.5 rounded-2xl border border-line bg-card text-base font-semibold text-ink-2 shadow-card disabled:opacity-40">
           <Icon name="prev" className="h-5 w-5" /> Back
         </button>
-        {last ? (
-          <button type="button" onClick={() => void found()}
-            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-fern text-base font-semibold text-white shadow-card hover:bg-fern-deep">
-            <Icon name="check" className="h-5 w-5" /> Found the patient
-          </button>
-        ) : (
-          <button type="button" onClick={cursor.next}
-            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-azure text-base font-semibold text-white shadow-card hover:bg-azure-deep">
-            Done, next step <Icon name="next" className="h-5 w-5" />
-          </button>
-        )}
+        <button type="button" onClick={cursor.next} disabled={last}
+          className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-azure text-base font-semibold text-white shadow-card hover:bg-azure-deep disabled:bg-line-strong">
+          {last ? 'Last step' : <>Done, next step <Icon name="next" className="h-5 w-5" /></>}
+        </button>
       </div>
 
       {/* The floor, following the current step */}
@@ -174,11 +154,6 @@ export default function Arrival() {
         </button>
       </div>
 
-      {!last && (
-        <button type="button" onClick={() => void found()} className="self-center text-sm font-medium text-fern-deep hover:underline">
-          Found the patient early
-        </button>
-      )}
 
       {replay && (
         <button type="button" onClick={replay.toggle} className="self-center text-xs text-ink-3 hover:text-azure">

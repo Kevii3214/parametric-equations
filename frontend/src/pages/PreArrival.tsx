@@ -1,15 +1,13 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
 import CallIntake from '../components/call/CallIntake'
 import CueIcon from '../components/CueIcon'
-import Icon from '../components/Icon'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
-import { headsUp, routeGlance, spokenSummary } from '../lib/briefing'
+import { routeGlance } from '../lib/briefing'
 import { buildingById } from '../lib/buildings'
 import { fixtureIncident } from '../lib/fixtures'
 import { parsedNote } from '../lib/incident'
-import { formatSeconds, nodeMap, tidy } from '../lib/route'
+import { formatSeconds, tidy } from '../lib/route'
 import { useIncident } from '../lib/useIncident'
 
 // The fly-through (Matterport SDK) and the 3D map are large: load on demand.
@@ -18,17 +16,12 @@ const TourPlayer = lazy(() => import('../components/tour/TourPlayer'))
 /** In the ambulance: who, where to stop, the route in advance, and what to watch for. */
 export default function PreArrival() {
   const inc = useIncident()
-  const { live, route, steps, site, tour, entrance } = inc
-  const navigate = useNavigate()
-  const { search } = useLocation()
+  const { live, route, steps, site, tour } = inc
   const note = parsedNote(live.incident?.parsed ?? null)
-  const nodes = inc.graph ? nodeMap(inc.graph) : null
-  const goal = nodes?.get(steps.at(-1)?.to_node ?? '')?.label ?? null
   const glance = routeGlance(steps)
-  const warnings = headsUp(site, steps, live.planSteps)
 
   return (
-    <div className="mx-auto max-w-6xl pb-28 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-8">
+    <div className="mx-auto max-w-6xl pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-8">
       <div className="min-w-0">
       <CallIntake reason={inc.reason} onCreated={inc.setIncident} />
 
@@ -66,7 +59,6 @@ export default function PreArrival() {
               {glance.climb && <span>{glance.climb} to floor {glance.floors.at(-1)}</span>}
             </p>
           )}
-          {route && <Briefing text={route.briefing || spokenSummary(steps, entrance?.label ?? null, goal)} />}
         </header>
       )}
 
@@ -98,19 +90,6 @@ export default function PreArrival() {
         </Section>
       )}
 
-      {route && warnings.length > 0 && (
-        <Section title="Heads-up">
-          <ul className="space-y-2">
-            {warnings.map((w) => (
-              <li key={w.text} className="flex gap-2.5 text-sm leading-snug text-ink">
-                <Icon name={w.tone === 'ok' ? 'check' : 'info'}
-                  className={`mt-0.5 h-4 w-4 shrink-0 ${w.tone === 'warn' ? 'text-amber' : w.tone === 'ok' ? 'text-fern' : 'text-ink-3'}`} />
-                {w.text}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
 
       </div>
 
@@ -125,14 +104,6 @@ export default function PreArrival() {
         </aside>
       )}
 
-      {route && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/90 px-4 py-3 backdrop-blur">
-          <button type="button" onClick={() => navigate({ pathname: '/arrival', search })}
-            className="mx-auto flex w-full max-w-6xl items-center justify-center gap-2 rounded-2xl bg-azure py-3.5 text-base font-semibold text-white shadow-card hover:bg-azure-deep">
-            We're here, start directions <Icon name="next" className="h-5 w-5" />
-          </button>
-        </div>
-      )}
     </div>
   )
 }
@@ -150,30 +121,5 @@ function Section({ title, aside, children }: { title: string; aside?: ReactNode;
 }
 
 
-/** Reads the briefing aloud with the browser's speech synthesis. */
-function Briefing({ text }: { text: string }) {
-  const [speaking, setSpeaking] = useState(false)
-  const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window
-  if (!text) return null
-  const toggle = () => {
-    if (!canSpeak) return
-    if (speaking) { window.speechSynthesis.cancel(); setSpeaking(false); return }
-    const u = new SpeechSynthesisUtterance(text)
-    u.onend = () => setSpeaking(false)
-    window.speechSynthesis.speak(u)
-    setSpeaking(true)
-  }
-  return (
-    <div className="mt-4 flex items-start gap-3 rounded-2xl bg-azure-soft p-3">
-      {canSpeak && (
-        <button type="button" onClick={toggle} aria-label={speaking ? 'Stop briefing' : 'Play briefing'}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-azure text-white hover:bg-azure-deep">
-          <Icon name={speaking ? 'pause' : 'play'} className="h-4 w-4" />
-        </button>
-      )}
-      <p className="text-sm leading-snug text-azure-deep">{tidy(text)}</p>
-    </div>
-  )
-}
 
 const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
