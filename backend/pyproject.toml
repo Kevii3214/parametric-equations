@@ -27,3 +27,6 @@ dev = [
     "ruff>=0.17.5",
     "shapely>=2.2.0",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["SIM115", "BLE001", "ISC004"]  # exploratory scripts: bare open() and broad except are fine here
