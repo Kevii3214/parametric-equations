@@ -1,7 +1,7 @@
 {
  "version": 1,
  "speed_up": 6.0,
- "duration_ms": 24966,
+ "duration_ms": 27345,
  "segments": [
   {
    "kind": "gap",
@@ -90,7 +90,7 @@
   },
   {
    "i": 3,
-   "t_ms": 15566,
+   "t_ms": 15066,
    "dwell_ms": 0,
    "kind": "gap",
    "frame": "plan",
@@ -113,7 +113,7 @@
   },
   {
    "i": 4,
-   "t_ms": 16766,
+   "t_ms": 15766,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -136,7 +136,7 @@
   },
   {
    "i": 5,
-   "t_ms": 18666,
+   "t_ms": 17425,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -151,7 +151,7 @@
     "z": -0.007
    },
    "level": 56,
-   "bearing_deg": 247.6,
+   "bearing_deg": 236.9,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "",
@@ -159,7 +159,30 @@
   },
   {
    "i": 6,
-   "t_ms": 19866,
+   "t_ms": 18805,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p25",
+   "step_index": 4,
+   "waypoint": false,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "1kze3iiq7c5qhyq9em7b56a9a",
+   "position": {
+    "x": -4.389,
+    "y": -4.05,
+    "z": -0.011
+   },
+   "level": 56,
+   "bearing_deg": 261.9,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 7,
+   "t_ms": 19842,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -174,15 +197,84 @@
     "z": -0.023
    },
    "level": 56,
-   "bearing_deg": 274.1,
+   "bearing_deg": 273.5,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "Walk 8.1 m to Lobby to Hallway passage.",
    "cue": "STRAIGHT"
   },
   {
-   "i": 7,
-   "t_ms": 21066,
+   "i": 8,
+   "t_ms": 21369,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p22",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "es37ibmuwd0p0xwxcgnpyph3c",
+   "position": {
+    "x": -11.022,
+    "y": -4.19,
+    "z": -0.019
+   },
+   "level": 56,
+   "bearing_deg": 269.4,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 9,
+   "t_ms": 22545,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p22",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "nxs2iexscf5nx197kn1a4wkhc",
+   "position": {
+    "x": -14.08,
+    "y": -4.22,
+    "z": -0.003
+   },
+   "level": 56,
+   "bearing_deg": 249.0,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 10,
+   "t_ms": 23245,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "p22",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "eJKnR3x44eh",
+   "sweep_id": "hp7900cwuncgbfzw29drqrsrc",
+   "position": {
+    "x": -15.097,
+    "y": -4.611,
+    "z": -0.009
+   },
+   "level": 56,
+   "bearing_deg": 312.4,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 11,
+   "t_ms": 23945,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -204,8 +296,8 @@
    "cue": "RIGHT"
   },
   {
-   "i": 8,
-   "t_ms": 22966,
+   "i": 12,
+   "t_ms": 25345,
    "dwell_ms": 2000,
    "kind": "scanned",
    "frame": "scan",

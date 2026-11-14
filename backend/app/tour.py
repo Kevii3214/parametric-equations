@@ -15,10 +15,12 @@ from app.graph.schema import BuildingGraph, RouteStep
 
 COVER_M = 3.0  # a route stop counts as scanned if a sweep on its level is this close
 WALK_MPS = 1.3
-MIN_HOP_MS = 1200  # the shortest move between two stops, so the flight never jerks
+MIN_HOP_MS = 700  # the shortest move between two stops, so the flight never jerks
 TURN_DWELL_MS = 700  # pause at a turn so the caption can be read
 END_DWELL_MS = 2000
 DEFAULT_SPEED_UP = 6.0  # a 100 s walk plays in about 17 s
+# Inside a scan the viewer walks at about 2.6 m/s: it looks like walking, not a blur.
+SCAN_SPEED_UP = 2.0
 
 
 class Point(BaseModel):
@@ -85,7 +87,7 @@ def _bearing(a, b) -> float:
 def _sweep_path(
     sweeps: dict[str, dict], start: str, goal: str, level: int | None
 ) -> list[str] | None:
-    """Shortest chain of visible-from-each-other sweeps from start to goal (staying on one level if given)."""
+    """Chain of visible-from-each-other sweeps from start to goal, in short hops (staying on one level if given)."""
     if start == goal:
         return [start]
     adjacency: dict[str, set[str]] = {sid: set() for sid in sweeps}
@@ -109,9 +111,12 @@ def _sweep_path(
         for nxt in adjacency[here]:
             if level is not None and sweeps[nxt]["level"] != level:
                 continue
-            nc = cost + _dist(
+            hop = _dist(
                 (sweeps[here]["x"], sweeps[here]["y"]), (sweeps[nxt]["x"], sweeps[nxt]["y"])
             )
+            nc = (
+                cost + hop**2
+            )  # squared: prefers many short hops over a few long jumps, so the flight flows
             if nc < best.get(nxt, math.inf):
                 best[nxt], came[nxt] = nc, here
                 heapq.heappush(queue, (nc, nxt))
@@ -238,7 +243,7 @@ def build_tour(
             elif not scanned:
                 move_ms = (step.seconds * 1000 / speed_up) if step is not None else 0
             else:
-                move_ms = hop_m / (WALK_MPS * speed_up) * 1000
+                move_ms = hop_m / (WALK_MPS * min(speed_up, SCAN_SPEED_UP)) * 1000
             t += prev.dwell_ms + max(MIN_HOP_MS, int(move_ms))
         keyframes.append(
             Keyframe(

@@ -151,3 +151,95 @@ export function wrap180(a: number): number {
   const r = ((a % 360) + 360) % 360
   return r > 180 ? r - 360 : r
 }
+
+/** A position in the viewer's frame (y up). */
+export interface SdkPoint { x: number; y: number; z: number }
+
+/** The scan's plan frame (z up, as the Model API reports it) in the viewer's frame (y up, -z is north). */
+export const apiToSdk = (p: TourPoint): SdkPoint => ({ x: p.x, y: p.z, z: -p.y })
+
+/**
+ * The viewer yaw (degrees) that faces `to` from `from`. A y-up camera at yaw 0
+ * looks down -z and a positive yaw turns left. `flip` is for a viewer whose
+ * positive yaw turns right.
+ */
+export function yawToward(from: SdkPoint, to: SdkPoint, flip = false): number {
+  const yaw = (Math.atan2(-(to.x - from.x), -(to.z - from.z)) * 180) / Math.PI
+  return wrap180(flip ? -yaw : yaw)
+}
+
+/**
+ * Which way yaw turns, read from the opening view: the viewer opens facing
+ * `openingBearing` (plan compass, clockwise) at `openingYaw`. Returns true when
+ * positive yaw turns right (then `yawToward` must flip). Ambiguous views keep
+ * the documented convention.
+ */
+export function yawIsFlipped(openingBearing: number, openingYaw: number): boolean {
+  const left = Math.abs(wrap180(openingYaw + openingBearing))
+  const right = Math.abs(wrap180(openingYaw - openingBearing))
+  return right + 5 < left
+}
+
+/**
+ * Where the camera should look on arriving at keyframe `i`: toward the next
+ * scanned stop (the direction of travel, like a video of someone walking), or
+ * keep the previous heading at the last stop. `where` maps a sweep id to its
+ * position in the viewer; null when a stop cannot be placed, so the caller
+ * falls back to the plan's bearing.
+ */
+export function facingFor(
+  tour: Tour, i: number, where: (sweepId: string) => SdkPoint | null, flip = false,
+): number | null {
+  const here = tour.keyframes[i]?.sweep_id
+  const a = here ? where(here) : null
+  if (!a) return null
+  for (let j = i + 1; j < tour.keyframes.length; j++) {
+    const k = tour.keyframes[j]
+    if (k.kind !== 'scanned' || !k.sweep_id || k.model_id !== tour.keyframes[i].model_id) return facingBefore(tour, i, where, flip)
+    const b = where(k.sweep_id)
+    if (b && Math.hypot(b.x - a.x, b.z - a.z) > 0.05) return yawToward(a, b, flip)
+  }
+  return facingBefore(tour, i, where, flip)
+}
+
+/** At the last stop: face the way the previous hop was going. */
+function facingBefore(tour: Tour, i: number, where: (id: string) => SdkPoint | null, flip: boolean): number | null {
+  const a = tour.keyframes[i].sweep_id ? where(tour.keyframes[i].sweep_id!) : null
+  for (let j = i - 1; a && j >= 0; j--) {
+    const k = tour.keyframes[j]
+    if (k.kind !== 'scanned' || !k.sweep_id || k.model_id !== tour.keyframes[i].model_id) return null
+    const b = where(k.sweep_id)
+    if (b && Math.hypot(a.x - b.x, a.z - b.z) > 0.05) return yawToward(b, a, flip)
+  }
+  return null
+}
+
+/** The viewer sweep id for a tour sweep: the same id if the viewer has it, else the nearest sweep within `maxM`. */
+export function matchSweep(
+  sweepId: string, planPos: TourPoint, viewer: Map<string, SdkPoint>, maxM = 1.5,
+): string | null {
+  if (viewer.has(sweepId)) return sweepId
+  const want = apiToSdk(planPos)
+  let best: string | null = null
+  let bestD = maxM
+  for (const [id, p] of viewer) {
+    const d = Math.hypot(p.x - want.x, p.y - want.y, p.z - want.z)
+    if (d <= bestD) { best = id; bestD = d }
+  }
+  return best
+}
+
+/**
+ * A tour that opens inside the scan: the unscanned stops at the start (street,
+ * lobby, lift) are cut and the clock starts at the first scanned stop. Their
+ * captions are returned so the player can list them on a title card.
+ */
+export function startInScan(tour: Tour): { tour: Tour; skipped: string[] } {
+  const first = tour.keyframes.findIndex((k) => k.kind === 'scanned')
+  if (first <= 0) return { tour, skipped: [] }
+  const t0 = tour.keyframes[first].t_ms
+  const skipped = tour.keyframes.slice(0, first).filter((k) => k.waypoint && k.caption).map((k) => k.caption)
+  const keyframes = tour.keyframes.slice(first).map((k) => ({ ...k, t_ms: k.t_ms - t0 }))
+  // The first stop can carry the lift/stairs instruction that led here; keep its caption on screen.
+  return { tour: { ...tour, keyframes, duration_ms: tour.duration_ms - t0 }, skipped }
+}

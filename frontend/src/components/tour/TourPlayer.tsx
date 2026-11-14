@@ -3,7 +3,10 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { matterportUrl, type Building } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import { tidy } from '../../lib/route'
-import { calibrate, gapPosition, moveFor, stateAt, type Tour } from '../../lib/tour'
+import {
+  calibrate, facingFor, gapPosition, matchSweep, moveFor, startInScan, stateAt, yawIsFlipped,
+  type SdkPoint, type Tour,
+} from '../../lib/tour'
 import CueIcon from '../CueIcon'
 import Icon from '../Icon'
 
@@ -20,7 +23,14 @@ const sdkEmbedUrl = (modelId: string) => `https://my.matterport.com/show/?${new 
 
 type Viewer =
   | { kind: 'loading' }
-  | { kind: 'sdk'; sdk: MpSdk; yaw: (bearing: number) => number }
+  | {
+    kind: 'sdk'; sdk: MpSdk
+    /** Fallback facing from the plan's compass, when a stop's sweep cannot be placed. */
+    yaw: (bearing: number) => number
+    /** The viewer's own sweep (id and position) for a tour sweep id; null when the scan has no such sweep. */
+    sweep: (tourSweepId: string) => { id: string; pos: SdkPoint } | null
+    flip: boolean
+  }
   | { kind: 'plain'; reason: string }
 
 /**
@@ -29,19 +39,28 @@ type Viewer =
  * `t_ms` and holding for `dwell_ms`. Unscanned (gap) stretches show the 3D
  * map instead and cut into the scan when it starts. The user only watches.
  */
-export default function TourPlayer({ tour, building, steps, patientFloor }: {
+export default function TourPlayer({ tour: fullTour, building, steps, patientFloor }: {
   tour: Tour; building: Building; steps: RouteStep[]; patientFloor: number | null
 }) {
+  // The tour opens inside the scan; the unscanned start (street, lobby, lift) is listed by the page, outside this box.
+  const tour = useMemo(() => startInScan(fullTour).tour, [fullTour])
   const [t, setT] = useState(0)
   const [wantPlay, setPlaying] = useState(true)
   const [viewer, setViewer] = useState<Viewer>(SDK_KEY ? { kind: 'loading' } : { kind: 'plain', reason: 'no SDK key' })
   const [skipped, setSkipped] = useState(0)
+  // The viewer moves one stop at a time: a move started during another is refused.
+  const wanted = useRef(-1)
+  const moving = useRef(false)
+  // Scrubbing: the clock pauses while the bar is dragged, then the viewer jumps to the new spot.
+  const [dragging, setDragging] = useState(false)
+  const jumped = useRef(false)
+  const bar = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
   // React's development double-run would connect twice; connect once per model.
   const connectedFor = useRef<string | null>(null)
   const s = stateAt(tour, t)
   // The clock stops by itself at the end of the tour.
-  const playing = wantPlay && !s.done
+  const playing = wantPlay && !s.done && !dragging
   const modelId = useMemo(() => tour.keyframes.find((k) => k.model_id)?.model_id ?? null, [tour])
 
   // The clock: real time while playing, held at the end.
@@ -80,10 +99,25 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
           const sub = sdk!.Camera.pose.subscribe((p) => { sub.cancel(); res(p) })
         })
         const opening = tour.models[modelId]?.bearing_deg ?? 0
-        if (!cancelled) setViewer({ kind: 'sdk', sdk, yaw: calibrate(opening, pose.rotation.y) })
+        // The viewer's own sweeps: the tour's sweep ids are matched to them (same id, else nearest position).
+        const data = await sdk.Sweep.data.waitUntil((d) => Object.keys(d).length > 0)
+        const here = new Map<string, SdkPoint>()
+        for (const [key, sw] of data) here.set(sw.sid || key, sw.position)
+        const found = new Map<string, { id: string; pos: SdkPoint }>()
+        for (const k of tour.keyframes) {
+          if (k.kind !== 'scanned' || !k.sweep_id || found.has(k.sweep_id)) continue
+          const id = matchSweep(k.sweep_id, k.position, here)
+          if (id) found.set(k.sweep_id, { id, pos: here.get(id)! })
+        }
+        const flip = yawIsFlipped(opening, pose.rotation.y)
+        console.info(`Matterport tour: ${found.size}/${new Set(tour.keyframes.map((k) => k.sweep_id).filter(Boolean)).size} sweeps matched, yaw ${flip ? 'turns right' : 'turns left'}`)
+        if (!cancelled) {
+          setViewer({ kind: 'sdk', sdk, yaw: calibrate(opening, pose.rotation.y), sweep: (id) => found.get(id) ?? null, flip })
+        }
       } catch (err) {
         console.warn('Matterport SDK:', err)
-        if (!cancelled) setViewer({ kind: 'plain', reason: 'SDK could not connect' })
+        const refused = /key|referrer|domain/i.test(String(err))
+        if (!cancelled) setViewer({ kind: 'plain', reason: refused ? `SDK key not allowed on ${location.host}` : 'SDK could not connect' })
       }
     })()
     return () => {
@@ -93,32 +127,60 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
       connectedFor.current = null
       try { sdk?.disconnect() } catch { /* already gone */ }
     }
-  }, [modelId, tour.models])
+  }, [modelId, tour.models, tour.keyframes])
 
-  // Drive the viewer: each time a new scanned stop becomes the target, move to it.
+  // Drive the viewer: walk to the latest stop, one move at a time. If a move runs late the
+  // next ones are skipped over to the newest target, so the picture stays in step with the clock.
   useEffect(() => {
-    if (viewer.kind !== 'sdk' || s.index < 0) return
-    const move = moveFor(tour, s.index)
-    if (!move) return
-    const { sdk, yaw } = viewer
-    const transition = move.transition === 'fly' ? sdk.Camera.TransitionType.FLY
-      : move.transition === 'fade' ? sdk.Camera.TransitionType.FADEOUT : sdk.Camera.TransitionType.INSTANT
-    sdk.Sweep.moveTo(move.sweepId, {
-      rotation: { x: move.pitch, y: yaw(move.bearing) },
-      transition,
-      transitionTime: move.transition === 'fade' ? Math.min(move.duration, 800) : move.duration,
-    }).catch((err: unknown) => {
-      // A sweep that will not load is skipped; the clock keeps the tour going.
-      console.warn('Matterport sweep skipped:', move.sweepId, err)
-      setSkipped((n) => n + 1)
-    })
-  }, [s.index, viewer, tour])
+    if (viewer.kind !== 'sdk' || s.index < 0 || dragging) return
+    wanted.current = s.index
+    if (moving.current) return
+    moving.current = true
+    const { sdk, yaw, sweep, flip } = viewer
+    void (async () => {
+      let last = -1
+      while (wanted.current !== last) {
+        const i = wanted.current
+        last = i
+        const move = moveFor(tour, i)
+        const target = move && sweep(move.sweepId)
+        if (!move || !target) { if (move) setSkipped((n) => n + 1); continue }
+        // After a seek the viewer may be far from the new stop: cut there with a quick fade, never fly.
+        const seek = jumped.current
+        jumped.current = false
+        const transition = seek ? sdk.Camera.TransitionType.FADEOUT
+          : move.transition === 'fly' ? sdk.Camera.TransitionType.FLY
+            : move.transition === 'fade' ? sdk.Camera.TransitionType.FADEOUT : sdk.Camera.TransitionType.INSTANT
+        // Look the way the walk goes (toward the next stop), like a video; else use the plan's compass.
+        const facing = facingFor(tour, i, (id) => sweep(id)?.pos ?? null, flip) ?? yaw(move.bearing)
+        try {
+          await sdk.Sweep.moveTo(target.id, {
+            rotation: { x: move.pitch, y: facing },
+            transition,
+            transitionTime: seek ? 400 : move.transition === 'fade' ? Math.min(move.duration, 800) : move.duration,
+          })
+        } catch (err) {
+          // A sweep that will not load is skipped; the clock keeps the tour going.
+          console.warn('Matterport sweep skipped:', move.sweepId, err)
+          setSkipped((n) => n + 1)
+        }
+      }
+      moving.current = false
+    })()
+  }, [s.index, viewer, tour, dragging])
 
   // Without the SDK: a plain embed opened at the current stop's sweep (jumps between stops).
   const plainSweep = viewer.kind === 'plain' && s.keyframe?.kind === 'scanned' ? s.keyframe.sweep_id : null
   const plainUrl = plainSweep && modelId ? `${matterportUrl(modelId, { autoplay: true })}&ss=${plainSweep}` : null
 
-  const restart = () => { setT(0); setPlaying(true) }
+  const restart = () => { jumped.current = true; setT(0); setPlaying(true) }
+  const seekTo = (clientX: number) => {
+    const r = bar.current?.getBoundingClientRect()
+    if (!r || r.width === 0) return
+    jumped.current = true
+    setT(Math.round(Math.min(1, Math.max(0, (clientX - r.left) / r.width)) * tour.duration_ms))
+  }
+  const nudge = (ms: number) => { jumped.current = true; setT((v) => Math.min(tour.duration_ms, Math.max(0, v + ms))) }
   const secs = (ms: number) => `${Math.floor(ms / 1000)}`.padStart(2, '0')
   const position = s.inGap ? gapPosition(tour, t) : null
   const showScan = !s.inGap && s.index >= 0
@@ -171,17 +233,31 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-2 hover:bg-sunk hover:text-azure">
           <Icon name="restart" className="h-4 w-4" />
         </button>
-        <div className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-sunk" role="progressbar"
-          aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(s.progress * 100)}>
-          {/* Scanned stretches tinted, so the gap-to-scan cut is visible on the bar. */}
-          {tour.keyframes.map((k, i) => {
-            const next = tour.keyframes[i + 1]
-            if (k.kind !== 'scanned') return null
-            const a = (k.t_ms / tour.duration_ms) * 100
-            const b = ((next?.t_ms ?? tour.duration_ms) / tour.duration_ms) * 100
-            return <span key={i} className="absolute inset-y-0 bg-azure-line" style={{ left: `${a}%`, width: `${b - a}%` }} />
-          })}
-          <span className="absolute inset-y-0 left-0 bg-azure" style={{ width: `${s.progress * 100}%` }} />
+        {/* A tall hit area around the thin bar: click or drag to skip through the tour. */}
+        <div ref={bar} role="slider" tabIndex={0} aria-label="Tour position" aria-valuemin={0} aria-valuemax={Math.round(tour.duration_ms / 1000)}
+          aria-valuenow={Math.round(t / 1000)} aria-valuetext={`${Math.round(s.progress * 100)}%`}
+          className="relative flex h-6 min-w-0 flex-1 cursor-pointer touch-none items-center"
+          onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); seekTo(e.clientX) }}
+          onPointerMove={(e) => { if (dragging) seekTo(e.clientX) }}
+          onPointerUp={() => setDragging(false)}
+          onPointerCancel={() => setDragging(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); nudge(2000) }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); nudge(-2000) }
+          }}>
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-sunk">
+            {/* Scanned stretches tinted, so the gap-to-scan cut is visible on the bar. */}
+            {tour.keyframes.map((k, i) => {
+              const next = tour.keyframes[i + 1]
+              if (k.kind !== 'scanned') return null
+              const a = (k.t_ms / tour.duration_ms) * 100
+              const b = ((next?.t_ms ?? tour.duration_ms) / tour.duration_ms) * 100
+              return <span key={i} className="absolute inset-y-0 bg-azure-line" style={{ left: `${a}%`, width: `${b - a}%` }} />
+            })}
+            <span className="absolute inset-y-0 left-0 bg-azure" style={{ width: `${s.progress * 100}%` }} />
+          </div>
+          <span className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-azure shadow-card ring-2 ring-white"
+            style={{ left: `${s.progress * 100}%` }} />
         </div>
         <span className="shrink-0 pr-2 font-mono text-[11px] text-ink-2 tabular-nums">
           0:{secs(t)} / 0:{secs(tour.duration_ms)}

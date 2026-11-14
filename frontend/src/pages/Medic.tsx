@@ -10,7 +10,7 @@ import { useDemo, useDemoBuilding, useIncidentParam } from '../lib/demo'
 import { closures, graphFor } from '../lib/incident'
 import { useRouteReplay } from '../lib/replay'
 import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint, tidy } from '../lib/route'
-import { readTour } from '../lib/tour'
+import { readTour, startInScan } from '../lib/tour'
 import { useIncidentLive } from '../lib/useIncidentLive'
 
 // MapLibre is large, so the 3D route view loads only when opened.
@@ -165,11 +165,31 @@ export default function Medic() {
         ) : (
           <p className="py-16 text-center text-sm text-ink-3">No floor plan for this building yet.</p>
         )}
+        {view === 'tour' && tour && <BeforeScan steps={startInScan(tour).skipped} />}
         {pickedFloor !== null && pickedFloor !== currentFloor && (
           <button type="button" onClick={() => setPickedFloor(null)}
             className="mt-3 text-xs font-medium text-azure hover:underline">Follow my floor ({currentFloor})</button>
         )}
       </section>
+    </div>
+  )
+}
+
+/** The steps before the scan starts (street, lobby, lift): no scan covers them, so they are listed here, outside the 3D box. */
+function BeforeScan({ steps }: { steps: string[] }) {
+  if (steps.length === 0) return null
+  return (
+    <div className="mt-3 rounded-2xl border border-line bg-card p-3 shadow-card">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Before the scan (not scanned)</h3>
+      <ol className="mt-1.5 space-y-1 text-sm text-ink">
+        {steps.map((text, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sunk text-[10px] font-semibold text-ink-2">{i + 1}</span>
+            <span className="min-w-0">{tidy(text)}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs text-ink-3">The fly-through starts inside the scan, at the suite floor.</p>
     </div>
   )
 }

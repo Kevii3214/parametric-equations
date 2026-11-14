@@ -1,7 +1,7 @@
 {
  "version": 1,
  "speed_up": 6.0,
- "duration_ms": 17034,
+ "duration_ms": 28666,
  "segments": [
   {
    "kind": "scanned",
@@ -37,7 +37,7 @@
   },
   {
    "i": 1,
-   "t_ms": 1200,
+   "t_ms": 1138,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -60,7 +60,7 @@
   },
   {
    "i": 2,
-   "t_ms": 2400,
+   "t_ms": 3060,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -83,7 +83,7 @@
   },
   {
    "i": 3,
-   "t_ms": 3600,
+   "t_ms": 4931,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -106,7 +106,7 @@
   },
   {
    "i": 4,
-   "t_ms": 8600,
+   "t_ms": 9931,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -129,7 +129,7 @@
   },
   {
    "i": 5,
-   "t_ms": 10500,
+   "t_ms": 12663,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -144,7 +144,7 @@
     "z": 3.95
    },
    "level": 3,
-   "bearing_deg": 133.9,
+   "bearing_deg": 87.5,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "Walk 5.3 m, then turn right.",
@@ -152,7 +152,7 @@
   },
   {
    "i": 6,
-   "t_ms": 12400,
+   "t_ms": 15274,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -160,14 +160,14 @@
    "step_index": 5,
    "waypoint": false,
    "model_id": "P3S6VUTP3qB",
-   "sweep_id": "xdym22pw82n1ius7pazhttd1a",
+   "sweep_id": "4z3dsh3hzihrqcr8fsxqdkf6c",
    "position": {
-    "x": 9.669,
-    "y": 2.562,
-    "z": 3.936
+    "x": 11.857,
+    "y": 5.449,
+    "z": 4.108
    },
    "level": 3,
-   "bearing_deg": 218.0,
+   "bearing_deg": 107.2,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "",
@@ -175,7 +175,7 @@
   },
   {
    "i": 7,
-   "t_ms": 13834,
+   "t_ms": 16150,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -183,14 +183,14 @@
    "step_index": 5,
    "waypoint": false,
    "model_id": "P3S6VUTP3qB",
-   "sweep_id": "mk5198wdpzeqzp73ese8h4pbb",
+   "sweep_id": "c9t63yrk0m9rmufcmnebs24zb",
    "position": {
-    "x": 2.779,
-    "y": -6.25,
-    "z": 3.971
+    "x": 14.034,
+    "y": 4.776,
+    "z": 4.108
    },
    "level": 3,
-   "bearing_deg": 46.2,
+   "bearing_deg": 183.2,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "",
@@ -198,7 +198,145 @@
   },
   {
    "i": 8,
-   "t_ms": 15034,
+   "t_ms": 17951,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "8c32s7nkt2849ty7f2xzdunda",
+   "position": {
+    "x": 13.773,
+    "y": 0.1,
+    "z": 4.101
+   },
+   "level": 3,
+   "bearing_deg": 179.0,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 9,
+   "t_ms": 19531,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "0nunhdpcx0wq1xc8umazai0fd",
+   "position": {
+    "x": 13.848,
+    "y": -4.008,
+    "z": 4.094
+   },
+   "level": 3,
+   "bearing_deg": 179.4,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 10,
+   "t_ms": 21046,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "ubrr49s35m2uxuy9y5rwh74sb",
+   "position": {
+    "x": 13.889,
+    "y": -7.947,
+    "z": 4.106
+   },
+   "level": 3,
+   "bearing_deg": 248.2,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 11,
+   "t_ms": 23136,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "8cnnit59dnzb02y2nekixp6hc",
+   "position": {
+    "x": 8.841,
+    "y": -9.963,
+    "z": 3.97
+   },
+   "level": 3,
+   "bearing_deg": 2.2,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 12,
+   "t_ms": 23963,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "85ekq5i5e02pxxe0se65sr5sc",
+   "position": {
+    "x": 8.923,
+    "y": -7.813,
+    "z": 3.959
+   },
+   "level": 3,
+   "bearing_deg": 332.6,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 13,
+   "t_ms": 24707,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "s20",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "P3S6VUTP3qB",
+   "sweep_id": "bd3dzdmm4w3twrznh1ydgfq8b",
+   "position": {
+    "x": 8.033,
+    "y": -6.094,
+    "z": 3.959
+   },
+   "level": 3,
+   "bearing_deg": 2.4,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 14,
+   "t_ms": 26666,
    "dwell_ms": 2000,
    "kind": "scanned",
    "frame": "scan",
@@ -213,7 +351,7 @@
     "z": 3.974
    },
    "level": 3,
-   "bearing_deg": 46.2,
+   "bearing_deg": 2.4,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "Walk 6.4 m. Classroom (patient) is ahead.",

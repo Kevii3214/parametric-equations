@@ -1,7 +1,7 @@
 {
  "version": 1,
  "speed_up": 6.0,
- "duration_ms": 25766,
+ "duration_ms": 26650,
  "segments": [
   {
    "kind": "gap",
@@ -113,7 +113,7 @@
   },
   {
    "i": 4,
-   "t_ms": 17566,
+   "t_ms": 17066,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -136,7 +136,7 @@
   },
   {
    "i": 5,
-   "t_ms": 18766,
+   "t_ms": 18159,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -151,7 +151,7 @@
     "z": 0.007
    },
    "level": 18,
-   "bearing_deg": 111.0,
+   "bearing_deg": 142.8,
    "pitch_deg": 0.0,
    "transition": "fly",
    "caption": "Walk 2.1 m, then turn right.",
@@ -159,7 +159,53 @@
   },
   {
    "i": 6,
-   "t_ms": 20666,
+   "t_ms": 19952,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "rec_b",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "32tgheznxcqg37whh8h5kt6xa",
+   "position": {
+    "x": 1.725,
+    "y": -2.223,
+    "z": -0.009
+   },
+   "level": 18,
+   "bearing_deg": 94.2,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 7,
+   "t_ms": 21184,
+   "dwell_ms": 0,
+   "kind": "scanned",
+   "frame": "scan",
+   "node": "rec_b",
+   "step_index": 5,
+   "waypoint": false,
+   "model_id": "LJn59uoV759",
+   "sweep_id": "9b145bn9x9wpysknnydsb1rwa",
+   "position": {
+    "x": 4.921,
+    "y": -2.458,
+    "z": -0.001
+   },
+   "level": 18,
+   "bearing_deg": 92.5,
+   "pitch_deg": 0.0,
+   "transition": "fly",
+   "caption": "",
+   "cue": null
+  },
+  {
+   "i": 8,
+   "t_ms": 21886,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -181,8 +227,8 @@
    "cue": null
   },
   {
-   "i": 7,
-   "t_ms": 21866,
+   "i": 9,
+   "t_ms": 22918,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -204,8 +250,8 @@
    "cue": "RIGHT"
   },
   {
-   "i": 8,
-   "t_ms": 23766,
+   "i": 10,
+   "t_ms": 24650,
    "dwell_ms": 2000,
    "kind": "scanned",
    "frame": "scan",
