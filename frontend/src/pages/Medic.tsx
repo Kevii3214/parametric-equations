@@ -10,10 +10,12 @@ import { useDemo, useDemoBuilding, useIncidentParam } from '../lib/demo'
 import { closures, graphFor } from '../lib/incident'
 import { useRouteReplay } from '../lib/replay'
 import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint, tidy } from '../lib/route'
+import { readTour } from '../lib/tour'
 import { useIncidentLive } from '../lib/useIncidentLive'
 
 // MapLibre is large, so the 3D route view loads only when opened.
 const SiteFlyover = lazy(() => import('../components/site/SiteFlyover'))
+const TourPlayer = lazy(() => import('../components/tour/TourPlayer'))
 
 export default function Medic() {
   const demo = useDemo()
@@ -25,12 +27,13 @@ export default function Medic() {
   const replay = useRouteReplay(route, graph, live.source === 'fixtures')
   const position = replay?.position ?? live.position
   const [pickedFloor, setPickedFloor] = useState<number | null>(null)
-  const [view, setView] = useState<'plan' | 'route3d' | 'scan'>('plan')
+  const [view, setView] = useState<'plan' | 'tour' | 'route3d' | 'scan'>('plan')
   const [flyToken, setFlyToken] = useState(0)
 
   // The Matterport scan of the destination suite, when this building has one.
   const site = buildingById(live.incident?.building_id) ?? buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
   const scans = site?.matterport.filter((m) => m.destination) ?? []
+  const tour = readTour(live.route?.tour)
   const entranceMarker = site?.markers.find((m) => m.node === route?.entrance_node) ?? null
   const [doorHidden, setDoorHidden] = useState(false)
 
@@ -79,13 +82,13 @@ export default function Medic() {
           <Stat label="Step" value={`${stepIndex + 1} / ${steps.length}`} />
         </div>
         {site && (
-          <button type="button" onClick={() => { setView('route3d'); setFlyToken((t) => t + 1) }}
+          <button type="button" onClick={() => { if (tour) setView('tour'); else { setView('route3d'); setFlyToken((t) => t + 1) } }}
             className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-azure to-azure-deep px-4 py-3 text-left text-white shadow-card transition hover:brightness-110">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15"><Icon name="route" className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">Fly the indoor route</span>
               <span className="block truncate text-sm text-white/75">
-                3D walk-through from the entrance to the patient, floor {patientFloor(site, live.incident?.parsed ?? null) ?? '?'}
+                {tour ? 'Automatic walk-through in the 3D scan' : '3D walk-through'} from the entrance to the patient, floor {patientFloor(site, live.incident?.parsed ?? null) ?? '?'}
               </span>
             </span>
             <Icon name="play" className="h-5 w-5 shrink-0" />
@@ -114,11 +117,11 @@ export default function Medic() {
         <header className="mb-3 flex items-center gap-2">
           {site ? (
             <div className="flex gap-0.5 rounded-full bg-sunk p-0.5">
-              {(['plan', 'route3d', ...(scans.length ? ['scan'] as const : [])] as const).map((v) => (
+              {(['plan', ...(tour ? ['tour'] as const : []), 'route3d', ...(scans.length ? ['scan'] as const : [])] as const).map((v) => (
                 <button key={v} type="button" onClick={() => setView(v)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                     view === v ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
-                  {v === 'plan' ? 'Floor plan' : v === 'route3d' ? '3D route' : '3D scan'}
+                  {v === 'plan' ? 'Floor plan' : v === 'tour' ? 'Fly-through' : v === 'route3d' ? '3D route' : '3D scan'}
                 </button>
               ))}
             </div>
@@ -135,7 +138,15 @@ export default function Medic() {
             ))}
           </div>
         </header>
-        {view === 'route3d' && site ? (
+        {view === 'tour' && site && tour ? (
+          <div className="aspect-[4/3] w-full overflow-hidden rounded-xl">
+            <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading fly-through…</div>}>
+              {/* A re-plan (new route version) restarts the tour from the new one. */}
+              <TourPlayer key={`${route.id}-${route.version}`} tour={tour} building={site} steps={steps}
+                patientFloor={patientFloor(site, live.incident?.parsed ?? null)} />
+            </Suspense>
+          </div>
+        ) : view === 'route3d' && site ? (
           <div className="aspect-[4/3] w-full overflow-hidden rounded-xl">
             <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading 3D route…</div>}>
               <SiteFlyover building={site} entranceNode={route.entrance_node} mode="medic"
