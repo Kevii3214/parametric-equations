@@ -1,0 +1,1087 @@
+[
+ {
+  "property_id": "233899",
+  "name": "Wells Fargo Plaza",
+  "address": "1000 Louisiana St",
+  "city": "Houston",
+  "type": "office",
+  "stories": 71,
+  "models_in_kit": 7,
+  "models": [
+   {
+    "id": "3K5rnFt1P6B",
+    "name": "1500 - Wells Fargo Plaza",
+    "rooms": 11,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Gj2E4uqqdfU",
+    "name": "1000 Louisiana - Level 53",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Ry9V96reQ77",
+    "name": "6250 - Wells Fargo Plaza",
+    "rooms": 3,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "jUnF84zghQk",
+    "name": "1000 Louisiana Suite 3610",
+    "rooms": 8,
+    "wall_edges": 73,
+    "doorways": 9,
+    "tags": []
+   },
+   {
+    "id": "kDmRpp4ypA1",
+    "name": "1000 Louisiana - Suite 3700",
+    "rooms": 11,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "qVqBanbJQze",
+    "name": "1175 - Wells Fargo Plaza",
+    "rooms": 3,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "tzDLoMcCjuC",
+    "name": "1000 Louisiana - Suite 7100",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": []
+ },
+ {
+  "property_id": "233903",
+  "name": "Williams Tower",
+  "address": "2800 Post Oak Blvd",
+  "city": "Houston",
+  "type": "office",
+  "stories": 64,
+  "models_in_kit": 1,
+  "models": [
+   {
+    "id": "eJKnR3x44eh",
+    "name": "56th Floor",
+    "rooms": 30,
+    "wall_edges": 180,
+    "doorways": 50,
+    "tags": [
+     "lobby",
+     "corridor"
+    ]
+   }
+  ],
+  "vexcel_parcel": 502,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "233905",
+  "name": "TC Energy Center",
+  "address": "700 Louisiana St",
+  "city": "Houston",
+  "type": "office",
+  "stories": 56,
+  "models_in_kit": 2,
+  "models": [
+   {
+    "id": "gGm7vFc9YgS",
+    "name": "Suite 3950 ",
+    "rooms": 17,
+    "wall_edges": 188,
+    "doorways": 52,
+    "tags": []
+   },
+   {
+    "id": "rjEYw8eRQpf",
+    "name": "TC Energy Center - Servcorp Houston",
+    "rooms": 7,
+    "wall_edges": 91,
+    "doorways": 24,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "233918",
+  "name": "3 Houston Center",
+  "address": "1301 McKinney St",
+  "city": "Houston",
+  "type": "office",
+  "stories": 51,
+  "models_in_kit": 1,
+  "models": [
+   {
+    "id": "JWtTP2g7mDj",
+    "name": "Industrious Houston - Downtown (3rd Floor)",
+    "rooms": 35,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "10819844",
+  "name": "Texas Tower",
+  "address": "845 Texas Ave",
+  "city": "Houston",
+  "type": "office",
+  "stories": 47,
+  "models_in_kit": 2,
+  "models": [
+   {
+    "id": "5ih8y3c7LGE",
+    "name": "Suite 3",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "65if4fU5412",
+    "name": "CoWorking Space",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "233927",
+  "name": "800 Bell",
+  "address": "800 Bell St",
+  "city": "Houston",
+  "type": "office",
+  "stories": 46,
+  "models_in_kit": 2,
+  "models": [
+   {
+    "id": "AyQEoYpB3Hx",
+    "name": "43rd Floor - 30,373sqft",
+    "rooms": 10,
+    "wall_edges": 66,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "zYdLbVFphGC",
+    "name": "35th Floor - 30,799sqft",
+    "rooms": 19,
+    "wall_edges": 144,
+    "doorways": 1,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "247506",
+  "name": "Century Plaza Towers North",
+  "address": "2029 Century Park None",
+  "city": "Los Angeles",
+  "type": "office",
+  "stories": 44,
+  "models_in_kit": 3,
+  "models": [
+   {
+    "id": "f56MRgHWx9G",
+    "name": "Suite 400 - Coworking Office",
+    "rooms": 1,
+    "wall_edges": 4,
+    "doorways": 2,
+    "tags": []
+   },
+   {
+    "id": "iG38NENNhnQ",
+    "name": "Suite 400 - Office",
+    "rooms": 2,
+    "wall_edges": 13,
+    "doorways": 4,
+    "tags": []
+   },
+   {
+    "id": "jnoQ7Zn8wih",
+    "name": "Suite 400 - Lounge",
+    "rooms": 2,
+    "wall_edges": 35,
+    "doorways": 10,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "233928",
+  "name": "1415 Louisiana",
+  "address": "1415 Louisiana St",
+  "city": "Houston",
+  "type": "office",
+  "stories": 43,
+  "models_in_kit": 6,
+  "models": [
+   {
+    "id": "LJn59uoV759",
+    "name": "Lobby",
+    "rooms": 3,
+    "wall_edges": 26,
+    "doorways": 6,
+    "tags": [
+     "lobby",
+     "corridor"
+    ]
+   },
+   {
+    "id": "qgHrw7d3MJ1",
+    "name": "Corner Office",
+    "rooms": 1,
+    "wall_edges": 15,
+    "doorways": 4,
+    "tags": []
+   },
+   {
+    "id": "sEmBqaiPBba",
+    "name": "Strato",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "tMswvfbZK8C",
+    "name": "Suite 2350 - 5,914SF",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "vh1XhRJyZPW",
+    "name": "Interior Office",
+    "rooms": 1,
+    "wall_edges": 4,
+    "doorways": 1,
+    "tags": []
+   },
+   {
+    "id": "yPnykGhkJf6",
+    "name": "Conference Room",
+    "rooms": 1,
+    "wall_edges": 8,
+    "doorways": 1,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9560001",
+  "name": "THEA at Metropolis",
+  "address": "1000 8th St",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 58,
+  "models_in_kit": 10,
+  "models": [
+   {
+    "id": "8GhMqrps4Gr",
+    "name": "2BR, 2.5BA - 1,602SF",
+    "rooms": 19,
+    "wall_edges": 136,
+    "doorways": 34,
+    "tags": []
+   },
+   {
+    "id": "EzxGFXnuArf",
+    "name": "Studio, 1BA - 646SF",
+    "rooms": 7,
+    "wall_edges": 41,
+    "doorways": 12,
+    "tags": []
+   },
+   {
+    "id": "KdkWV2ckj8t",
+    "name": "2BR, 2BA - 1,170SF",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Sthbwyr74VK",
+    "name": "2BR, 2.5BA - 1602SF",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "d9Qwewvs91m",
+    "name": "4BR, 4.5BA - 3,487SF",
+    "rooms": 33,
+    "wall_edges": 250,
+    "doorways": 56,
+    "tags": [
+     "corridor"
+    ]
+   },
+   {
+    "id": "gUAaGWzibBv",
+    "name": "1BR, 1.5BA - 1,007SF",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "pd1Rc2K6YC1",
+    "name": "2BR, 2.5BA - 1,655SF",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "qwQtxRtjcwR",
+    "name": "3BR, 3.5BA - 3,487SF",
+    "rooms": 30,
+    "wall_edges": 218,
+    "doorways": 47,
+    "tags": [
+     "corridor"
+    ]
+   },
+   {
+    "id": "t7QGPjD38YR",
+    "name": "3BR, 3.5BA - 3,317SF",
+    "rooms": 37,
+    "wall_edges": 271,
+    "doorways": 60,
+    "tags": [
+     "corridor"
+    ]
+   },
+   {
+    "id": "x9jYhGy22rM",
+    "name": "1BR, 1BA - 855SF",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9354100",
+  "name": "825 South Hill",
+  "address": "825 Hill St",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 50,
+  "models_in_kit": 11,
+  "models": [
+   {
+    "id": "5Z5aRJfQqkB",
+    "name": "825 South Hill #3409 - Plan M 1",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "6s6ZWi48RLz",
+    "name": "825 South Hill #2611 - Plan J",
+    "rooms": 6,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "7VNhLApt7ia",
+    "name": "825 South Hill #2912 - Plan K",
+    "rooms": 6,
+    "wall_edges": 50,
+    "doorways": 13,
+    "tags": []
+   },
+   {
+    "id": "BbYQ2rws1Rf",
+    "name": "825 South Hill #4107 - Plan O",
+    "rooms": 3,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "K3DQYhhw2BJ",
+    "name": "825 South Hill #2904 - Plan N",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "MizhyvLLK3F",
+    "name": "825 South Hill #3603 - Plan M",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Q2Z4hTw7jDv",
+    "name": "825 South Hill #0301 - Plan A2",
+    "rooms": 11,
+    "wall_edges": 77,
+    "doorways": 21,
+    "tags": []
+   },
+   {
+    "id": "UK6FB4BsHBq",
+    "name": "825 South Hill #4201 - Plan K1",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "YvXMakQHfvn",
+    "name": "Pool",
+    "rooms": 0,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "iU1p9FAwJWX",
+    "name": "825 South Hill #4310 - Plan N1",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "p7wcDKE78b7",
+    "name": "Fitness Center",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9557833",
+  "name": "Aspire Post Oak",
+  "address": "1616 Post Oak Blvd",
+  "city": "Houston",
+  "type": "apartments",
+  "stories": 40,
+  "models_in_kit": 24,
+  "models": [
+   {
+    "id": "4LYR8XWCwXk",
+    "name": "Amelia - 1 bed, 1 bath",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "EXoK9jkmgFy",
+    "name": "Victoria - 2 Beds, 2 Baths",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "HKu2T4tdNaW",
+    "name": "Ashlyn - 2 bed, 2 bath",
+    "rooms": 10,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "JNvv5ZHphAp",
+    "name": "Allison - 1 Bed, 1 Bath",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Kx7RHfKE7iT",
+    "name": "Allie - 1 bed, 1 bath",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "M6HQrKuSEPP",
+    "name": "Adrian - 1 Bed, 1 Bath",
+    "rooms": 3,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "N4jWHeWxzdB",
+    "name": "Avril - 2 Bed, 2 Baths",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "PCkd9FG3XP2",
+    "name": "Addison - 1 bed, 1 bath",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "PPdgxYZsd83",
+    "name": "Anya - 2 bed, 2 bath",
+    "rooms": 9,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "PnaXb7GsisN",
+    "name": "Aspire Post Oak Health & Fitness Center",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "UyRUYU2W5Zb",
+    "name": "Ava - 1 Beds, 2 Baths",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "VJTZ7MZC2Yh",
+    "name": "Aspire Post Oak Gather South",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9432618",
+  "name": "Ten Thousand",
+  "address": "10000 Santa Monica Blvd",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 40,
+  "models_in_kit": 6,
+  "models": [
+   {
+    "id": "8bGPYyNZ5y3",
+    "name": "2BR, 2BA",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "WAtSgZefoaL",
+    "name": "2BR, 2BA",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Ys5dxj5rsVZ",
+    "name": "2BR, 2.5BA",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "vGnkzSn2K6H",
+    "name": "2BR, 2.5 BA",
+    "rooms": 6,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "vQzVKsXRzVE",
+    "name": "2BR, 2BA",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "yyDZtLF69dj",
+    "name": "2BR, 2.5 BA",
+    "rooms": 7,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "10043113",
+  "name": "Figueroa Eight",
+  "address": "744 Figueroa St",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 42,
+  "models_in_kit": 6,
+  "models": [
+   {
+    "id": "APF5Chd3RVA",
+    "name": "2BR, 2BA - 1282SF",
+    "rooms": 9,
+    "wall_edges": 77,
+    "doorways": 14,
+    "tags": []
+   },
+   {
+    "id": "CHitr4Bk3pE",
+    "name": "1BR, 1BA - 642SF",
+    "rooms": 7,
+    "wall_edges": 55,
+    "doorways": 8,
+    "tags": []
+   },
+   {
+    "id": "P6o5j2m8FXH",
+    "name": "Pool",
+    "rooms": 2,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "SFtjQ4UEhrM",
+    "name": "2BR, 2BA - 1155SF",
+    "rooms": 10,
+    "wall_edges": 74,
+    "doorways": 14,
+    "tags": [
+     "corridor"
+    ]
+   },
+   {
+    "id": "WnZzTaJJDcT",
+    "name": "1BR, 1BA - 833SF",
+    "rooms": 4,
+    "wall_edges": 41,
+    "doorways": 6,
+    "tags": []
+   },
+   {
+    "id": "rHKrJkaK7WC",
+    "name": "Studio - 540SF",
+    "rooms": 5,
+    "wall_edges": 43,
+    "doorways": 6,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9395438",
+  "name": "Market Square Tower",
+  "address": "777 Preston St",
+  "city": "Houston",
+  "type": "apartments",
+  "stories": 40,
+  "models_in_kit": 6,
+  "models": [
+   {
+    "id": "4QzunX6Hxjz",
+    "name": "2BR, 2.5BA - 1976SF",
+    "rooms": 8,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "C6ZQ1kvMUen",
+    "name": "1BR, 1.5BA - 1135SF",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "Fo8t4KxkDDH",
+    "name": "Virtual Golf Room",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "im3MPuAYg1L",
+    "name": "Game Room",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "jYbwA2kbUjU",
+    "name": "Sky Lounge",
+    "rooms": 2,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "vYPQTpycXxa",
+    "name": "Movie Theater",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "691919",
+  "name": "Verdosa",
+  "address": "705 9th St",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 35,
+  "models_in_kit": 10,
+  "models": [
+   {
+    "id": "2cEYDkA1DtY",
+    "name": "2BR, 2BA - 1536 SF",
+    "rooms": 0,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "3bDVWV9uSHX",
+    "name": "The Conservatory ",
+    "rooms": 2,
+    "wall_edges": 39,
+    "doorways": 5,
+    "tags": []
+   },
+   {
+    "id": "8hXyVPyTHN3",
+    "name": "1BR, 1BA - 862 SF",
+    "rooms": 2,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "FPUJrh7k1ZN",
+    "name": "Fit & Flourish Gym",
+    "rooms": 2,
+    "wall_edges": 34,
+    "doorways": 4,
+    "tags": []
+   },
+   {
+    "id": "L1qD5Kw6jHE",
+    "name": "2BR, 2BA - 1286 SF",
+    "rooms": 6,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "XWZT8EVvqKx",
+    "name": "2BR, 2BA - 1,286SF",
+    "rooms": 10,
+    "wall_edges": 70,
+    "doorways": 23,
+    "tags": []
+   },
+   {
+    "id": "Zcr7Ce2kK8j",
+    "name": "3BR, 2BA - 2162SF",
+    "rooms": 0,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "kEJzBW7fSge",
+    "name": "Infinity Edge Swimming Pool",
+    "rooms": 3,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "v8tL37XyADs",
+    "name": "1BR, 1BA - 862SF",
+    "rooms": 3,
+    "wall_edges": 30,
+    "doorways": 7,
+    "tags": []
+   },
+   {
+    "id": "wxCnEGo9w2o",
+    "name": "Fitness Center",
+    "rooms": 1,
+    "wall_edges": 6,
+    "doorways": 1,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "9447351",
+  "name": "Circa LA",
+  "address": "1200 Figueroa St",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 35,
+  "models_in_kit": 6,
+  "models": [
+   {
+    "id": "GA4y7nnfYfx",
+    "name": "1BR, 1BA - 770 SF",
+    "rooms": 2,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "RUUU3RJVDoz",
+    "name": "2BR, 2.5BA + Den - 2288 SF",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "WsvWQmUTk15",
+    "name": "Fitness Center",
+    "rooms": 1,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "dHioeXGhxmf",
+    "name": "2BR, 2.5BA - 1898 SF",
+    "rooms": 5,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "eBUav6ttuNA",
+    "name": "2BR, 2BA - 1285 SF",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "pm3qWkqMjVg",
+    "name": "1BR, 1BA - 868 SF",
+    "rooms": 4,
+    "wall_edges": 0,
+    "doorways": 0,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ },
+ {
+  "property_id": "12862161",
+  "name": "Hallasan",
+  "address": "696 New Hampshire Ave",
+  "city": "Los Angeles",
+  "type": "apartments",
+  "stories": 38,
+  "models_in_kit": 5,
+  "models": [
+   {
+    "id": "64o3fq4cfA9",
+    "name": "1BR, 1BA - 803SF",
+    "rooms": 7,
+    "wall_edges": 39,
+    "doorways": 12,
+    "tags": []
+   },
+   {
+    "id": "RENdfC6Bdq9",
+    "name": "2BR, 2BA - 1,781SF",
+    "rooms": 10,
+    "wall_edges": 104,
+    "doorways": 12,
+    "tags": [
+     "corridor"
+    ]
+   },
+   {
+    "id": "Su8teN91A5n",
+    "name": "Sky Lounge & Pool",
+    "rooms": 10,
+    "wall_edges": 99,
+    "doorways": 0,
+    "tags": []
+   },
+   {
+    "id": "TzF7DgQZPxc",
+    "name": "Fitness Center & Yoga Studio",
+    "rooms": 10,
+    "wall_edges": 88,
+    "doorways": 1,
+    "tags": []
+   },
+   {
+    "id": "piMMr6wp9Tk",
+    "name": "3BR, 3BA - 1,851SF",
+    "rooms": 15,
+    "wall_edges": 100,
+    "doorways": 14,
+    "tags": []
+   }
+  ],
+  "vexcel_parcel": 400,
+  "vexcel_obliques": [
+   "oblique-east",
+   "oblique-north",
+   "oblique-south",
+   "oblique-west"
+  ]
+ }
+]
