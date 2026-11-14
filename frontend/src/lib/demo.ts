@@ -35,11 +35,14 @@ export function useExitDemo(): () => void {
 }
 
 /** The incident both pages follow, kept in ?incident=<uuid>. */
-export function useIncidentParam(): [string | null, (id: string) => void] {
+export function useIncidentParam(): [string | null, (id: string, demoBuilding?: string | null) => void] {
   const [params, setParams] = useSearchParams()
-  const set = (id: string) =>
+  // demoBuilding picks which building the sample replay shows (?building=).
+  const set = (id: string, demoBuilding?: string | null) =>
     setParams((p) => {
       p.set('incident', id)
+      if (demoBuilding) p.set('building', demoBuilding)
+      else p.delete('building')
       return p
     })
   return [params.get('incident'), set]
