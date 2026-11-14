@@ -1,18 +1,41 @@
 import maplibregl, { type Map as MlMap } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
-import type { Building, LngLat } from '../../lib/buildings'
+import { parcelCentre, type Building, type LngLat } from '../../lib/buildings'
+
+type Ring = LngLat[]
+
+/** Ray-casting point-in-polygon on the outer ring. */
+function inside([x, y]: LngLat, ring: Ring): boolean {
+  let hit = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]
+    const [xj, yj] = ring[j]
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit
+  }
+  return hit
+}
+
+/** Grow a ring about its centre, so a floor band pokes out of the tower walls. */
+function grow(ring: Ring, k: number): Ring {
+  const cx = ring.reduce((t, p) => t + p[0], 0) / ring.length
+  const cy = ring.reduce((t, p) => t + p[1], 0) / ring.length
+  return ring.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k])
+}
+
+const FLOOR_M = 4 // fallback storey height when the map has no building height
 
 // Free vector tiles with building heights (OpenStreetMap data), no API key.
 const STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 
-type Phase = 'idle' | 'city' | 'approach' | 'orbit' | 'entrance' | 'done'
+type Phase = 'idle' | 'city' | 'approach' | 'orbit' | 'floor' | 'entrance' | 'done'
 
 const CAPTION: Record<Phase, string> = {
   idle: '',
   city: 'Downtown Houston',
   approach: 'Approaching the building',
   orbit: 'Circling the site',
+  floor: 'Patient floor',
   entrance: 'Ambulance stop',
   done: '',
 }
@@ -21,7 +44,9 @@ const CAPTION: Record<Phase, string> = {
  * 3D flyover of the site: drops in from the city, circles the tower, then
  * settles on the entrance the agent chose. The parcel comes from CoStar/Vexcel.
  */
-export default function SiteFlyover({ building, entranceNode }: { building: Building; entranceNode: string | null }) {
+export default function SiteFlyover({ building, entranceNode, patientFloor }: {
+  building: Building; entranceNode: string | null; patientFloor: number | null
+}) {
   const box = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const run = useRef(0)
@@ -94,8 +119,10 @@ export default function SiteFlyover({ building, entranceNode }: { building: Buil
       const tag = document.createElement('div')
       tag.innerHTML = `<div class="rounded-2xl bg-azure px-3 py-2 text-white shadow-card">
         <div class="text-[13px] font-semibold leading-tight">${building.record.name}</div>
-        <div class="text-[11px] text-white/80">${building.record.stories_above_grade} stories · Patient on floor 18</div></div>`
+        <div class="text-[11px] text-white/80">${building.record.stories_above_grade} stories${
+          patientFloor ? ` · Patient on floor ${patientFloor}` : ''}</div></div>`
       new maplibregl.Marker({ element: tag, anchor: 'bottom', offset: [0, -24] }).setLngLat(center).addTo(map)
+        if (patientFloor) highlightFloor(map, patientFloor)
       } catch (err) {
         console.warn('map setup:', err)
       }
@@ -110,6 +137,52 @@ export default function SiteFlyover({ building, entranceNode }: { building: Buil
     // The building is fixed for the life of this view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /**
+   * Find the tower in the map's OpenStreetMap buildings (the footprint that
+   * contains the CoStar point, tallest first) and draw the patient's floor as
+   * a green band, at its share of the real height. Falls back to the parcel.
+   */
+  function highlightFloor(map: MlMap, floor: number) {
+    const stories = building.record.stories_above_grade
+    let done = false
+    const draw = (ring: Ring, height: number) => {
+      done = true
+      const storey = height / stories
+      map.addSource('tower', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } } })
+      map.addSource('patient-floor', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [grow(ring, 1.08)] } } })
+      // A light blue wash over the whole tower, then the floor itself in green.
+      map.addLayer({ id: 'tower-wash', type: 'fill-extrusion', source: 'tower', paint: {
+        'fill-extrusion-color': '#c4d4f6', 'fill-extrusion-height': height + 0.5, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.5 } })
+      map.addLayer({ id: 'patient-floor', type: 'fill-extrusion', source: 'patient-floor', paint: {
+        'fill-extrusion-color': '#0e8a5f', 'fill-extrusion-base': (floor - 1) * storey, 'fill-extrusion-height': floor * storey,
+        'fill-extrusion-opacity': 0.95 } })
+    }
+    const tryFind = () => {
+      if (done || mapRef.current !== map) return
+      let best: { ring: Ring; height: number } | null = null
+      for (const f of map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' })) {
+        const g = f.geometry
+        const rings = g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p: number[][][]) => p[0]) : []
+        const h = Number(f.properties?.render_height ?? 0)
+        for (const r of rings as Ring[]) if (inside(center, r) && (!best || h > best.height)) best = { ring: r, height: h }
+      }
+      if (best && best.height > 30) {
+        draw(best.ring, best.height)
+        map.off('sourcedata', tryFind)
+      }
+    }
+    map.on('sourcedata', tryFind)
+    // If the tiles never give us the tower, use a shrunken parcel at the CoStar height.
+    map.once('idle', () => {
+      tryFind()
+      if (!done && mapRef.current === map) {
+        map.off('sourcedata', tryFind)
+        const c = parcelCentre(building)
+        draw(building.parcel.map(([x, y]) => [c[0] + (x - c[0]) * 0.55, c[1] + (y - c[1]) * 0.55]), stories * FLOOR_M)
+      }
+    })
+  }
 
   async function play() {
     const map = mapRef.current
@@ -134,6 +207,12 @@ export default function SiteFlyover({ building, entranceNode }: { building: Buil
       await move(() => map.easeTo({ bearing: map.getBearing() - 90, duration: 3200, easing: (t) => t, essential: true }))
     }
     if (!alive()) return
+    if (patientFloor) {
+      setPhase('floor')
+      await move(() => map.flyTo({ center, zoom: 17, pitch: 62, bearing: map.getBearing() - 30, duration: 3000, essential: true }))
+      await new Promise((r) => setTimeout(r, 2200))
+      if (!alive()) return
+    }
     setPhase('entrance')
     await move(() => map.flyTo({ ...end, duration: 3600, essential: true }))
     if (alive()) setTimeout(() => alive() && setPhase('done'), 2500)
@@ -150,7 +229,9 @@ export default function SiteFlyover({ building, entranceNode }: { building: Buil
     )
   }
 
-  const caption = phase === 'entrance' ? `${CAPTION.entrance}: ${entrance?.label}` : CAPTION[phase]
+  const caption = phase === 'entrance' ? `${CAPTION.entrance}: ${entrance?.label}`
+    : phase === 'floor' ? `Patient: floor ${patientFloor} of ${building.record.stories_above_grade}`
+    : CAPTION[phase]
   return (
     <div className="relative h-full w-full bg-sunk">
       {/* maplibre-gl.css forces position: relative on the container, so size it from a wrapper. */}

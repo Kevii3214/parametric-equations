@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import type { Building } from '../../lib/buildings'
+import { obliqueShowing, sideOf, type Building } from '../../lib/buildings'
 import MatterportTour from './MatterportTour'
 import ObliqueTour from './ObliqueTour'
 import OrthoView from './OrthoView'
@@ -17,7 +17,9 @@ const TABS: { id: Tab; label: string; source: string }[] = [
 ]
 
 /** Every view of the site in one panel: map flyover, aerials and interior scans. */
-export default function SiteImagery({ building, entranceNode }: { building: Building; entranceNode: string | null }) {
+export default function SiteImagery({ building, entranceNode, patientFloor }: {
+  building: Building; entranceNode: string | null; patientFloor: number | null
+}) {
   const [tab, setTab] = useState<Tab>('flyover')
   const entrance = building.markers.find((m) => m.node === entranceNode)
 
@@ -44,11 +46,11 @@ export default function SiteImagery({ building, entranceNode }: { building: Buil
       <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
         {tab === 'flyover' && (
           <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading 3D map…</div>}>
-            <SiteFlyover building={building} entranceNode={entranceNode} />
+            <SiteFlyover building={building} entranceNode={entranceNode} patientFloor={patientFloor} />
           </Suspense>
         )}
         {tab === 'overhead' && <OrthoView building={building} entranceNode={entranceNode} />}
-        {tab === 'approach' && <ObliqueTour building={building} />}
+        {tab === 'approach' && <ObliqueTour building={building} start={entrance ? obliqueShowing(sideOf(building, entrance.at)) : undefined} />}
         {tab === 'interior' && <MatterportTour models={building.matterport} />}
       </div>
       <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-xs text-ink-3">

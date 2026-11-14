@@ -58,6 +58,10 @@ export interface Building {
   ortho: string
   obliques: Record<Direction, string>
   obliqueCaptured: string | null
+  /** What to look for in an oblique, checked by eye (e.g. a neighbour in front). */
+  obliqueNotes: Partial<Record<Direction, string>>
+  /** CSS object-position that frames this building in an oblique. */
+  obliqueFocus: Partial<Record<Direction, string>>
   collection: string
   parcel: LngLat[]
   /** Lon/lat box the ortho image covers: the parcel's bounding box plus 10 m. */
@@ -107,6 +111,10 @@ const louisiana: Building = {
   ortho: orthoUrl,
   obliques: { north: obliqueNorth, east: obliqueEast, south: obliqueSouth, west: obliqueWest },
   obliqueCaptured: aerialJson.images['oblique-north']?.captured ?? null,
+  obliqueNotes: {
+    east: 'The rounded glass tower in front is a neighbour. 1415 Louisiana is the dark brown tower behind it, on the left.',
+  },
+  obliqueFocus: { east: '22% 55%' },
   collection: aerialJson.collection,
   parcel,
   orthoBounds,
@@ -142,6 +150,40 @@ export function buildingForRoute(nodeIds: string[]): Building | null {
 }
 
 export const demoBuilding = louisiana
+
+const OPPOSITE: Record<Direction, Direction> = { north: 'south', south: 'north', east: 'west', west: 'east' }
+
+/** Centre of the parcel. */
+export function parcelCentre(b: Building): LngLat {
+  const ring = b.parcel.slice(0, -1)
+  return [ring.reduce((t, p) => t + p[0], 0) / ring.length, ring.reduce((t, p) => t + p[1], 0) / ring.length]
+}
+
+/** Which side of the building a point is on (largest offset from the parcel centre). */
+export function sideOf(b: Building, at: LngLat): Direction {
+  const [cx, cy] = parcelCentre(b)
+  const east = (at[0] - cx) * Math.cos((cy * Math.PI) / 180)
+  const north = at[1] - cy
+  if (Math.abs(east) > Math.abs(north)) return east > 0 ? 'east' : 'west'
+  return north > 0 ? 'north' : 'south'
+}
+
+/**
+ * Vexcel names each oblique by the direction the camera looks (checked
+ * against the camera GPS in the EXIF: the "east" image was shot from the
+ * west). So the photo that shows a building's west side is the "east" one.
+ */
+export const obliqueShowing = (side: Direction): Direction => OPPOSITE[side]
+/** Where the camera stood for an oblique: the "east" image is seen from the west. */
+export const viewedFrom = (oblique: Direction): Direction => OPPOSITE[oblique]
+
+/** Floor the patient is on: from the suite's CoStar tenant row, else the parsed note. */
+export function patientFloor(b: Building, parsed: Record<string, unknown> | null): number | null {
+  const suite = parsed?.suite != null ? String(parsed.suite) : null
+  const fromTenant = b.record.current_tenants.find((t) => t.suite === suite)?.floor_guess_from_suite
+  if (fromTenant) return fromTenant
+  return typeof parsed?.floor === 'number' ? parsed.floor : null
+}
 
 /** Matterport Showcase embed URL. Models here are public, so no SDK key. */
 export function matterportUrl(id: string, opts: { autoplay?: boolean; tour?: boolean } = {}) {
