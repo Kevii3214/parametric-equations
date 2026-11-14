@@ -1,0 +1,307 @@
+{
+  "building_id": "233928",
+  "nodes": [
+    {
+      "id": "st_main",
+      "floor": 1,
+      "x": 0.0,
+      "y": 0.0,
+      "kind": "entrance",
+      "label": "Louisiana St main entrance",
+      "tag_id": "TAG-ENTRANCE-01"
+    },
+    {
+      "id": "lob1",
+      "floor": 1,
+      "x": 15.0,
+      "y": 0.0,
+      "kind": "corridor",
+      "label": "Ground floor lobby",
+      "tag_id": null
+    },
+    {
+      "id": "el1",
+      "floor": 1,
+      "x": 15.0,
+      "y": 12.0,
+      "kind": "elevator",
+      "label": "Elevators (floor 1)",
+      "tag_id": null
+    },
+    {
+      "id": "stair1",
+      "floor": 1,
+      "x": 22.0,
+      "y": 12.0,
+      "kind": "stairs",
+      "label": "Stairwell (floor 1)",
+      "tag_id": null
+    },
+    {
+      "id": "gar1",
+      "floor": 1,
+      "x": 40.0,
+      "y": 12.0,
+      "kind": "entrance",
+      "label": "Parking garage lobby",
+      "tag_id": null
+    },
+    {
+      "id": "el18",
+      "floor": 18,
+      "x": -0.2,
+      "y": -25.0,
+      "kind": "elevator",
+      "label": "Elevators (floor 18)",
+      "tag_id": null
+    },
+    {
+      "id": "stair18",
+      "floor": 18,
+      "x": -6.0,
+      "y": -25.0,
+      "kind": "stairs",
+      "label": "Stairwell (floor 18)",
+      "tag_id": null
+    },
+    {
+      "id": "hall18",
+      "floor": 18,
+      "x": -0.2,
+      "y": -8.0,
+      "kind": "corridor",
+      "label": "Floor 18 corridor",
+      "tag_id": null
+    },
+    {
+      "id": "door18",
+      "floor": 18,
+      "x": -0.27,
+      "y": -2.12,
+      "kind": "door",
+      "label": "Regus Suite 1800 entrance",
+      "tag_id": "TAG-SUITE-1800"
+    },
+    {
+      "id": "rec_a",
+      "floor": 18,
+      "x": 1.0,
+      "y": -0.5,
+      "kind": "corridor",
+      "label": "Regus reception",
+      "tag_id": null
+    },
+    {
+      "id": "rec_b",
+      "floor": 18,
+      "x": 6.65,
+      "y": -0.5,
+      "kind": "corridor",
+      "label": "Regus reception, by the phone room",
+      "tag_id": null
+    },
+    {
+      "id": "phone_door",
+      "floor": 18,
+      "x": 6.65,
+      "y": -3.16,
+      "kind": "door",
+      "label": "Regus Suite 1800 phone room (patient)",
+      "tag_id": null
+    }
+  ],
+  "edges": [
+    {
+      "from": "st_main",
+      "to": "lob1",
+      "meters": 15.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 12
+    },
+    {
+      "from": "lob1",
+      "to": "st_main",
+      "meters": 15.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 12
+    },
+    {
+      "from": "lob1",
+      "to": "el1",
+      "meters": 12.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 10
+    },
+    {
+      "from": "el1",
+      "to": "lob1",
+      "meters": 12.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 10
+    },
+    {
+      "from": "el1",
+      "to": "stair1",
+      "meters": 7.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 6
+    },
+    {
+      "from": "stair1",
+      "to": "el1",
+      "meters": 7.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 6
+    },
+    {
+      "from": "gar1",
+      "to": "el1",
+      "meters": 25.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 20
+    },
+    {
+      "from": "el1",
+      "to": "gar1",
+      "meters": 25.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 20
+    },
+    {
+      "from": "el18",
+      "to": "stair18",
+      "meters": 5.8,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "stair18",
+      "to": "el18",
+      "meters": 5.8,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "el18",
+      "to": "hall18",
+      "meters": 17.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 14
+    },
+    {
+      "from": "hall18",
+      "to": "el18",
+      "meters": 17.0,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 14
+    },
+    {
+      "from": "hall18",
+      "to": "door18",
+      "meters": 5.9,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "door18",
+      "to": "hall18",
+      "meters": 5.9,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "door18",
+      "to": "rec_a",
+      "meters": 2.1,
+      "kind": "door",
+      "stretcher_ok": true,
+      "seconds": 2
+    },
+    {
+      "from": "rec_a",
+      "to": "door18",
+      "meters": 2.1,
+      "kind": "door",
+      "stretcher_ok": true,
+      "seconds": 2
+    },
+    {
+      "from": "rec_a",
+      "to": "rec_b",
+      "meters": 5.7,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "rec_b",
+      "to": "rec_a",
+      "meters": 5.7,
+      "kind": "corridor",
+      "stretcher_ok": true,
+      "seconds": 5
+    },
+    {
+      "from": "rec_b",
+      "to": "phone_door",
+      "meters": 2.7,
+      "kind": "door",
+      "stretcher_ok": true,
+      "seconds": 3
+    },
+    {
+      "from": "phone_door",
+      "to": "rec_b",
+      "meters": 2.7,
+      "kind": "door",
+      "stretcher_ok": true,
+      "seconds": 3
+    },
+    {
+      "from": "el1",
+      "to": "el18",
+      "meters": 0,
+      "kind": "elevator",
+      "stretcher_ok": true,
+      "seconds": 60
+    },
+    {
+      "from": "el18",
+      "to": "el1",
+      "meters": 0,
+      "kind": "elevator",
+      "stretcher_ok": true,
+      "seconds": 55
+    },
+    {
+      "from": "stair1",
+      "to": "stair18",
+      "meters": 90,
+      "kind": "stairs",
+      "stretcher_ok": true,
+      "seconds": 425
+    },
+    {
+      "from": "stair18",
+      "to": "stair1",
+      "meters": 90,
+      "kind": "stairs",
+      "stretcher_ok": true,
+      "seconds": 330
+    }
+  ]
+}
