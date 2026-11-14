@@ -214,6 +214,20 @@ function facingBefore(tour: Tour, i: number, where: (id: string) => SdkPoint | n
   return null
 }
 
+/**
+ * Where the camera should look on arriving at keyframe `i` when the flight is meant to flow: halfway
+ * between the way it came in and the way it leaves, so a corner is taken as a gradual turn over two hops
+ * instead of a snap at the sweep. Straight stretches are unchanged; null when the stop cannot be placed.
+ */
+export function flowFacing(
+  tour: Tour, i: number, where: (sweepId: string) => SdkPoint | null, flip = false,
+): number | null {
+  const out = facingFor(tour, i, where, flip)
+  if (out === null) return null
+  const into = facingBefore(tour, i, where, flip)
+  return into === null ? out : wrap180(into + wrap180(out - into) / 2)
+}
+
 /** The viewer sweep id for a tour sweep: the same id if the viewer has it, else the nearest sweep within `maxM`. */
 export function matchSweep(
   sweepId: string, planPos: TourPoint, viewer: Map<string, SdkPoint>, maxM = 1.5,
@@ -242,4 +256,22 @@ export function startInScan(tour: Tour): { tour: Tour; skipped: string[] } {
   const keyframes = tour.keyframes.slice(first).map((k) => ({ ...k, t_ms: k.t_ms - t0 }))
   // The first stop can carry the lift/stairs instruction that led here; keep its caption on screen.
   return { tour: { ...tour, keyframes, duration_ms: tour.duration_ms - t0 }, skipped }
+}
+
+/**
+ * A tour for a camera that keeps moving: inside a scan the pause at each turn is dropped, so the viewer
+ * flies hop after hop like a drone and only rests at the very end. Every hop keeps its length, so the
+ * speed does not change. Map stretches (no scan) keep their pauses, and so does the final hold.
+ */
+export function smoothTour(tour: Tour): Tour {
+  const ks = tour.keyframes
+  let saved = 0
+  const keyframes = ks.map((k, i) => {
+    const next = ks[i + 1]
+    const inScan = k.kind === 'scanned' && next?.kind === 'scanned' && next.model_id === k.model_id
+    const moved = { ...k, t_ms: k.t_ms - saved, dwell_ms: inScan ? 0 : k.dwell_ms }
+    if (inScan) saved += k.dwell_ms
+    return moved
+  })
+  return { ...tour, keyframes, duration_ms: tour.duration_ms - saved }
 }

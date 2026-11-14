@@ -4,7 +4,7 @@ import { matterportUrl, type Building } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import { tidy } from '../../lib/route'
 import {
-  calibrate, facingFor, gapPosition, matchSweep, moveFor, startInScan, stateAt, yawIsFlipped,
+  calibrate, flowFacing, gapPosition, matchSweep, moveFor, smoothTour, startInScan, stateAt, yawIsFlipped,
   type SdkPoint, type Tour,
 } from '../../lib/tour'
 import CueIcon from '../CueIcon'
@@ -43,13 +43,15 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
   tour: Tour; building: Building; steps: RouteStep[]; patientFloor: number | null
 }) {
   // The tour opens inside the scan; the unscanned start (street, lobby, lift) is listed by the page, outside this box.
-  const tour = useMemo(() => startInScan(fullTour).tour, [fullTour])
+  // Inside the scan the camera never rests at a turn: it flies hop after hop like a drone.
+  const tour = useMemo(() => smoothTour(startInScan(fullTour).tour), [fullTour])
   const [t, setT] = useState(0)
   const [wantPlay, setPlaying] = useState(true)
   const [viewer, setViewer] = useState<Viewer>(SDK_KEY ? { kind: 'loading' } : { kind: 'plain', reason: 'no SDK key' })
   const [skipped, setSkipped] = useState(0)
   // The viewer moves one stop at a time: a move started during another is refused.
   const wanted = useRef(-1)
+  const sent = useRef(-1) // the last stop the viewer was sent to
   const moving = useRef(false)
   // Scrubbing: the clock pauses while the bar is dragged, then the viewer jumps to the new spot.
   const [dragging, setDragging] = useState(false)
@@ -129,8 +131,9 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
     }
   }, [modelId, tour.models, tour.keyframes])
 
-  // Drive the viewer: walk to the latest stop, one move at a time. If a move runs late the
-  // next ones are skipped over to the newest target, so the picture stays in step with the clock.
+  // Drive the viewer: fly to each stop in order, one move at a time. A viewer that runs late catches up
+  // with short hops through every stop instead of jumping over them, so the picture never teleports;
+  // only a seek (the bar, restart) cuts straight to the new spot.
   useEffect(() => {
     if (viewer.kind !== 'sdk' || s.index < 0 || dragging) return
     wanted.current = s.index
@@ -138,26 +141,27 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
     moving.current = true
     const { sdk, yaw, sweep, flip } = viewer
     void (async () => {
-      let last = -1
-      while (wanted.current !== last) {
-        const i = wanted.current
-        last = i
+      while (wanted.current !== sent.current) {
+        // After a seek, or going back, cut to the target; otherwise take the next stop in order.
+        const seek = jumped.current
+        jumped.current = false
+        const i = seek || wanted.current < sent.current ? wanted.current : sent.current + 1
+        sent.current = i
+        const behind = i < wanted.current
         const move = moveFor(tour, i)
         const target = move && sweep(move.sweepId)
         if (!move || !target) { if (move) setSkipped((n) => n + 1); continue }
         // After a seek the viewer may be far from the new stop: cut there with a quick fade, never fly.
-        const seek = jumped.current
-        jumped.current = false
         const transition = seek ? sdk.Camera.TransitionType.FADEOUT
           : move.transition === 'fly' ? sdk.Camera.TransitionType.FLY
             : move.transition === 'fade' ? sdk.Camera.TransitionType.FADEOUT : sdk.Camera.TransitionType.INSTANT
         // Look the way the walk goes (toward the next stop), like a video; else use the plan's compass.
-        const facing = facingFor(tour, i, (id) => sweep(id)?.pos ?? null, flip) ?? yaw(move.bearing)
+        const facing = flowFacing(tour, i, (id) => sweep(id)?.pos ?? null, flip) ?? yaw(move.bearing)
         try {
           await sdk.Sweep.moveTo(target.id, {
             rotation: { x: move.pitch, y: facing },
             transition,
-            transitionTime: seek ? 400 : move.transition === 'fade' ? Math.min(move.duration, 800) : move.duration,
+            transitionTime: seek ? 400 : move.transition === 'fade' ? Math.min(move.duration, 800) : behind ? Math.min(move.duration, 500) : move.duration,
           })
         } catch (err) {
           // A sweep that will not load is skipped; the clock keeps the tour going.

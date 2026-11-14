@@ -3,7 +3,7 @@ import la from '../../../fixtures/buildings/233928/tour_sample.json'
 import wt from '../../../fixtures/buildings/233903/tour_sample.json'
 import jr from '../../../fixtures/buildings/jrr/tour_sample.json'
 import {
-  apiToSdk, calibrate, departAt, facingFor, gapPosition, matchSweep, moveFor, readTour, startInScan, stateAt, wrap180, yawIsFlipped, yawToward,
+  apiToSdk, calibrate, departAt, facingFor, flowFacing, gapPosition, matchSweep, moveFor, readTour, smoothTour, startInScan, stateAt, wrap180, yawIsFlipped, yawToward,
   type SdkPoint, type Tour,
 } from './tour'
 
@@ -161,5 +161,65 @@ describe('startInScan', () => {
     const { tour, skipped } = startInScan(tours.jrr)
     expect(tour).toBe(tours.jrr)
     expect(skipped).toEqual([])
+  })
+})
+
+describe('smoothTour', () => {
+  it.each(Object.entries(tours))('%s: the camera never rests inside the scan, only at the end', (_id, tour) => {
+    const smooth = smoothTour(startInScan(tour).tour)
+    const ks = smooth.keyframes
+    ks.forEach((k, i) => {
+      const next = ks[i + 1]
+      if (k.kind === 'scanned' && next?.kind === 'scanned' && next.model_id === k.model_id) expect(k.dwell_ms).toBe(0)
+    })
+    expect(ks[ks.length - 1].dwell_ms).toBe(tour.keyframes[tour.keyframes.length - 1].dwell_ms)
+  })
+  it.each(Object.entries(tours))('%s: every hop takes as long as before and the clock still adds up', (_id, tour) => {
+    const before = startInScan(tour).tour
+    const after = smoothTour(before)
+    expect(after.keyframes).toHaveLength(before.keyframes.length)
+    before.keyframes.forEach((_, i) => {
+      expect(moveFor(after, i)?.duration).toBe(moveFor(before, i)?.duration)
+    })
+    const ks = after.keyframes
+    for (let i = 1; i < ks.length; i++) expect(ks[i].t_ms).toBeGreaterThanOrEqual(departAt(after, i))
+    const last = ks[ks.length - 1]
+    expect(after.duration_ms).toBe(last.t_ms + last.dwell_ms)
+    expect(after.duration_ms).toBeLessThanOrEqual(before.duration_ms)
+  })
+  it('keeps the pauses on the map stretches (the Houston lobby and lift are not in a scan)', () => {
+    const smooth = smoothTour(tours['233928'])
+    expect(smooth.keyframes.slice(0, 4).map((k) => k.dwell_ms)).toEqual(
+      tours['233928'].keyframes.slice(0, 4).map((k) => k.dwell_ms))
+  })
+})
+
+describe('flowFacing', () => {
+  const where = (m: Record<string, SdkPoint>) => (id: string) => m[id] ?? null
+  // a, b, c in a row heading north (-z), then d to the west: a corner at c
+  const pts = { a: { x: 0, y: 0, z: 0 }, b: { x: 0, y: 0, z: -5 }, c: { x: 0, y: 0, z: -10 }, d: { x: -5, y: 0, z: -10 } }
+  const tour = {
+    speed_up: 1, duration_ms: 0, segments: [], models: {},
+    keyframes: (['a', 'b', 'c', 'd'] as const).map((id, i) => ({
+      i, t_ms: i * 1000, dwell_ms: 0, kind: 'scanned', frame: 'scan', node: id, step_index: i, waypoint: false,
+      model_id: 'm', sweep_id: id, position: { x: 0, y: 0, z: 0 }, level: 0, bearing_deg: 0, pitch_deg: 0,
+      transition: 'fly', caption: '', cue: null,
+    })),
+  } as Tour
+  it('on a straight stretch looks where it is going', () => {
+    expect(flowFacing(tour, 1, where(pts))).toBeCloseTo(0)
+  })
+  it('turns gradually: at a corner it looks halfway between the way in and the way out', () => {
+    expect(facingFor(tour, 2, where(pts))).toBeCloseTo(90) // the way out: west
+    expect(flowFacing(tour, 2, where(pts))).toBeCloseTo(45)
+  })
+  it('keeps the way in at the last stop and is null when a stop cannot be placed', () => {
+    expect(flowFacing(tour, 3, where(pts))).toBeCloseTo(90)
+    expect(flowFacing(tour, 1, () => null)).toBeNull()
+  })
+  it('turns the other way for a right-hand corner, and honours a viewer whose yaw turns right', () => {
+    const east = { a: { x: 0, y: 0, z: 0 }, b: { x: 0, y: 0, z: -5 }, c: { x: 0, y: 0, z: -10 }, d: { x: 5, y: 0, z: -10 } }
+    expect(flowFacing(tour, 2, where(east))).toBeCloseTo(-45)
+    expect(flowFacing(tour, 2, where(east), true)).toBeCloseTo(45)
   })
 })
