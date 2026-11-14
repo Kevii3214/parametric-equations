@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import type { Building, Direction } from '../../lib/buildings'
 
 const ORDER: Direction[] = ['south', 'east', 'north', 'west']
+// Vexcel names obliques by the way the camera looks, so "north" is seen from the south.
 const LABEL: Record<Direction, string> = {
-  north: 'From the north', east: 'From the east', south: 'From the south', west: 'From the west',
+  north: 'From the south', east: 'From the west', south: 'From the north', west: 'From the east',
 }
 const SLIDE_MS = 6000
 
@@ -11,8 +12,9 @@ const SLIDE_MS = 6000
  * Vexcel oblique images as an approach tour: each direction drifts in slowly
  * (a Ken Burns move) and the tour cycles round the building on its own.
  */
-export default function ObliqueTour({ building }: { building: Building }) {
-  const [i, setI] = useState(0)
+export default function ObliqueTour({ building, start }: { building: Building; start?: Direction }) {
+  // Open on the photo that shows the chosen entrance, then tour the rest.
+  const [i, setI] = useState(() => Math.max(0, ORDER.indexOf(start ?? ORDER[0])))
   const [playing, setPlaying] = useState(true)
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export default function ObliqueTour({ building }: { building: Building }) {
       <div className="absolute bottom-3 left-3 text-white">
         <div className="text-lg font-semibold tracking-tight drop-shadow">{LABEL[dir]}</div>
         <div className="text-xs text-white/80">Vexcel oblique{captured ? ` · ${captured}` : ''}</div>
+        {building.obliqueNotes[dir] && <div className="mt-1 max-w-md text-xs text-white/90">{building.obliqueNotes[dir]}</div>}
       </div>
       <div className="absolute right-3 bottom-3 flex items-center gap-1 rounded-full bg-card/90 p-1 shadow-card">
         {ORDER.map((d, n) => (
@@ -44,7 +47,7 @@ export default function ObliqueTour({ building }: { building: Building }) {
             aria-label={LABEL[d]} title={LABEL[d]}
             className={`h-7 min-w-7 rounded-full px-2 text-[11px] font-semibold uppercase transition ${
               n === i ? 'bg-azure text-white' : 'text-ink-2 hover:text-ink'}`}>
-            {d[0]}
+            {LABEL[d].split(' ').at(-1)![0]}
           </button>
         ))}
         <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pause tour' : 'Play tour'}

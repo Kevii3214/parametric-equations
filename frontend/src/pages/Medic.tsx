@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CueIcon from '../components/CueIcon'
 import FloorMap from '../components/FloorMap'
+import FindDoor from '../components/site/FindDoor'
 import MatterportTour from '../components/site/MatterportTour'
 import { buildingById, buildingForRoute } from '../lib/buildings'
 import type { Cue, RouteStep } from '../lib/contracts'
@@ -25,6 +26,8 @@ export default function Medic() {
   // The Matterport scan of the destination suite, when this building has one.
   const site = buildingById(live.incident?.building_id) ?? buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
   const scans = site?.matterport.filter((m) => m.destination) ?? []
+  const entranceMarker = site?.markers.find((m) => m.node === route?.entrance_node) ?? null
+  const [doorHidden, setDoorHidden] = useState(false)
 
   if (!route) {
     return (
@@ -60,6 +63,9 @@ export default function Medic() {
   return (
     <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
       <div className="min-w-0 space-y-4">
+        {site && entranceMarker && stepIndex === 0 && !arrived && !doorHidden && (
+          <FindDoor building={site} entrance={entranceMarker} onDismiss={() => setDoorHidden(true)} />
+        )}
         <NextTurn cue={cue} distance={distance} text={text} offRoute={offRoute}
           then={!arrived && !offRoute ? steps[stepIndex + 1] : undefined} />
         <div className="grid grid-cols-3 gap-2 text-center">

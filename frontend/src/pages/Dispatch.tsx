@@ -5,7 +5,7 @@ import Panel, { Chip } from '../components/Panel'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
 import { createIncident } from '../lib/api'
-import { buildingById, buildingForRoute, type Building } from '../lib/buildings'
+import { buildingById, buildingForRoute, patientFloor, type Building } from '../lib/buildings'
 import type { IncidentRow, PlanStepRow, RouteRow } from '../lib/contracts'
 import { useDemoReason, useExitDemo, useIncidentParam, type DemoReason } from '../lib/demo'
 import { graphFor, parsedNote, recordsResult } from '../lib/incident'
@@ -32,7 +32,8 @@ export default function Dispatch() {
         {live.incident && <IncidentBar incident={live.incident} source={live.source} />}
         {building ? (
           <>
-            <SiteImagery building={building} entranceNode={live.route?.entrance_node ?? null} />
+            <SiteImagery building={building} entranceNode={live.route?.entrance_node ?? null}
+              patientFloor={patientFloor(building, live.incident?.parsed ?? null)} />
             <div className="grid gap-5 md:grid-cols-2">
               <CostarCard building={building} incident={live.incident} steps={live.planSteps} />
               <RouteSummary route={live.route} started={started} />

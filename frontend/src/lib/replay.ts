@@ -5,6 +5,8 @@ import { nodeMap } from './route'
 /** Replay runs this many times faster than the route's own timings. */
 const SPEEDUP = 3
 const TICK_MS = 250
+/** Seconds (route time) the replay waits at the entrance, so the door photo can be seen. */
+const ARRIVAL_HOLD = 18
 
 interface Walk {
   step: number
@@ -19,7 +21,7 @@ interface Walk {
  * wearable. Returns null when disabled.
  */
 export function useRouteReplay(route: RouteRow | null, graph: BuildingGraph | null, enabled: boolean) {
-  const [walk, setWalk] = useState<Walk>({ step: 0, elapsed: 0, playing: true })
+  const [walk, setWalk] = useState<Walk>({ step: 0, elapsed: -ARRIVAL_HOLD, playing: true })
   const steps = route?.steps ?? []
   const running = enabled && walk.playing && steps.length > 0
 
@@ -41,7 +43,7 @@ export function useRouteReplay(route: RouteRow | null, graph: BuildingGraph | nu
   if (!enabled || !route || !graph || !steps.length) return null
 
   const s = steps[walk.step]
-  const f = s.seconds > 0 ? Math.min(1, walk.elapsed / s.seconds) : 1
+  const f = s.seconds > 0 ? Math.min(1, Math.max(0, walk.elapsed) / s.seconds) : 1
   const from = nodeMap(graph).get(s.from_node)
   const position: PositionRow = {
     id: walk.step * 10_000 + Math.round(walk.elapsed * 10),
@@ -61,8 +63,8 @@ export function useRouteReplay(route: RouteRow | null, graph: BuildingGraph | nu
     done: !walk.playing && walk.step === steps.length - 1 && f >= 1,
     toggle: () => setWalk((w) => (w.playing || !(w.step === steps.length - 1 && f >= 1)
       ? { ...w, playing: !w.playing }
-      : { step: 0, elapsed: 0, playing: true })),
-    restart: () => setWalk({ step: 0, elapsed: 0, playing: true }),
+      : { step: 0, elapsed: -ARRIVAL_HOLD, playing: true })),
+    restart: () => setWalk({ step: 0, elapsed: -ARRIVAL_HOLD, playing: true }),
     jump: (d: number) => setWalk((w) => ({
       ...w,
       step: Math.min(steps.length - 1, Math.max(0, w.step + d)),
