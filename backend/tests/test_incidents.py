@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.incidents import get_parser
+from app.api.incidents import get_agent_runner, get_parser
 from app.db import get_db
 from app.intake import SYSTEM_PROMPT, NoteParser
 from app.main import app
@@ -44,7 +44,20 @@ class FakeDb:
 
 
 @pytest.fixture
-def db():
+def runner():
+    """Stands in for the background agent so these tests never start a real one."""
+    calls = []
+
+    async def run(incident_id):
+        calls.append(incident_id)
+
+    run.calls = calls
+    app.dependency_overrides[get_agent_runner] = lambda: run
+    return run
+
+
+@pytest.fixture
+def db(runner):
     fake = FakeDb()
     app.dependency_overrides[get_db] = lambda: fake
     yield fake
@@ -172,3 +185,22 @@ def test_fallback_can_be_a_comma_separated_list_without_duplicates():
     from app.intake import model_names
 
     assert model_names("a", "b, c ,a,b") == ["a", "b", "c"]
+
+
+def test_the_agent_starts_in_the_background_with_the_new_incident_id(db, runner):
+    use_parser(good_parser)
+    client.post("/incidents", json={"note": NOTE})
+    assert runner.calls == [INCIDENT_ID]
+
+
+def test_the_agent_still_starts_when_parsing_failed(db, runner):
+    use_parser(broken_parser)
+    client.post("/incidents", json={"note": NOTE})
+    assert runner.calls == [INCIDENT_ID]
+
+
+def test_no_agent_starts_when_the_incident_was_not_saved(db, runner):
+    db.fail = True
+    use_parser(good_parser)
+    client.post("/incidents", json={"note": NOTE})
+    assert runner.calls == []
