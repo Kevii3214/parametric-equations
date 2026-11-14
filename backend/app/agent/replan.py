@@ -9,6 +9,7 @@ import asyncio
 import logging
 
 from app.agent.trace import PlanTrace
+from app.briefing import HARD_LIMIT_WORDS, clip_words, spoken_briefing
 from app.graph.router import NoRouteError, find_route
 from app.graph.schema import BuildingGraph, RouteStep
 
@@ -85,8 +86,10 @@ async def replan(
             "entrance_node": start,
             "steps": [s.model_dump() for s in new_steps],
             "total_seconds": seconds,
-            "briefing": f"Re-routed: {reason.lower()}. New route is {len(new_steps)} steps, "
-            f"about {seconds} seconds.",
+            "briefing": clip_words(
+                f"Re-routed, {REASONS[kind].lower()}. {spoken_briefing(graph, new_steps)}",
+                HARD_LIMIT_WORDS,
+            ),
         }
         await asyncio.to_thread(lambda: db.table("routes").insert(row).execute())
         await trace.add(
