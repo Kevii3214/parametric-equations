@@ -1,0 +1,25 @@
+{
+  "building_id": "thea-2br",
+  "source": "written by hand: not in the CoStar kit",
+  "snapshot_date": "2026-11-14",
+  "name": "THEA at Metropolis 2BR unit",
+  "address": "Metropolis, 1000 8th St",
+  "city": "Los Angeles",
+  "state": "CA",
+  "latitude": 34.0492097,
+  "longitude": -118.2636366,
+  "property_type": null,
+  "stories_above_grade": 1,
+  "floor_names": [
+    "Floor 1"
+  ],
+  "elevators": [],
+  "parking": [],
+  "matterport_model_ids": [
+    "8GhMqrps4Gr"
+  ],
+  "current_tenants": [],
+  "data_quality_notes": [
+    "Written by hand from the Matterport scan: address, floors and elevators are unverified. No elevator is recorded because the scan does not show one."
+  ]
+}
