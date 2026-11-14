@@ -1,5 +1,12 @@
-import csv, json, os, re, sys, time, random
+import csv
+import json
+import os
+import random
+import re
+import sys
+import time
 from pathlib import Path
+
 import httpx
 from dotenv import load_dotenv
 
@@ -10,8 +17,25 @@ load_dotenv(BACKEND / ".env")
 MP_AUTH = (os.environ["MATTERPORT_API_KEY"], os.environ["MATTERPORT_API_TOKEN"])
 VX_KEY = os.environ["VEXCEL_API_KEY"]
 
-CANDIDATES = [233899, 233903, 233905, 233918, 10819844, 233927, 247506, 233928,   # office towers
-              9560001, 9354100, 9557833, 9432618, 10043113, 9395438, 691919, 9447351, 12862161]  # apartment high-rises
+CANDIDATES = [
+    233899,
+    233903,
+    233905,
+    233918,
+    10819844,
+    233927,
+    247506,
+    233928,  # office towers
+    9560001,
+    9354100,
+    9557833,
+    9432618,
+    10043113,
+    9395438,
+    691919,
+    9447351,
+    12862161,
+]  # apartment high-rises
 MAX_MODELS = 12
 
 Q = """query($id: ID!) { model(id: $id) { id name
@@ -30,18 +54,30 @@ KW = {
 
 def mp(model_id):
     for attempt in range(6):
-        r = httpx.post("https://api.matterport.com/api/models/graph", json={"query": Q, "variables": {"id": model_id}}, auth=MP_AUTH, timeout=90)
+        r = httpx.post(
+            "https://api.matterport.com/api/models/graph",
+            json={"query": Q, "variables": {"id": model_id}},
+            auth=MP_AUTH,
+            timeout=90,
+        )
         if r.status_code == 429:
-            time.sleep(2 ** attempt + random.random()); continue
+            time.sleep(2**attempt + random.random())
+            continue
         return r
     return r
 
 
 def vx(path, params):
     for attempt in range(6):
-        r = httpx.get(f"https://api.vexcelgroup.com/v2/{path}", params=params, headers={"X-API-KEY": VX_KEY}, timeout=120)
+        r = httpx.get(
+            f"https://api.vexcelgroup.com/v2/{path}",
+            params=params,
+            headers={"X-API-KEY": VX_KEY},
+            timeout=120,
+        )
         if r.status_code == 429:
-            time.sleep(2 ** attempt + random.random()); continue
+            time.sleep(2**attempt + random.random())
+            continue
         return r
     return r
 
@@ -59,10 +95,19 @@ results = []
 for pid in map(str, CANDIDATES):
     p = props[pid]
     a = p["primaryAddress"]
-    models = [r["MatterportModelId"] for r in rows if r["PropertyId"] == pid and r["MatterportModelId"]]
-    res = {"property_id": pid, "name": p.get("buildingName"), "address": f"{a.get('streetNumber')} {a.get('streetName')} {a.get('streetType')}",
-           "city": a["city"], "type": "office" if p["propertyType"] == 5 else "apartments", "stories": p.get("numStoriesAboveGrade"),
-           "models_in_kit": len(models), "models": []}
+    models = [
+        r["MatterportModelId"] for r in rows if r["PropertyId"] == pid and r["MatterportModelId"]
+    ]
+    res = {
+        "property_id": pid,
+        "name": p.get("buildingName"),
+        "address": f"{a.get('streetNumber')} {a.get('streetName')} {a.get('streetType')}",
+        "city": a["city"],
+        "type": "office" if p["propertyType"] == 5 else "apartments",
+        "stories": p.get("numStoriesAboveGrade"),
+        "models_in_kit": len(models),
+        "models": [],
+    }
     for mid in models[:MAX_MODELS]:
         r = mp(mid)
         e = {"id": mid}
@@ -80,19 +125,43 @@ for pid in map(str, CANDIDATES):
                     texts.append(rm.get("label") or "")
                     texts += [c.get("label") or "" for c in rm.get("classifications") or []]
                 blob = " | ".join(texts).lower()
-                edges = [ed for rm in rooms for ed in ((rm.get("boundary") or {}).get("edges") or [])]
-                e.update(name=m.get("name"), rooms=len(rooms), wall_edges=len(edges),
-                         doorways=sum(len(ed.get("openings") or []) for ed in edges),
-                         tags=[k for k, rx in KW.items() if re.search(rx, blob)])
+                edges = [
+                    ed for rm in rooms for ed in ((rm.get("boundary") or {}).get("edges") or [])
+                ]
+                e.update(
+                    name=m.get("name"),
+                    rooms=len(rooms),
+                    wall_edges=len(edges),
+                    doorways=sum(len(ed.get("openings") or []) for ed in edges),
+                    tags=[k for k, rx in KW.items() if re.search(rx, blob)],
+                )
         res["models"].append(e)
         time.sleep(0.15)
     # Vexcel: parcel + oblique coverage
     lat, lon = a.get("latitude"), a.get("longitude")
     if lat and lon:
         pt = f"POINT({lon} {lat})"
-        r = vx("property/extract", {"wkt": pt, "srid": 4326, "layer": "urban,urban-r,wide-area,urban-g", "latest": "true", "include": "structure"})
+        r = vx(
+            "property/extract",
+            {
+                "wkt": pt,
+                "srid": 4326,
+                "layer": "urban,urban-r,wide-area,urban-g",
+                "latest": "true",
+                "include": "structure",
+            },
+        )
         res["vexcel_parcel"] = r.status_code
-        r = vx("oriented/collections", {"wkt": pt, "srid": 4326, "layer": "urban", "product-type": "oblique", "include": "product-type,last-capture-date"})
+        r = vx(
+            "oriented/collections",
+            {
+                "wkt": pt,
+                "srid": 4326,
+                "layer": "urban",
+                "product-type": "oblique",
+                "include": "product-type,last-capture-date",
+            },
+        )
         feats = r.json()["features"] if r.is_success else []
         res["vexcel_obliques"] = sorted({f["properties"]["product-type"] for f in feats})
     results.append(res)

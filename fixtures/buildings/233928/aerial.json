@@ -1,0 +1,37 @@
+{
+  "building_id": "233928",
+  "source": "Vexcel API 2.0",
+  "snapshot_date": "2026-11-14",
+  "images": {
+    "ortho": {
+      "file": "aerial.jpg",
+      "kb": 471
+    },
+    "oblique-east": {
+      "file": "oblique-east.jpg",
+      "kb": 603,
+      "captured": "2026-01-02T18:43:55"
+    },
+    "oblique-north": {
+      "file": "oblique-north.jpg",
+      "kb": 716,
+      "captured": "2026-01-02T18:43:55"
+    },
+    "oblique-south": {
+      "file": "oblique-south.jpg",
+      "kb": 605,
+      "captured": "2026-01-02T18:43:55"
+    },
+    "oblique-west": {
+      "file": "oblique-west.jpg",
+      "kb": 585,
+      "captured": "2026-01-02T18:43:55"
+    }
+  },
+  "parcel_wkt": "MULTIPOLYGON (((-95.3694232 29.7547098, -95.3696554 29.7544162, -95.3703034 29.7548069, -95.3700711 29.7551005, -95.3694232 29.7547098)))",
+  "collection": "us-tx-houston_rf08-2023",
+  "structure_count": 1,
+  "structure_footprints_sqft": [
+    25047
+  ]
+}
