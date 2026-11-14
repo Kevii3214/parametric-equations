@@ -1,11 +1,11 @@
-# web — dispatch + medic frontend
+# frontend — dispatch + medic frontend
 
 Vite + React + TypeScript + Tailwind v4, routing with react-router, Supabase JS client.
 
 ## Run it
 
 ```bash
-cd web
+cd frontend
 npm install
 cp .env.example .env.local   # fill in Supabase URL + anon key, API URL
 npm run dev                  # http://localhost:5173
