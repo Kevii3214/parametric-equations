@@ -18,6 +18,12 @@ export function useDemo(): boolean {
   return useDemoReason() !== null
 }
 
+/** Which demo building to replay: ?building=<CoStar id>. */
+export function useDemoBuilding(): string | null {
+  const [params] = useSearchParams()
+  return params.get('building')
+}
+
 /** Leave ?demo=1 (and the sample incident) and go back to live data. */
 export function useExitDemo(): () => void {
   const [, setParams] = useSearchParams()

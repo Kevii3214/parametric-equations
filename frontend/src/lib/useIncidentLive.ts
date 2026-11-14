@@ -7,7 +7,7 @@ import type {
   RouteRow,
 } from './contracts'
 import { fixtureIncident } from './fixtures'
-import { scenarioIncident, scenarioPlanSteps, scenarioRoute } from './scenario'
+import { scenarioFor } from './scenario'
 import { supabase } from './supabase'
 
 export interface IncidentLive {
@@ -28,13 +28,9 @@ const empty: Omit<IncidentLive, 'source'> = {
   cue: null,
 }
 
-const fixtureState: IncidentLive = {
-  ...empty,
-  // Demo mode shows the real demo building (1415 Louisiana), not the toy fixture.
-  incident: scenarioIncident,
-  planSteps: scenarioPlanSteps,
-  route: scenarioRoute,
-  source: 'fixtures',
+/** Demo mode shows a real demo building (1415 Louisiana unless ?building= says otherwise). */
+function fixtureState(buildingId?: string | null): IncidentLive {
+  return { ...empty, ...scenarioFor(buildingId), source: 'fixtures' }
 }
 
 function upsertStep(list: PlanStepRow[], row: PlanStepRow): PlanStepRow[] {
@@ -54,7 +50,7 @@ function newer<T extends { id: number }>(cur: T | null, row: T): T {
  * Realtime inserts and updates. Uses the anon key only (read-only). With no
  * Supabase env vars, or with demo set, it returns the fixtures instead.
  */
-export function useIncidentLive(incidentId: string | null, demo = false): IncidentLive {
+export function useIncidentLive(incidentId: string | null, demo = false, demoBuilding?: string | null): IncidentLive {
   // The sample incident id comes back when the server was down at intake, so
   // replay the fixtures for it rather than looking it up in Supabase.
   const useFixtures = demo || !supabase || incidentId === fixtureIncident.id
@@ -115,7 +111,7 @@ export function useIncidentLive(incidentId: string | null, demo = false): Incide
     }
   }, [incidentId, useFixtures])
 
-  if (useFixtures) return fixtureState
+  if (useFixtures) return fixtureState(demoBuilding)
   // Drop rows left over from a previous incident id until the new ones arrive.
   if (live.key !== incidentId) return { ...empty, source: 'supabase' }
   const { key: _key, ...state } = live

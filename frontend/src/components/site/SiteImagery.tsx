@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { obliqueShowing, sideOf, type Building } from '../../lib/buildings'
+import type { RouteStep } from '../../lib/contracts'
 import MatterportTour from './MatterportTour'
 import ObliqueTour from './ObliqueTour'
 import OrthoView from './OrthoView'
@@ -10,15 +11,15 @@ const SiteFlyover = lazy(() => import('./SiteFlyover'))
 type Tab = 'flyover' | 'overhead' | 'approach' | 'interior'
 
 const TABS: { id: Tab; label: string; source: string }[] = [
-  { id: 'flyover', label: '3D flyover', source: 'OpenStreetMap 3D · CoStar parcel' },
+  { id: 'flyover', label: '3D flyover', source: 'OpenStreetMap 3D · route placed from the building graph (approximate)' },
   { id: 'overhead', label: 'Overhead', source: 'Vexcel ortho · CoStar parcel' },
   { id: 'approach', label: 'Approach', source: 'Vexcel obliques' },
   { id: 'interior', label: 'Inside', source: 'Matterport scans' },
 ]
 
 /** Every view of the site in one panel: map flyover, aerials and interior scans. */
-export default function SiteImagery({ building, entranceNode, patientFloor }: {
-  building: Building; entranceNode: string | null; patientFloor: number | null
+export default function SiteImagery({ building, entranceNode, patientFloor, steps }: {
+  building: Building; entranceNode: string | null; patientFloor: number | null; steps?: RouteStep[]
 }) {
   const [tab, setTab] = useState<Tab>('flyover')
   const entrance = building.markers.find((m) => m.node === entranceNode)
@@ -34,7 +35,7 @@ export default function SiteImagery({ building, entranceNode, patientFloor }: {
           </p>
         </div>
         <nav className="ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5" aria-label="Site views">
-          {TABS.map((t) => (
+          {TABS.filter((t) => building.imageryMatches || (t.id !== 'overhead' && t.id !== 'approach')).map((t) => (
             <button key={t.id} type="button" onClick={() => setTab(t.id)} aria-pressed={tab === t.id}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 tab === t.id ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
@@ -46,7 +47,7 @@ export default function SiteImagery({ building, entranceNode, patientFloor }: {
       <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
         {tab === 'flyover' && (
           <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading 3D map…</div>}>
-            <SiteFlyover building={building} entranceNode={entranceNode} patientFloor={patientFloor} />
+            <SiteFlyover building={building} entranceNode={entranceNode} patientFloor={patientFloor} steps={steps} />
           </Suspense>
         )}
         {tab === 'overhead' && <OrthoView building={building} entranceNode={entranceNode} />}
@@ -61,6 +62,7 @@ export default function SiteImagery({ building, entranceNode, patientFloor }: {
             {entrance.estimated && <span className="text-xs text-ink-3">(position estimated)</span>}
           </span>
         )}
+        {!building.imageryMatches && <span className="w-full text-amber">{building.imageryNote}</span>}
         <span className="ml-auto">{TABS.find((t) => t.id === tab)?.source}</span>
       </footer>
     </section>
