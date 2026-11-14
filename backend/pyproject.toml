@@ -25,4 +25,5 @@ dev = [
     "nbformat>=5.11.1",
     "pytest>=9.2.0",
     "ruff>=0.17.5",
+    "shapely>=2.2.0",
 ]
