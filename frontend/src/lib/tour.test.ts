@@ -61,11 +61,11 @@ describe('gap handling', () => {
     expect(gapPosition(tour, 1000)).not.toBeNull()
   })
 
-  it('Rabinowitz Hall is one continuous fly-through with a fade cut at the stairs, about 17 s', () => {
+  it('Rabinowitz Hall is one continuous fly-through with a fade cut at the stairs, about 29 s', () => {
     const tour = tours.jrr
     expect(tour.keyframes.every((k) => k.kind === 'scanned')).toBe(true)
-    expect(tour.duration_ms).toBeGreaterThan(15000)
-    expect(tour.duration_ms).toBeLessThan(27000)
+    expect(tour.duration_ms).toBeGreaterThan(20000)
+    expect(tour.duration_ms).toBeLessThan(35000)
     const stairs = tour.keyframes.findIndex((k) => k.cue === 'FLOOR_UP')
     expect(moveFor(tour, stairs)!.transition).toBe('fade')
     const flights = tour.keyframes.map((_, i) => moveFor(tour, i)!.transition)

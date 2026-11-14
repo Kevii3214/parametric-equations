@@ -179,6 +179,17 @@ def test_walking_through_a_scan_is_never_faster_than_a_brisk_walk(jrr):
         assert hop_m / seconds <= 3.0, (a.i, hop_m, seconds)
 
 
+def test_the_walk_goes_through_many_short_hops_so_it_flows(jrr):
+    tour, _, _ = jrr
+    hops = [
+        math.hypot(b.position.x - a.position.x, b.position.y - a.position.y)
+        for a, b in itertools.pairwise(tour.keyframes)
+        if a.level == b.level
+    ]
+    assert len(tour.keyframes) >= 13
+    assert max(hops) <= 6.0
+
+
 def test_the_scans_opening_view_is_included_so_the_compass_can_be_calibrated(jrr):
     tour, _, _ = jrr
     pose = tour.models["P3S6VUTP3qB"]

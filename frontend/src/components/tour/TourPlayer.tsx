@@ -207,9 +207,9 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
 
       {/* What happens before the scan starts: no scan covers it, so it is said, not shown. */}
       {intro.length > 0 && t < 4500 && (
-        <div className="pointer-events-none absolute inset-x-3 top-16 z-10 max-w-sm rounded-2xl bg-ink/85 p-3 text-white shadow-card backdrop-blur">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/60">Before the scan (not scanned)</div>
-          <ol className="mt-1 space-y-0.5 text-sm leading-snug">
+        <div className="pointer-events-none absolute bottom-[3.75rem] left-3 z-10 max-w-[70%] rounded-xl bg-ink/80 px-2.5 py-2 text-white shadow-card backdrop-blur">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">Before the scan (not scanned)</div>
+          <ol className="mt-0.5 space-y-0.5 text-xs leading-snug">
             {intro.map((c, i) => <li key={i}>{tidy(c)}</li>)}
           </ol>
         </div>
