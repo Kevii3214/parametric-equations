@@ -56,7 +56,7 @@
       "closure": "n3->n7",
       "from_node": "n3",
       "new_route_version": 2,
-      "total_seconds": 265
+      "total_seconds": 254
     },
     "created_at": "2026-11-14T10:01:12Z"
   },
@@ -65,7 +65,7 @@
     "seq": 6,
     "kind": "final",
     "title": "Final: take Stairwell B to floor 14, then east to Suite 1420",
-    "detail": { "route_version": 2, "total_seconds": 265 },
+    "detail": { "route_version": 2, "total_seconds": 254 },
     "created_at": "2026-11-14T10:01:13Z"
   }
 ]
