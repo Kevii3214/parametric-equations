@@ -1,0 +1,635 @@
+{
+ "building_id": "233903",
+ "source": "Matterport Model API",
+ "snapshot_date": "2026-11-14",
+ "note": "Sweep positions are metres in the scan's own frame (z up). A sweep id is the stop the viewer flies to; neighbors are the sweeps visible from it.",
+ "models": [
+  {
+   "id": "eJKnR3x44eh",
+   "name": "56th Floor",
+   "start_pose": {
+    "position": {
+     "x": -0.009,
+     "y": -0.007,
+     "z": 1.578
+    },
+    "bearing_deg": 0.0,
+    "pitch_deg": 5.2
+   },
+   "sweeps": [
+    {
+     "id": "dt09qgmu3yyh0ywsi4dffa01a",
+     "x": 6.791,
+     "y": 10.371,
+     "z": 0.038,
+     "level": 56,
+     "neighbors": [
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "f2r93ii0h429hurx48yqwqswc",
+     "x": -16.979,
+     "y": 0.051,
+     "z": 0.002,
+     "level": 56,
+     "neighbors": [
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "skxz39y441g9d71rmfq2ps40d",
+      "80ffs7nttkuhg6gdqa8i7dxqb",
+      "apc9zmm50narha7whp25pzpcd",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "iiix0rqk1ds0rcwmprnsc3idb",
+     "x": 8.124,
+     "y": -4.275,
+     "z": -0.033,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "cubdutgi6ty3qe06cigfn5a3b",
+      "q5fnn09gqph05hhpwtku3mk9c"
+     ]
+    },
+    {
+     "id": "nibsctteg37gnz49734zra10c",
+     "x": 13.776,
+     "y": 7.549,
+     "z": -0.026,
+     "level": 56,
+     "neighbors": [
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "3syatyp12rf6xde8wby2a478a",
+      "5scedukc3nsyaqdz783mdrdgc",
+      "ek9tmw4iz7m7as47um0nfhuwd",
+      "xy4x6c05susckiu7m243gkx9c",
+      "ku9t6zk23f3artf2uhb4z8hxa"
+     ]
+    },
+    {
+     "id": "wau3xhpqgkd6t3xcfiwcb163a",
+     "x": -10.893,
+     "y": -1.802,
+     "z": -0.003,
+     "level": 56,
+     "neighbors": [
+      "es37ibmuwd0p0xwxcgnpyph3c"
+     ]
+    },
+    {
+     "id": "cu2ay9iz7s7ux6tnpy9apq9tb",
+     "x": -1.38,
+     "y": -2.091,
+     "z": -0.007,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc"
+     ]
+    },
+    {
+     "id": "cubdutgi6ty3qe06cigfn5a3b",
+     "x": 8.097,
+     "y": 4.684,
+     "z": 0.046,
+     "level": 56,
+     "neighbors": [
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc"
+     ]
+    },
+    {
+     "id": "ek9tmw4iz7m7as47um0nfhuwd",
+     "x": 13.526,
+     "y": 6.183,
+     "z": -0.005,
+     "level": 56,
+     "neighbors": [
+      "nibsctteg37gnz49734zra10c",
+      "3syatyp12rf6xde8wby2a478a",
+      "5scedukc3nsyaqdz783mdrdgc",
+      "xy4x6c05susckiu7m243gkx9c",
+      "ku9t6zk23f3artf2uhb4z8hxa"
+     ]
+    },
+    {
+     "id": "hus8ir7dz751hrwgw6tbskpwa",
+     "x": 6.282,
+     "y": 4.135,
+     "z": 0.05,
+     "level": 56,
+     "neighbors": [
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "ku9t6zk23f3artf2uhb4z8hxa",
+     "x": 13.771,
+     "y": 17.04,
+     "z": -0.022,
+     "level": 56,
+     "neighbors": [
+      "nibsctteg37gnz49734zra10c",
+      "3syatyp12rf6xde8wby2a478a",
+      "5scedukc3nsyaqdz783mdrdgc",
+      "ek9tmw4iz7m7as47um0nfhuwd",
+      "xy4x6c05susckiu7m243gkx9c"
+     ]
+    },
+    {
+     "id": "skxz39y441g9d71rmfq2ps40d",
+     "x": -15.945,
+     "y": -2.863,
+     "z": -0.002,
+     "level": 56,
+     "neighbors": [
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "80ffs7nttkuhg6gdqa8i7dxqb",
+      "apc9zmm50narha7whp25pzpcd",
+      "f2r93ii0h429hurx48yqwqswc",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "1kze3iiq7c5qhyq9em7b56a9a",
+     "x": -4.389,
+     "y": -4.05,
+     "z": -0.011,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "rmk2sdkgpks3cgp7t8xtaw8qc",
+     "x": 8.108,
+     "y": 7.416,
+     "z": 0.021,
+     "level": 56,
+     "neighbors": [
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "nibsctteg37gnz49734zra10c",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "ymubn87r1z2ce562k13z7qzzd",
+     "x": -0.009,
+     "y": -0.007,
+     "z": -0.019,
+     "level": 56,
+     "neighbors": [
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb"
+     ]
+    },
+    {
+     "id": "ycrziideatuhe911rqm4agfqc",
+     "x": -15.99,
+     "y": -3.795,
+     "z": -0.009,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "skxz39y441g9d71rmfq2ps40d",
+      "apc9zmm50narha7whp25pzpcd",
+      "f2r93ii0h429hurx48yqwqswc",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "7wpnhnszffqc3bgnmngeh1qgb",
+     "x": 6.408,
+     "y": 7.309,
+     "z": 0.039,
+     "level": 56,
+     "neighbors": [
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "nibsctteg37gnz49734zra10c",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "74s1xtr9bt45ndbw2fqknhp0d",
+     "x": 10.63,
+     "y": 13.201,
+     "z": 0.023,
+     "level": 56,
+     "neighbors": [
+      "3syatyp12rf6xde8wby2a478a"
+     ]
+    },
+    {
+     "id": "d5e27bdfqxiawc3ut0w6ezhrc",
+     "x": -7.059,
+     "y": -4.43,
+     "z": -0.023,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "hxwz0p147k78hekmgyats13ua",
+     "x": 2.738,
+     "y": -0.777,
+     "z": -0.008,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc"
+     ]
+    },
+    {
+     "id": "nxs2iexscf5nx197kn1a4wkhc",
+     "x": -14.08,
+     "y": -4.22,
+     "z": -0.003,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "q5fnn09gqph05hhpwtku3mk9c",
+     "x": -17.49,
+     "y": -4.495,
+     "z": -0.006,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "4dhhrd3fp2c4ab16t9ta3xiyd",
+     "x": 8.217,
+     "y": -1.985,
+     "z": -0.005,
+     "level": 56,
+     "neighbors": [
+      "87xuh7htuewdnr0awrggikdcb",
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "apc9zmm50narha7whp25pzpcd",
+     "x": -12.997,
+     "y": 0.117,
+     "z": 0.016,
+     "level": 56,
+     "neighbors": [
+      "ycrziideatuhe911rqm4agfqc",
+      "skxz39y441g9d71rmfq2ps40d",
+      "80ffs7nttkuhg6gdqa8i7dxqb",
+      "f2r93ii0h429hurx48yqwqswc",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "hp7900cwuncgbfzw29drqrsrc",
+     "x": -15.097,
+     "y": -4.611,
+     "z": -0.009,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "skxz39y441g9d71rmfq2ps40d",
+      "f2r93ii0h429hurx48yqwqswc",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "xy4x6c05susckiu7m243gkx9c",
+     "x": 14.152,
+     "y": 3.467,
+     "z": -0.01,
+     "level": 56,
+     "neighbors": [
+      "nibsctteg37gnz49734zra10c",
+      "3syatyp12rf6xde8wby2a478a",
+      "5scedukc3nsyaqdz783mdrdgc",
+      "ek9tmw4iz7m7as47um0nfhuwd",
+      "ku9t6zk23f3artf2uhb4z8hxa"
+     ]
+    },
+    {
+     "id": "1py26m6zc7610hr0z0u999xcb",
+     "x": -0.007,
+     "y": -4.235,
+     "z": -0.028,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "d7uq3bx8xf2q75i6mmy8sn1ka",
+     "x": -3.997,
+     "y": -0.178,
+     "z": 0.009,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb"
+     ]
+    },
+    {
+     "id": "3fqm4m7n9wdp5yfb4qfuur6dd",
+     "x": 4.881,
+     "y": 1.518,
+     "z": 0.048,
+     "level": 56,
+     "neighbors": [
+      "q1zbiar1ctwfhc44gcu2yqs7a",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "87xuh7htuewdnr0awrggikdcb",
+     "x": 3.02,
+     "y": -4.3,
+     "z": -0.027,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd"
+     ]
+    },
+    {
+     "id": "u02khzr7y03tdatg6apgg44nd",
+     "x": -17.877,
+     "y": -1.754,
+     "z": -0.005,
+     "level": 56,
+     "neighbors": [
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "skxz39y441g9d71rmfq2ps40d",
+      "80ffs7nttkuhg6gdqa8i7dxqb",
+      "apc9zmm50narha7whp25pzpcd",
+      "f2r93ii0h429hurx48yqwqswc"
+     ]
+    },
+    {
+     "id": "80ffs7nttkuhg6gdqa8i7dxqb",
+     "x": -12.935,
+     "y": -2.7,
+     "z": 0.024,
+     "level": 56,
+     "neighbors": [
+      "skxz39y441g9d71rmfq2ps40d",
+      "apc9zmm50narha7whp25pzpcd",
+      "f2r93ii0h429hurx48yqwqswc",
+      "u02khzr7y03tdatg6apgg44nd"
+     ]
+    },
+    {
+     "id": "bhtd4w936a6n3dm5cnaherz6a",
+     "x": 3.335,
+     "y": -2.404,
+     "z": -0.003,
+     "level": 56,
+     "neighbors": [
+      "ymubn87r1z2ce562k13z7qzzd",
+      "d7uq3bx8xf2q75i6mmy8sn1ka",
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "cu2ay9iz7s7ux6tnpy9apq9tb",
+      "hxwz0p147k78hekmgyats13ua",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "es37ibmuwd0p0xwxcgnpyph3c",
+      "hp7900cwuncgbfzw29drqrsrc"
+     ]
+    },
+    {
+     "id": "es37ibmuwd0p0xwxcgnpyph3c",
+     "x": -11.022,
+     "y": -4.19,
+     "z": -0.019,
+     "level": 56,
+     "neighbors": [
+      "1kze3iiq7c5qhyq9em7b56a9a",
+      "1py26m6zc7610hr0z0u999xcb",
+      "bhtd4w936a6n3dm5cnaherz6a",
+      "87xuh7htuewdnr0awrggikdcb",
+      "d5e27bdfqxiawc3ut0w6ezhrc",
+      "wau3xhpqgkd6t3xcfiwcb163a",
+      "nxs2iexscf5nx197kn1a4wkhc",
+      "hp7900cwuncgbfzw29drqrsrc",
+      "ycrziideatuhe911rqm4agfqc",
+      "q5fnn09gqph05hhpwtku3mk9c",
+      "iiix0rqk1ds0rcwmprnsc3idb"
+     ]
+    },
+    {
+     "id": "q1zbiar1ctwfhc44gcu2yqs7a",
+     "x": 7.854,
+     "y": 1.616,
+     "z": 0.036,
+     "level": 56,
+     "neighbors": [
+      "iiix0rqk1ds0rcwmprnsc3idb",
+      "4dhhrd3fp2c4ab16t9ta3xiyd",
+      "3fqm4m7n9wdp5yfb4qfuur6dd",
+      "hus8ir7dz751hrwgw6tbskpwa",
+      "7wpnhnszffqc3bgnmngeh1qgb",
+      "dt09qgmu3yyh0ywsi4dffa01a",
+      "rmk2sdkgpks3cgp7t8xtaw8qc",
+      "cubdutgi6ty3qe06cigfn5a3b"
+     ]
+    },
+    {
+     "id": "3syatyp12rf6xde8wby2a478a",
+     "x": 13.893,
+     "y": 13.196,
+     "z": -0.002,
+     "level": 56,
+     "neighbors": [
+      "nibsctteg37gnz49734zra10c",
+      "74s1xtr9bt45ndbw2fqknhp0d",
+      "5scedukc3nsyaqdz783mdrdgc",
+      "ek9tmw4iz7m7as47um0nfhuwd",
+      "xy4x6c05susckiu7m243gkx9c",
+      "ku9t6zk23f3artf2uhb4z8hxa"
+     ]
+    },
+    {
+     "id": "5scedukc3nsyaqdz783mdrdgc",
+     "x": 14.19,
+     "y": 14.902,
+     "z": 0.008,
+     "level": 56,
+     "neighbors": [
+      "nibsctteg37gnz49734zra10c",
+      "3syatyp12rf6xde8wby2a478a",
+      "ek9tmw4iz7m7as47um0nfhuwd",
+      "xy4x6c05susckiu7m243gkx9c",
+      "ku9t6zk23f3artf2uhb4z8hxa"
+     ]
+    }
+   ]
+  }
+ ]
+}

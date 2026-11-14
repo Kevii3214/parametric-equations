@@ -1,0 +1,249 @@
+{
+ "building_id": "233928",
+ "source": "Matterport Model API",
+ "snapshot_date": "2026-11-14",
+ "note": "Sweep positions are metres in the scan's own frame (z up). A sweep id is the stop the viewer flies to; neighbors are the sweeps visible from it.",
+ "models": [
+  {
+   "id": "LJn59uoV759",
+   "name": "Lobby",
+   "start_pose": {
+    "position": {
+     "x": 0.007,
+     "y": 0.043,
+     "z": 1.593
+    },
+    "bearing_deg": 268.9,
+    "pitch_deg": 3.6
+   },
+   "sweeps": [
+    {
+     "id": "32tgheznxcqg37whh8h5kt6xa",
+     "x": 1.725,
+     "y": -2.223,
+     "z": -0.009,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "d3chkp0nrr1nhiyepsr0iyubc",
+      "mzkyi6qkgn1hmsz761rppxbfc"
+     ]
+    },
+    {
+     "id": "d3chkp0nrr1nhiyepsr0iyubc",
+     "x": 12.613,
+     "y": -1.53,
+     "z": -0.017,
+     "level": 18,
+     "neighbors": [
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "mzkyi6qkgn1hmsz761rppxbfc"
+     ]
+    },
+    {
+     "id": "w32nu5kxn9rxnnrsrgr4nyxuc",
+     "x": 6.746,
+     "y": -2.538,
+     "z": 0.001,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "kn46c8n6iy72syz48pekigqba",
+      "99ma6g4dxa42f4h613bug5iib",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "0mn5a17ywr3ci84suauea81kb",
+      "d3chkp0nrr1nhiyepsr0iyubc"
+     ]
+    },
+    {
+     "id": "8bk3xkhybtd0drycbddtat4ba",
+     "x": 9.029,
+     "y": -1.572,
+     "z": -0.007,
+     "level": 18,
+     "neighbors": [
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "kn46c8n6iy72syz48pekigqba",
+      "99ma6g4dxa42f4h613bug5iib",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "0mn5a17ywr3ci84suauea81kb",
+      "d3chkp0nrr1nhiyepsr0iyubc",
+      "mzkyi6qkgn1hmsz761rppxbfc"
+     ]
+    },
+    {
+     "id": "9b145bn9x9wpysknnydsb1rwa",
+     "x": 4.921,
+     "y": -2.458,
+     "z": -0.001,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "0mn5a17ywr3ci84suauea81kb",
+      "d3chkp0nrr1nhiyepsr0iyubc",
+      "mzkyi6qkgn1hmsz761rppxbfc"
+     ]
+    },
+    {
+     "id": "0mn5a17ywr3ci84suauea81kb",
+     "x": 9.15,
+     "y": -3.512,
+     "z": -0.01,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "kn46c8n6iy72syz48pekigqba",
+      "99ma6g4dxa42f4h613bug5iib",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc"
+     ]
+    },
+    {
+     "id": "kn46c8n6iy72syz48pekigqba",
+     "x": 8.158,
+     "y": 3.016,
+     "z": 0.005,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "99ma6g4dxa42f4h613bug5iib",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "0mn5a17ywr3ci84suauea81kb"
+     ]
+    },
+    {
+     "id": "rnmm4pfqqcf84hf312bpyhyqc",
+     "x": 0.007,
+     "y": 0.043,
+     "z": 0.007,
+     "level": 18,
+     "neighbors": [
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "kn46c8n6iy72syz48pekigqba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "0mn5a17ywr3ci84suauea81kb"
+     ]
+    },
+    {
+     "id": "he3bzqywb23ew6g144xu6a2sa",
+     "x": 2.621,
+     "y": 0.393,
+     "z": -0.002,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "kn46c8n6iy72syz48pekigqba"
+     ]
+    },
+    {
+     "id": "ifyny2pu1i1cts7kmse1a9t7c",
+     "x": 4.718,
+     "y": 3.136,
+     "z": -0.002,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "kn46c8n6iy72syz48pekigqba"
+     ]
+    },
+    {
+     "id": "mzkyi6qkgn1hmsz761rppxbfc",
+     "x": 16.969,
+     "y": -1.446,
+     "z": -0.026,
+     "level": 18,
+     "neighbors": [
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "d3chkp0nrr1nhiyepsr0iyubc"
+     ]
+    },
+    {
+     "id": "n7968ufpicry2bzfutbrfirdd",
+     "x": 5.076,
+     "y": 0.54,
+     "z": -0.0,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "rhye72bu3r59pq6415h2k83ta",
+      "he3bzqywb23ew6g144xu6a2sa"
+     ]
+    },
+    {
+     "id": "rhye72bu3r59pq6415h2k83ta",
+     "x": 1.019,
+     "y": 3.569,
+     "z": -0.002,
+     "level": 18,
+     "neighbors": [
+      "rnmm4pfqqcf84hf312bpyhyqc",
+      "32tgheznxcqg37whh8h5kt6xa",
+      "9b145bn9x9wpysknnydsb1rwa",
+      "n7968ufpicry2bzfutbrfirdd",
+      "ifyny2pu1i1cts7kmse1a9t7c",
+      "he3bzqywb23ew6g144xu6a2sa",
+      "kn46c8n6iy72syz48pekigqba"
+     ]
+    },
+    {
+     "id": "99ma6g4dxa42f4h613bug5iib",
+     "x": 7.687,
+     "y": -0.025,
+     "z": 0.005,
+     "level": 18,
+     "neighbors": [
+      "kn46c8n6iy72syz48pekigqba",
+      "8bk3xkhybtd0drycbddtat4ba",
+      "w32nu5kxn9rxnnrsrgr4nyxuc",
+      "0mn5a17ywr3ci84suauea81kb"
+     ]
+    }
+   ]
+  }
+ ]
+}

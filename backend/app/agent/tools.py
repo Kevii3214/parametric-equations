@@ -8,6 +8,7 @@ from app import notes
 from app.briefing import HARD_LIMIT_WORDS, clip_words, spoken_briefing
 from app.graph.router import NoRouteError, find_route
 from app.graph.schema import BuildingGraph
+from app.tour import build_tour
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,35 @@ def make_route_tools(provider, db, incident_id: str) -> list:
         except (LookupError, NoRouteError) as error:
             return None, {"error": str(error)}
 
+    async def load_scans(building_id: str) -> dict | None:
+        try:
+            return await provider.scans(building_id)
+        except LookupError:
+            return None  # this building has no scan data to fly through
+
+    def make_tour(steps, graph, scans) -> dict | None:
+        """The fly-through tour for this route, or None: a tour must never stop a route being saved."""
+        try:
+            return build_tour(steps, graph, scans)
+        except Exception:
+            logger.exception("Could not build the tour for incident %s", incident_id)
+            return None
+
+    async def save_route_row(row: dict, tour: dict | None) -> None:
+        if tour is None:
+            await asyncio.to_thread(lambda: db.table("routes").insert(row).execute())
+            return
+        try:
+            await asyncio.to_thread(
+                lambda: db.table("routes").insert({**row, "tour": tour}).execute()
+            )
+        except Exception:
+            logger.warning(
+                "Saving the tour failed; saving the route without it (has routes.tour been added?)",
+                exc_info=True,
+            )
+            await asyncio.to_thread(lambda: db.table("routes").insert(row).execute())
+
     @tool
     async def list_entrances(building_id: str) -> dict:
         """List the ways into the building (entrances) that the router can start a route from."""
@@ -194,6 +224,7 @@ def make_route_tools(provider, db, incident_id: str) -> list:
         if error:
             return error
         graph = await load_graph(building_id)
+        scans = await load_scans(building_id)
         try:
             existing = await asyncio.to_thread(
                 lambda: db.table("routes").select("*").eq("incident_id", incident_id).execute()
@@ -208,7 +239,7 @@ def make_route_tools(provider, db, incident_id: str) -> list:
                 "briefing": clip_words(briefing, HARD_LIMIT_WORDS)[:MAX_BRIEFING]
                 or spoken_briefing(graph, steps),
             }
-            await asyncio.to_thread(lambda: db.table("routes").insert(row).execute())
+            await save_route_row(row, make_tour(steps, graph, scans))
             await asyncio.to_thread(
                 lambda: (
                     db.table("incidents")
