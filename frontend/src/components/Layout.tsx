@@ -18,7 +18,7 @@ export default function Layout() {
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
           <span className="flex items-center gap-2">
             <Mark />
-            <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">Last 100 Meters</span>
+            <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">Pairatech</span>
           </span>
           <nav className="ml-2 flex gap-0.5 rounded-full bg-sunk p-0.5">
             <NavLink to={{ pathname: '/dispatch', search }} className={linkClass}>Dispatch</NavLink>
