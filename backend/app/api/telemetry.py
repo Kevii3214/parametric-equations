@@ -140,18 +140,15 @@ async def _save(db, incident_id: str, version: int, update: Update) -> None:
             logger.exception("Could not mark incident %s arrived", incident_id)
 
 
-@router.post("/incidents/{incident_id}/telemetry")
-async def telemetry(
-    incident_id: str,
-    sample: Telemetry,
-    db: Annotated[Client, Depends(get_db)],
-    registry: Annotated[EngineRegistry, Depends(get_registry)],
-) -> dict:
+async def process_sample(
+    db, registry: EngineRegistry, incident_id: str, sample: Telemetry
+) -> Update | None:
+    """Follow one wearable sample on the incident's route. None while the incident has no route yet."""
     if not await registry.knows(incident_id, db):
         raise HTTPException(status_code=404, detail="Unknown incident")
     tracked = await registry.get(incident_id, db)
     if tracked is None:  # no route yet: nothing to follow
-        return {"ok": True}
+        return None
     async with tracked.lock:
         update = tracked.engine.update(sample)
         await _save(db, incident_id, tracked.version, update)
@@ -172,4 +169,15 @@ async def telemetry(
                 tracked.engine,
                 None,
             )
+    return update
+
+
+@router.post("/incidents/{incident_id}/telemetry")
+async def telemetry(
+    incident_id: str,
+    sample: Telemetry,
+    db: Annotated[Client, Depends(get_db)],
+    registry: Annotated[EngineRegistry, Depends(get_registry)],
+) -> dict:
+    await process_sample(db, registry, incident_id, sample)
     return {"ok": True}

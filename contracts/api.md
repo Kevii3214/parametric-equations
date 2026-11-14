@@ -33,6 +33,14 @@ Each entry in `routes.steps` has a `cue`:
 - `plan_steps.kind`: `plan` | `subagent` | `tool_call` | `tool_result` | `replan` | `final`
 - Person 1 uses the Supabase **anon** key (read only). The service-role key never leaves the server.
 
+## Wearable device bridge
+
+The Raspberry Pi wearable does not send telemetry samples. It links to an incident with
+`PUT /api/device/{id}/link`, posts events to `POST /api/device/{id}/events` and gets cue commands (`CUE L`, `CUE UP`,
+...) in the response. The server turns the events into the same samples as `POST /incidents/{id}/telemetry`, so the web
+app sees no difference. Full protocol: `device-protocol.md`. Additive; private tables `devices` and `device_events`
+(`supabase/migrations/0003_devices.sql`).
+
 ## Fly-through tour (`routes.tour`)
 
 Each `routes` row can carry a `tour` (jsonb, added by `supabase/migrations/0002_route_tour.sql`; it is `null` or missing

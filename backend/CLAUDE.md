@@ -2,7 +2,7 @@
 
 You are helping **Person 2**, who owns the server, the AI agent and the data for **Beeline**, a HackPrinceton Fall 2026 project (the web app is called **Pairatech**). Person 2 is new to this stack: explain what you are doing in plain words, keep changes small, and stop to ask when something is unclear.
 
-**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 315 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
+**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 340 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
 
 ## What Beeline is
 
@@ -45,18 +45,21 @@ fixtures/
 supabase/migrations/    0001_init.sql (9 tables, RLS, Realtime), 0002_route_tour.sql (routes.tour)
 backend/
   app/main.py config.py db.py models.py intake.py briefing.py notes.py tour.py
-  app/api/        incidents.py telemetry.py events.py ask.py
+  app/api/        incidents.py telemetry.py events.py ask.py device.py
+  app/device/     translate.py (Pi events <-> telemetry/commands) replay.py (reverse, for the fake device)
   app/agent/      agent.py subagents.py tools.py trace.py replan.py vision_hints.py
   app/graph/      schema.py router.py from_scan.py
   app/position/   engine.py simulate.py
   app/providers/  base.py (BuildingProvider) snapshot.py (reads fixtures)
-  tools/          mock_wearable.py  add_building.py
+  tools/          mock_wearable.py  mock_device.py  add_building.py
   notebooks/      costar_pull.ipynb, make_*.py (regenerate fixtures), rank_buildings.py
-  tests/          315 tests; fakes.py is an in-memory Supabase stand-in
+  tests/          340 tests; fakes.py is an in-memory Supabase stand-in
   data/ docs/     git-ignored: CoStar kit and Vexcel docs (not committed)
 ```
 
-**Endpoints:** `GET /health`, `POST /incidents` (parse the note with Gemini, save the row, start the agent in the background), `POST /incidents/{id}/telemetry`, `POST /incidents/{id}/events` (elevator_out, obstacle, note, arrived; elevator_out triggers a re-plan), `POST /ask`.
+**Endpoints:** `GET /health`, `POST /incidents` (parse the note with Gemini, save the row, start the agent in the background), `POST /incidents/{id}/telemetry`, `POST /incidents/{id}/events` (elevator_out, obstacle, note, arrived; elevator_out triggers a re-plan), `POST /ask`, plus the Pi bridge `PUT /api/device/{id}/link` and `POST /api/device/{id}/events`.
+
+**Device bridge** (`app/api/device.py`, `app/device/`, `contracts/device-protocol.md`, migration 0003): the hardware team's Raspberry Pi sends events (steps, turn, floor, button, fall, air) and gets commands (`CUE L`, `CUE UP`, ...) back. `DeviceState` turns each batch into one telemetry sample for `process_sample` (shared with `/telemetry`), so there is one position engine. Field names and command strings are **proposed from a summary of `wearable.py`, which has not been seen**: if it differs, change only `translate.py`. No RFID reader is used, so no `tag` events. Falls and air warnings go to `device_events` and are not shown on the web app yet. Test with `tools/mock_device.py`.
 
 **The agent** (`create_deep_agent`, Gemini with fallbacks): `make_plan` → `records` subagent (resolve_building, get_building_record, find_suite) → `search_notes`, `list_entrances`, `find_destination_nodes`, `plan_route` (every entrance, in parallel), `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note`. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`). Capped at 25 model calls; model fallback applies to the subagent too; a failure after a route was saved is reported as "Route saved". Built-in deepagents `execute`/file tools are harmless (no sandbox, in-memory files) and a test locks that in.
 
@@ -97,7 +100,7 @@ DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost
 `uv` is not on PATH on this machine: use `python -m uv ...`.
 
 ```
-python -m uv run pytest -q                      # 315 tests
+python -m uv run pytest -q                      # 340 tests
 python -m uv run ruff format app tests tools    # NOT "ruff format ." : it reformats code blocks inside .md files
 python -m uv run ruff check .
 python -m uv run uvicorn app.main:app --port 8000
