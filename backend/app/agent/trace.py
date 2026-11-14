@@ -6,6 +6,7 @@ Person 1's web app shows these rows live, and they are how judges see the agent 
 import asyncio
 import json
 import logging
+import threading
 from uuid import UUID
 
 from langchain_core.callbacks import AsyncCallbackHandler
@@ -41,7 +42,8 @@ class PlanTrace:
         self._db = db
         self._incident_id = incident_id
         self._seq = 0
-        self._lock = asyncio.Lock()
+        # a thread lock, not asyncio.Lock: tool callbacks can arrive from a different event loop
+        self._lock = threading.Lock()
 
     @classmethod
     async def resume(cls, db, incident_id: str) -> "PlanTrace":
@@ -57,19 +59,20 @@ class PlanTrace:
         return trace
 
     async def add(self, kind: str, title: str, detail: dict | None = None) -> None:
-        async with self._lock:  # keeps seq in step with the order rows are written
+        with self._lock:  # numbers each step; never held across an await
             self._seq += 1
-            row = {
-                "incident_id": self._incident_id,
-                "seq": self._seq,
-                "kind": kind,
-                "title": _clip(title, MAX_TITLE),
-                "detail": _clip_detail(detail or {}),
-            }
-            try:
-                await asyncio.to_thread(lambda: self._db.table("plan_steps").insert(row).execute())
-            except Exception:
-                logger.exception("Could not write plan step %s", self._seq)
+            seq = self._seq
+        row = {
+            "incident_id": self._incident_id,
+            "seq": seq,
+            "kind": kind,
+            "title": _clip(title, MAX_TITLE),
+            "detail": _clip_detail(detail or {}),
+        }
+        try:
+            await asyncio.to_thread(lambda: self._db.table("plan_steps").insert(row).execute())
+        except Exception:
+            logger.exception("Could not write plan step %s", self._seq)
 
 
 class TraceHandler(AsyncCallbackHandler):
