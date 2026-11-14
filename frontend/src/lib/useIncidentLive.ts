@@ -53,7 +53,9 @@ function newer<T extends { id: number }>(cur: T | null, row: T): T {
  * Supabase env vars, or with demo set, it returns the fixtures instead.
  */
 export function useIncidentLive(incidentId: string | null, demo = false): IncidentLive {
-  const useFixtures = demo || !supabase
+  // The sample incident id comes back when the server was down at intake, so
+  // replay the fixtures for it rather than looking it up in Supabase.
+  const useFixtures = demo || !supabase || incidentId === fixtureIncident.id
   const [live, setState] = useState<IncidentLive & { key: string | null }>({
     ...empty,
     source: 'supabase',
