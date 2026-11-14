@@ -1,11 +1,9 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import CostarCard from '../components/briefing/CostarCard'
 import CallIntake from '../components/call/CallIntake'
 import CueIcon from '../components/CueIcon'
 import Icon from '../components/Icon'
 import PlanTrace from '../components/PlanTrace'
-import FindDoor from '../components/site/FindDoor'
 import SiteImagery from '../components/site/SiteImagery'
 import { headsUp, routeGlance, spokenSummary } from '../lib/briefing'
 import { buildingById } from '../lib/buildings'
@@ -30,7 +28,8 @@ export default function PreArrival() {
   const warnings = headsUp(site, steps, live.planSteps)
 
   return (
-    <div className="mx-auto max-w-3xl pb-28">
+    <div className="mx-auto max-w-6xl pb-28 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-8">
+      <div className="min-w-0">
       <CallIntake reason={inc.reason} onCreated={inc.setIncident} />
 
       {!live.incident && !inc.started && (
@@ -71,9 +70,10 @@ export default function PreArrival() {
         </header>
       )}
 
-      {route && site && entrance && site.imageryMatches && (
+      {route && site && (
         <Section title="Where to stop">
-          <FindDoor building={site} entrance={entrance} />
+          {/* Opens on the 3D view: the tower, the patient's floor, the entrance pins and the route. */}
+          <SiteImagery building={site} entranceNode={route.entrance_node} patientFloor={inc.patientFloor} steps={steps} />
         </Section>
       )}
 
@@ -112,28 +112,23 @@ export default function PreArrival() {
         </Section>
       )}
 
-      {site && route && (
-        <Collapsible title="The building, in 3D and from above">
-          <SiteImagery building={site} entranceNode={route.entrance_node} patientFloor={inc.patientFloor} steps={steps} />
-        </Collapsible>
-      )}
+      </div>
 
-      {site && live.incident && (
-        <Collapsible title="Building facts">
-          <CostarCard building={site} incident={live.incident} steps={live.planSteps} />
-        </Collapsible>
-      )}
-
+      {/* The agent's plan trace stays on screen: a column beside the briefing on wide screens. */}
       {(live.planSteps.length > 0 || inc.working) && (
-        <Collapsible title={`How the route was planned (${live.planSteps.length} steps)`} open={inc.working}>
+        <aside className="mt-6 border-t border-line pt-5 lg:sticky lg:top-20 lg:mt-0 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-t-0 lg:pt-0">
+          <header className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Agent plan trace</h2>
+            <span className="text-xs text-ink-3">{live.planSteps.length} steps</span>
+          </header>
           <PlanTrace steps={live.planSteps} waiting={inc.working} />
-        </Collapsible>
+        </aside>
       )}
 
       {route && (
         <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/90 px-4 py-3 backdrop-blur">
           <button type="button" onClick={() => navigate({ pathname: '/arrival', search })}
-            className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-azure py-3.5 text-base font-semibold text-white shadow-card hover:bg-azure-deep">
+            className="mx-auto flex w-full max-w-6xl items-center justify-center gap-2 rounded-2xl bg-azure py-3.5 text-base font-semibold text-white shadow-card hover:bg-azure-deep">
             We're here, start directions <Icon name="next" className="h-5 w-5" />
           </button>
         </div>
@@ -154,17 +149,6 @@ function Section({ title, aside, children }: { title: string; aside?: ReactNode;
   )
 }
 
-function Collapsible({ title, open, children }: { title: string; open?: boolean; children: ReactNode }) {
-  return (
-    <details open={open} className="group mt-6 border-t border-line pt-5">
-      <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3 hover:text-azure">
-        {title}
-        <Icon name="next" className="h-4 w-4 transition group-open:rotate-90" />
-      </summary>
-      <div className="mt-3">{children}</div>
-    </details>
-  )
-}
 
 /** Reads the briefing aloud with the browser's speech synthesis. */
 function Briefing({ text }: { text: string }) {
