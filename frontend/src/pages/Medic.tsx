@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import CueIcon from '../components/CueIcon'
 import FloorMap from '../components/FloorMap'
+import MatterportTour from '../components/site/MatterportTour'
+import { buildingById, buildingForRoute } from '../lib/buildings'
 import type { Cue, RouteStep } from '../lib/contracts'
 import { useDemo, useIncidentParam } from '../lib/demo'
 import { closures, graphFor } from '../lib/incident'
@@ -18,6 +20,11 @@ export default function Medic() {
   const replay = useRouteReplay(route, graph, live.source === 'fixtures')
   const position = replay?.position ?? live.position
   const [pickedFloor, setPickedFloor] = useState<number | null>(null)
+  const [view, setView] = useState<'plan' | 'scan'>('plan')
+
+  // The Matterport scan of the destination suite, when this building has one.
+  const site = buildingById(live.incident?.building_id) ?? buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
+  const scans = site?.matterport.filter((m) => m.destination) ?? []
 
   if (!route) {
     return (
@@ -81,8 +88,20 @@ export default function Medic() {
 
       <section className="min-w-0 self-start rounded-2xl border border-line bg-card p-4 shadow-card">
         <header className="mb-3 flex items-center gap-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Floor map</h2>
-          <div className="ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5">
+          {scans.length ? (
+            <div className="flex gap-0.5 rounded-full bg-sunk p-0.5">
+              {(['plan', 'scan'] as const).map((v) => (
+                <button key={v} type="button" onClick={() => setView(v)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    view === v ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
+                  {v === 'plan' ? 'Floor plan' : '3D scan'}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Floor map</h2>
+          )}
+          <div className={`ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5 ${view === 'scan' ? 'invisible' : ''}`}>
             {floors.map((f) => (
               <button key={f} type="button" onClick={() => setPickedFloor(f === currentFloor ? null : f)}
                 className={`min-w-10 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
@@ -92,7 +111,11 @@ export default function Medic() {
             ))}
           </div>
         </header>
-        {graph ? (
+        {view === 'scan' && scans.length ? (
+          <div className="aspect-[4/3] w-full overflow-hidden rounded-xl">
+            <MatterportTour models={scans} compact />
+          </div>
+        ) : graph ? (
           <FloorMap graph={graph} floor={floor} steps={steps} currentStep={stepIndex}
             position={point} offRoute={offRoute} closures={closures(live.planSteps)}
             className="aspect-[4/3] w-full rounded-xl bg-sunk" />

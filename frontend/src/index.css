@@ -59,3 +59,24 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .trace-in { animation: none; }
 }
+
+/* Oblique approach tour: slow drift in, alternating direction. */
+@keyframes kenburns-0 {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.14) translate(-2%, -1.5%); }
+}
+@keyframes kenburns-1 {
+  from { transform: scale(1.14) translate(2%, 1%); }
+  to { transform: scale(1.02) translate(0, 0); }
+}
+@keyframes progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="kenburns"] { animation: none !important; }
+}
+
+/* MapLibre controls in the app's palette. */
+.maplibregl-ctrl-group { border-radius: 9999px !important; box-shadow: var(--shadow-card) !important; overflow: hidden; }
+.maplibregl-ctrl-attrib { font-size: 10px; background: rgb(255 253 248 / 0.8) !important; border-radius: 9999px; }

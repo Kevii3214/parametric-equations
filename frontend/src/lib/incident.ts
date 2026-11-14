@@ -1,5 +1,6 @@
 // Small readers over the shared rows. Person 1 never reads Person 2's private
 // tables (buildings, graphs), so building facts come from the plan trace.
+import { buildingForRoute } from './buildings'
 import type { BuildingGraph, PlanStepRow, RouteStep } from './contracts'
 import { fixtureGraph } from './fixtures'
 
@@ -32,11 +33,13 @@ export function parsedNote(parsed: Json | null): Record<string, string | number>
 
 /**
  * The interior graph for a route. The graphs table is private to the server
- * and the API has no graph endpoint yet (open question with Person 2), so for
- * now this is the fixture graph, used only when it contains the route's nodes.
+ * and the API has no graph endpoint yet, so this uses the graphs bundled from
+ * fixtures/ (the real demo building first), when they contain the route.
  */
 export function graphFor(steps: RouteStep[] | undefined): BuildingGraph | null {
   if (!steps?.length) return null
+  const real = buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
+  if (real) return real.graph
   const ids = new Set(fixtureGraph.nodes.map((n) => n.id))
   return steps.every((s) => ids.has(s.from_node) && ids.has(s.to_node)) ? fixtureGraph : null
 }

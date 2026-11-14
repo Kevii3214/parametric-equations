@@ -6,7 +6,8 @@ import type {
   PositionRow,
   RouteRow,
 } from './contracts'
-import { fixtureIncident, fixturePlanSteps, fixtureRoute } from './fixtures'
+import { fixtureIncident } from './fixtures'
+import { scenarioIncident, scenarioPlanSteps, scenarioRoute } from './scenario'
 import { supabase } from './supabase'
 
 export interface IncidentLive {
@@ -29,9 +30,10 @@ const empty: Omit<IncidentLive, 'source'> = {
 
 const fixtureState: IncidentLive = {
   ...empty,
-  incident: fixtureIncident,
-  planSteps: fixturePlanSteps,
-  route: fixtureRoute,
+  // Demo mode shows the real demo building (1415 Louisiana), not the toy fixture.
+  incident: scenarioIncident,
+  planSteps: scenarioPlanSteps,
+  route: scenarioRoute,
   source: 'fixtures',
 }
 
