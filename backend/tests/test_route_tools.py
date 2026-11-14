@@ -154,3 +154,25 @@ def test_long_briefings_are_trimmed(tools, db):
         briefing="x" * 3000,
     )
     assert len(db.rows("routes")[0]["briefing"]) <= 600
+
+
+def test_a_blank_briefing_is_written_from_the_route(tools, db):
+    call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing="  ",
+    )
+    assert "elevator" in db.rows("routes")[0]["briefing"].lower()
+
+
+def test_a_long_briefing_is_cut_to_about_ten_seconds(tools, db):
+    call(
+        tools["choose_route"],
+        building_id=BUILDING,
+        start_node="gar1",
+        goal_node="phone_door",
+        briefing=" ".join(["word"] * 100),
+    )
+    assert len(db.rows("routes")[0]["briefing"].split()) <= 35

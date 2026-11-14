@@ -5,6 +5,7 @@ import re
 from langchain_core.tools import tool
 
 from app import notes
+from app.briefing import HARD_LIMIT_WORDS, clip_words, spoken_briefing
 from app.graph.router import NoRouteError, find_route
 from app.graph.schema import BuildingGraph
 
@@ -188,10 +189,11 @@ def make_route_tools(provider, db, incident_id: str) -> list:
         building_id: str, start_node: str, goal_node: str, briefing: str
     ) -> dict:
         """Save the route you picked as the incident's route. The router's steps for these two nodes are
-        stored; you only add a short briefing for the crew (two or three plain sentences)."""
+        stored; you only add a spoken briefing for the crew: one or two plain sentences, 30 words at most."""
         steps, error = await compute(building_id, start_node, goal_node)
         if error:
             return error
+        graph = await load_graph(building_id)
         try:
             existing = await asyncio.to_thread(
                 lambda: db.table("routes").select("*").eq("incident_id", incident_id).execute()
@@ -203,7 +205,8 @@ def make_route_tools(provider, db, incident_id: str) -> list:
                 "entrance_node": start_node,
                 "steps": [s.model_dump() for s in steps],
                 "total_seconds": round(sum(s.seconds for s in steps)),
-                "briefing": briefing.strip()[:MAX_BRIEFING],
+                "briefing": clip_words(briefing, HARD_LIMIT_WORDS)[:MAX_BRIEFING]
+                or spoken_briefing(graph, steps),
             }
             await asyncio.to_thread(lambda: db.table("routes").insert(row).execute())
             await asyncio.to_thread(

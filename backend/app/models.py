@@ -50,6 +50,21 @@ class Telemetry(BaseModel):
     tag: str | None = Field(default=None, description="RFID tag UID scanned in this sample")
 
 
+class AskIn(BaseModel):
+    """Body of POST /ask."""
+
+    incident_id: str
+    question: str = Field(max_length=500)
+
+    @field_validator("question")
+    @classmethod
+    def not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("question must not be empty")
+        return value
+
+
 class EventIn(BaseModel):
     """Body of POST /incidents/{id}/events: something the crew reports."""
 

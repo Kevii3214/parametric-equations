@@ -33,7 +33,7 @@ results and write the briefing.
    so in the briefing.
 5. Call plan_route for EVERY entrance in the same step (parallel tool calls, not one after another), then
    compare total_seconds.
-6. Call choose_route for the fastest one, with a briefing of two or three plain sentences for the crew:
+6. Call choose_route for the fastest one, with a spoken briefing for the crew, 30 words at most (about ten seconds):
    which entrance, the key turns and floor changes, and anything uncertain (such as a floor that is only
    a guess).
 7. Finish with one or two sentences saying what was saved.
