@@ -1,7 +1,7 @@
 {
  "version": 1,
  "speed_up": 6.0,
- "duration_ms": 17034,
+ "duration_ms": 24121,
  "segments": [
   {
    "kind": "scanned",
@@ -60,7 +60,7 @@
   },
   {
    "i": 2,
-   "t_ms": 2400,
+   "t_ms": 3122,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -83,7 +83,7 @@
   },
   {
    "i": 3,
-   "t_ms": 3600,
+   "t_ms": 4993,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -106,7 +106,7 @@
   },
   {
    "i": 4,
-   "t_ms": 8600,
+   "t_ms": 9993,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -129,7 +129,7 @@
   },
   {
    "i": 5,
-   "t_ms": 10500,
+   "t_ms": 12725,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -152,7 +152,7 @@
   },
   {
    "i": 6,
-   "t_ms": 12400,
+   "t_ms": 14906,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -175,7 +175,7 @@
   },
   {
    "i": 7,
-   "t_ms": 13834,
+   "t_ms": 19208,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -198,7 +198,7 @@
   },
   {
    "i": 8,
-   "t_ms": 15034,
+   "t_ms": 22121,
    "dwell_ms": 2000,
    "kind": "scanned",
    "frame": "scan",

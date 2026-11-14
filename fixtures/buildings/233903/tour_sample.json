@@ -1,7 +1,7 @@
 {
  "version": 1,
  "speed_up": 6.0,
- "duration_ms": 24966,
+ "duration_ms": 28371,
  "segments": [
   {
    "kind": "gap",
@@ -159,7 +159,7 @@
   },
   {
    "i": 6,
-   "t_ms": 19866,
+   "t_ms": 21028,
    "dwell_ms": 0,
    "kind": "scanned",
    "frame": "scan",
@@ -182,7 +182,7 @@
   },
   {
    "i": 7,
-   "t_ms": 21066,
+   "t_ms": 24471,
    "dwell_ms": 700,
    "kind": "scanned",
    "frame": "scan",
@@ -205,7 +205,7 @@
   },
   {
    "i": 8,
-   "t_ms": 22966,
+   "t_ms": 26371,
    "dwell_ms": 2000,
    "kind": "scanned",
    "frame": "scan",

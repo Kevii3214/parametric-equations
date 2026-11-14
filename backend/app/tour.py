@@ -19,6 +19,8 @@ MIN_HOP_MS = 1200  # the shortest move between two stops, so the flight never je
 TURN_DWELL_MS = 700  # pause at a turn so the caption can be read
 END_DWELL_MS = 2000
 DEFAULT_SPEED_UP = 6.0  # a 100 s walk plays in about 17 s
+# Inside a scan the viewer walks at about 2.6 m/s: it looks like walking, not a blur.
+SCAN_SPEED_UP = 2.0
 
 
 class Point(BaseModel):
@@ -238,7 +240,7 @@ def build_tour(
             elif not scanned:
                 move_ms = (step.seconds * 1000 / speed_up) if step is not None else 0
             else:
-                move_ms = hop_m / (WALK_MPS * speed_up) * 1000
+                move_ms = hop_m / (WALK_MPS * min(speed_up, SCAN_SPEED_UP)) * 1000
             t += prev.dwell_ms + max(MIN_HOP_MS, int(move_ms))
         keyframes.append(
             Keyframe(

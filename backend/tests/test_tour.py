@@ -169,6 +169,16 @@ def test_a_faster_playback_makes_a_shorter_tour():
     assert fast.duration_ms < slow.duration_ms
 
 
+def test_walking_through_a_scan_is_never_faster_than_a_brisk_walk(jrr):
+    tour, _, _ = jrr
+    for a, b in itertools.pairwise(tour.keyframes):
+        if a.level != b.level or a.model_id != b.model_id:
+            continue
+        hop_m = math.hypot(b.position.x - a.position.x, b.position.y - a.position.y)
+        seconds = (b.t_ms - a.t_ms - a.dwell_ms) / 1000
+        assert hop_m / seconds <= 3.0, (a.i, hop_m, seconds)
+
+
 def test_the_scans_opening_view_is_included_so_the_compass_can_be_calibrated(jrr):
     tour, _, _ = jrr
     pose = tour.models["P3S6VUTP3qB"]

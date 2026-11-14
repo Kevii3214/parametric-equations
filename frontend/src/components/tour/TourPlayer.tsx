@@ -3,7 +3,10 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { matterportUrl, type Building } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import { tidy } from '../../lib/route'
-import { calibrate, gapPosition, moveFor, stateAt, type Tour } from '../../lib/tour'
+import {
+  calibrate, facingFor, gapPosition, matchSweep, moveFor, stateAt, yawIsFlipped,
+  type SdkPoint, type Tour,
+} from '../../lib/tour'
 import CueIcon from '../CueIcon'
 import Icon from '../Icon'
 
@@ -20,7 +23,14 @@ const sdkEmbedUrl = (modelId: string) => `https://my.matterport.com/show/?${new 
 
 type Viewer =
   | { kind: 'loading' }
-  | { kind: 'sdk'; sdk: MpSdk; yaw: (bearing: number) => number }
+  | {
+    kind: 'sdk'; sdk: MpSdk
+    /** Fallback facing from the plan's compass, when a stop's sweep cannot be placed. */
+    yaw: (bearing: number) => number
+    /** The viewer's own sweep (id and position) for a tour sweep id; null when the scan has no such sweep. */
+    sweep: (tourSweepId: string) => { id: string; pos: SdkPoint } | null
+    flip: boolean
+  }
   | { kind: 'plain'; reason: string }
 
 /**
@@ -36,6 +46,9 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
   const [wantPlay, setPlaying] = useState(true)
   const [viewer, setViewer] = useState<Viewer>(SDK_KEY ? { kind: 'loading' } : { kind: 'plain', reason: 'no SDK key' })
   const [skipped, setSkipped] = useState(0)
+  // The viewer moves one stop at a time: a move started during another is refused.
+  const wanted = useRef(-1)
+  const moving = useRef(false)
   const frame = useRef<HTMLIFrameElement>(null)
   // React's development double-run would connect twice; connect once per model.
   const connectedFor = useRef<string | null>(null)
@@ -80,10 +93,25 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
           const sub = sdk!.Camera.pose.subscribe((p) => { sub.cancel(); res(p) })
         })
         const opening = tour.models[modelId]?.bearing_deg ?? 0
-        if (!cancelled) setViewer({ kind: 'sdk', sdk, yaw: calibrate(opening, pose.rotation.y) })
+        // The viewer's own sweeps: the tour's sweep ids are matched to them (same id, else nearest position).
+        const data = await sdk.Sweep.data.waitUntil((d) => Object.keys(d).length > 0)
+        const here = new Map<string, SdkPoint>()
+        for (const [key, sw] of data) here.set(sw.sid || key, sw.position)
+        const found = new Map<string, { id: string; pos: SdkPoint }>()
+        for (const k of tour.keyframes) {
+          if (k.kind !== 'scanned' || !k.sweep_id || found.has(k.sweep_id)) continue
+          const id = matchSweep(k.sweep_id, k.position, here)
+          if (id) found.set(k.sweep_id, { id, pos: here.get(id)! })
+        }
+        const flip = yawIsFlipped(opening, pose.rotation.y)
+        console.info(`Matterport tour: ${found.size}/${new Set(tour.keyframes.map((k) => k.sweep_id).filter(Boolean)).size} sweeps matched, yaw ${flip ? 'turns right' : 'turns left'}`)
+        if (!cancelled) {
+          setViewer({ kind: 'sdk', sdk, yaw: calibrate(opening, pose.rotation.y), sweep: (id) => found.get(id) ?? null, flip })
+        }
       } catch (err) {
         console.warn('Matterport SDK:', err)
-        if (!cancelled) setViewer({ kind: 'plain', reason: 'SDK could not connect' })
+        const refused = /key|referrer|domain/i.test(String(err))
+        if (!cancelled) setViewer({ kind: 'plain', reason: refused ? `SDK key not allowed on ${location.host}` : 'SDK could not connect' })
       }
     })()
     return () => {
@@ -93,25 +121,42 @@ export default function TourPlayer({ tour, building, steps, patientFloor }: {
       connectedFor.current = null
       try { sdk?.disconnect() } catch { /* already gone */ }
     }
-  }, [modelId, tour.models])
+  }, [modelId, tour.models, tour.keyframes])
 
-  // Drive the viewer: each time a new scanned stop becomes the target, move to it.
+  // Drive the viewer: walk to the latest stop, one move at a time. If a move runs late the
+  // next ones are skipped over to the newest target, so the picture stays in step with the clock.
   useEffect(() => {
     if (viewer.kind !== 'sdk' || s.index < 0) return
-    const move = moveFor(tour, s.index)
-    if (!move) return
-    const { sdk, yaw } = viewer
-    const transition = move.transition === 'fly' ? sdk.Camera.TransitionType.FLY
-      : move.transition === 'fade' ? sdk.Camera.TransitionType.FADEOUT : sdk.Camera.TransitionType.INSTANT
-    sdk.Sweep.moveTo(move.sweepId, {
-      rotation: { x: move.pitch, y: yaw(move.bearing) },
-      transition,
-      transitionTime: move.transition === 'fade' ? Math.min(move.duration, 800) : move.duration,
-    }).catch((err: unknown) => {
-      // A sweep that will not load is skipped; the clock keeps the tour going.
-      console.warn('Matterport sweep skipped:', move.sweepId, err)
-      setSkipped((n) => n + 1)
-    })
+    wanted.current = s.index
+    if (moving.current) return
+    moving.current = true
+    const { sdk, yaw, sweep, flip } = viewer
+    void (async () => {
+      let last = -1
+      while (wanted.current !== last) {
+        const i = wanted.current
+        last = i
+        const move = moveFor(tour, i)
+        const target = move && sweep(move.sweepId)
+        if (!move || !target) { if (move) setSkipped((n) => n + 1); continue }
+        const transition = move.transition === 'fly' ? sdk.Camera.TransitionType.FLY
+          : move.transition === 'fade' ? sdk.Camera.TransitionType.FADEOUT : sdk.Camera.TransitionType.INSTANT
+        // Look the way the walk goes (toward the next stop), like a video; else use the plan's compass.
+        const facing = facingFor(tour, i, (id) => sweep(id)?.pos ?? null, flip) ?? yaw(move.bearing)
+        try {
+          await sdk.Sweep.moveTo(target.id, {
+            rotation: { x: move.pitch, y: facing },
+            transition,
+            transitionTime: move.transition === 'fade' ? Math.min(move.duration, 800) : move.duration,
+          })
+        } catch (err) {
+          // A sweep that will not load is skipped; the clock keeps the tour going.
+          console.warn('Matterport sweep skipped:', move.sweepId, err)
+          setSkipped((n) => n + 1)
+        }
+      }
+      moving.current = false
+    })()
   }, [s.index, viewer, tour])
 
   // Without the SDK: a plain embed opened at the current stop's sweep (jumps between stops).
