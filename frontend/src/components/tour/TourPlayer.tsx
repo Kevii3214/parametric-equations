@@ -186,7 +186,15 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
   const showScan = !s.inGap && s.index >= 0
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-ink">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-ink">
+      {/* What comes before the scan: no scan covers it, so it is said here, above the picture, never over it. */}
+      {intro.length > 0 && (
+        <div className="shrink-0 bg-ink px-3 py-1.5 text-white">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">Before the scan (not scanned)</div>
+          <div className="truncate text-xs leading-snug" title={intro.map(tidy).join(' → ')}>{intro.map(tidy).join(' → ')}</div>
+        </div>
+      )}
+      <div className="relative min-h-0 flex-1 overflow-hidden">
       {/* The 3D map, under the scan; it shows through during unscanned stretches. */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${showScan ? 'opacity-0' : 'opacity-100'}`}>
         <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading map…</div>}>
@@ -204,16 +212,6 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
           : plainUrl && <iframe key={plainUrl} title="Matterport fly-through" src={plainUrl} className="h-full w-full border-0"
             allow="fullscreen; xr-spatial-tracking" />}
       </div>
-
-      {/* What happens before the scan starts: no scan covers it, so it is said, not shown. */}
-      {intro.length > 0 && t < 4500 && (
-        <div className="pointer-events-none absolute bottom-[3.75rem] left-3 z-10 max-w-[70%] rounded-xl bg-ink/80 px-2.5 py-2 text-white shadow-card backdrop-blur">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/60">Before the scan (not scanned)</div>
-          <ol className="mt-0.5 space-y-0.5 text-xs leading-snug">
-            {intro.map((c, i) => <li key={i}>{tidy(c)}</li>)}
-          </ol>
-        </div>
-      )}
 
       {/* Instruction banner */}
       <div className="pointer-events-none absolute inset-x-3 top-3 flex flex-col items-start gap-2">
@@ -279,6 +277,7 @@ export default function TourPlayer({ tour: fullTour, building, steps, patientFlo
           {viewer.kind === 'plain' ? `Basic mode (${viewer.reason}): the scan jumps between stops` : `${skipped} stop${skipped > 1 ? 's' : ''} skipped`}
         </span>
       )}
+      </div>
     </div>
   )
 }
