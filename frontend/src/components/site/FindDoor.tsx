@@ -7,7 +7,7 @@ import Icon from '../Icon'
  * what to look for when they step out of the ambulance.
  */
 export default function FindDoor({ building, entrance, onDismiss }: {
-  building: Building; entrance: SiteMarker; onDismiss: () => void
+  building: Building; entrance: SiteMarker; onDismiss?: () => void
 }) {
   const side = entranceSide(building, entrance)
   const photo = obliqueShowing(side)
@@ -23,8 +23,8 @@ export default function FindDoor({ building, entrance, onDismiss }: {
         <span className="absolute top-3 left-3 rounded-full bg-fern px-2.5 py-1 text-[11px] font-semibold text-white shadow-card">
           Find this door
         </span>
-        <button type="button" onClick={onDismiss} aria-label="Hide door photo"
-          className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-ink-2 shadow-card hover:text-ink"><Icon name="close" /></button>
+        {onDismiss && (<button type="button" onClick={onDismiss} aria-label="Hide door photo"
+          className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-full bg-card/90 text-ink-2 shadow-card hover:text-ink"><Icon name="close" /></button>)}
         <div className="absolute inset-x-0 bottom-0 p-4 text-white">
           <div className="text-xl font-semibold leading-tight tracking-tight drop-shadow">{entrance.label}</div>
           <div className="mt-0.5 text-sm text-white/85">

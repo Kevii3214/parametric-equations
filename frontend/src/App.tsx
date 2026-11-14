@@ -1,16 +1,22 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
-import Dispatch from './pages/Dispatch'
-import Medic from './pages/Medic'
+import Arrival from './pages/Arrival'
+import PreArrival from './pages/PreArrival'
+
+/** Old links (/dispatch, /medic, /) go to Pre-arrival, keeping ?incident= / ?demo= / ?building=. */
+function ToPreArrival() {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: '/pre-arrival', search }} replace />
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/dispatch" element={<Dispatch />} />
-          <Route path="/medic" element={<Medic />} />
-          <Route path="*" element={<Navigate to="/dispatch" replace />} />
+          <Route path="/pre-arrival" element={<PreArrival />} />
+          <Route path="/arrival" element={<Arrival />} />
+          <Route path="*" element={<ToPreArrival />} />
         </Route>
       </Routes>
     </BrowserRouter>
