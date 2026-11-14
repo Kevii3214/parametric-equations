@@ -303,3 +303,25 @@ def test_scanning_a_tag_further_back_lets_the_cues_fire_again(walker):
     walker.feed(0, tag="TAG-ENTRANCE-01")  # right back to the start of the route
     walker.walk(6)
     assert [c.cue for c in walker.cues].count("LEFT") == 2  # the cue is due again
+
+
+def walk_all_but_the_last_metres(w, last_leg):
+    w.walk(12)
+    w.feed(0, heading=0)
+    w.walk(9)
+    w.feed(0, pressure=BASE_PRESSURE - 800)
+    w.walk(11, heading=0)
+    w.feed(0, heading=90)
+    w.walk(18, heading=90)
+    w.feed(0, heading=0)
+    w.walk(last_leg, heading=0)
+
+
+def test_arrival_is_declared_within_a_metre_of_the_end_because_strides_vary(walker):
+    walk_all_but_the_last_metres(walker, 7)  # the last step is 8 m: 1 m short is close enough
+    assert walker.engine.arrived and "arrived" in walker.effects
+
+
+def test_more_than_a_metre_short_is_not_yet_arrived(walker):
+    walk_all_but_the_last_metres(walker, 6)
+    assert not walker.engine.arrived
