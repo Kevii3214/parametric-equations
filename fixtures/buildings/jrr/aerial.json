@@ -1,0 +1,33 @@
+{
+  "building_id": "jrr",
+  "source": "Vexcel API 2.0",
+  "snapshot_date": "2026-11-14",
+  "images": {
+    "ortho": {
+      "file": "aerial.jpg",
+      "kb": 769
+    },
+    "oblique-east": {
+      "file": "oblique-east.jpg",
+      "kb": 774,
+      "captured": "2026-08-26T14:27:57"
+    },
+    "oblique-north": {
+      "file": "oblique-north.jpg",
+      "kb": 821,
+      "captured": "2026-08-26T14:27:57"
+    },
+    "oblique-south": {
+      "file": "oblique-south.jpg",
+      "kb": 825,
+      "captured": "2026-08-26T14:27:57"
+    },
+    "oblique-west": {
+      "file": "oblique-west.jpg",
+      "kb": 864,
+      "captured": "2026-08-26T14:27:57"
+    }
+  },
+  "parcel_wkt": "MULTIPOLYGON (((-74.655603 40.3486405, -74.6561446 40.349333, -74.6549473 40.3497546, -74.6548366 40.349557, -74.6547968 40.3495781, -74.6544769 40.3491553, -74.6546262 40.3490922, -74.655603 40.3486405)))",
+  "collection": "us-nj-atlanticcity_rf04-2025"
+}
