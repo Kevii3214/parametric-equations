@@ -66,7 +66,17 @@ async def _try_embed(embed: Embedder, text: str) -> list[float] | None:
         return None
 
 
+async def _ensure_building(db, building_id: str) -> None:
+    """notes.building_id points at buildings(id), so the building needs a row before its first note."""
+    found = await asyncio.to_thread(
+        lambda: db.table("buildings").select("*").eq("id", building_id).execute()
+    )
+    if not found.data:
+        await asyncio.to_thread(lambda: db.table("buildings").insert({"id": building_id}).execute())
+
+
 async def save_note(db, embed: Embedder, building_id: str, text: str) -> None:
+    await _ensure_building(db, building_id)
     row = {"building_id": building_id, "text": text, "embedding": await _try_embed(embed, text)}
     await asyncio.to_thread(lambda: db.table("notes").insert(row).execute())
 
