@@ -344,5 +344,5 @@ export function buildingForNote(note: string): string | null {
 export const SAMPLE_CALLS: { building: string; label: string; note: string }[] = [
   { building: '233928', label: '1415 Louisiana', note: '65M chest pain, Suite 1800, 1415 Louisiana St, Houston, patient is in the phone room' },
   { building: '233903', label: 'Williams Tower', note: '58F fall with head injury, Suite 5600, Williams Tower, 2800 Post Oak Blvd, Houston, patient is in the conference room' },
-  { building: 'jrr', label: 'Rabinowitz Hall', note: '20M seizure, Rabinowitz Hall, Princeton University, patient is in the classroom on the upper level' },
+  // Rabinowitz Hall (jrr) is left out: its scan data is too rough to demo.
 ]
