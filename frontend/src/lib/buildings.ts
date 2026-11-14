@@ -1,13 +1,21 @@
-// Real data for the demo building, from fixtures/buildings/<id>/ (CoStar
+// Real data for the demo buildings, from fixtures/buildings/<id>/ (CoStar
 // record, Vexcel imagery, Matterport models, interior graph). Read-only.
-import aerialJson from '../../../fixtures/buildings/233928/aerial.json'
-import orthoUrl from '../../../fixtures/buildings/233928/aerial.jpg'
-import graphJson from '../../../fixtures/buildings/233928/graph.json'
-import obliqueEast from '../../../fixtures/buildings/233928/oblique-east.jpg'
-import obliqueNorth from '../../../fixtures/buildings/233928/oblique-north.jpg'
-import obliqueSouth from '../../../fixtures/buildings/233928/oblique-south.jpg'
-import obliqueWest from '../../../fixtures/buildings/233928/oblique-west.jpg'
-import recordJson from '../../../fixtures/buildings/233928/record.json'
+import laAerial from '../../../fixtures/buildings/233928/aerial.json'
+import laOrtho from '../../../fixtures/buildings/233928/aerial.jpg'
+import laGraph from '../../../fixtures/buildings/233928/graph.json'
+import laEast from '../../../fixtures/buildings/233928/oblique-east.jpg'
+import laNorth from '../../../fixtures/buildings/233928/oblique-north.jpg'
+import laSouth from '../../../fixtures/buildings/233928/oblique-south.jpg'
+import laWest from '../../../fixtures/buildings/233928/oblique-west.jpg'
+import laRecord from '../../../fixtures/buildings/233928/record.json'
+import wtAerial from '../../../fixtures/buildings/233903/aerial.json'
+import wtOrtho from '../../../fixtures/buildings/233903/aerial.jpg'
+import wtGraph from '../../../fixtures/buildings/233903/graph.json'
+import wtEast from '../../../fixtures/buildings/233903/oblique-east.jpg'
+import wtNorth from '../../../fixtures/buildings/233903/oblique-north.jpg'
+import wtSouth from '../../../fixtures/buildings/233903/oblique-south.jpg'
+import wtWest from '../../../fixtures/buildings/233903/oblique-west.jpg'
+import wtRecord from '../../../fixtures/buildings/233903/record.json'
 import type { BuildingGraph } from './contracts'
 
 export type LngLat = [number, number]
@@ -64,10 +72,19 @@ export interface Building {
   obliqueFocus: Partial<Record<Direction, string>>
   collection: string
   parcel: LngLat[]
-  /** Lon/lat box the ortho image covers: the parcel's bounding box plus 10 m. */
+  /** Lon/lat box the ortho image covers: the parcel's bounding box plus 10 m, padded square. */
   orthoBounds: { west: number; east: number; south: number; north: number }
+  /**
+   * False when the Vexcel parcel (and so the ortho, obliques and parcel
+   * outline) is a different building from the CoStar record. The UI then
+   * hides that imagery and shows `imageryNote` instead.
+   */
+  imageryMatches: boolean
+  imageryNote?: string
   markers: SiteMarker[]
   matterport: MatterportModel[]
+  /** The default patient node for the demo replay. */
+  demoGoal?: string
 }
 
 function parseWkt(wkt: string): LngLat[] {
@@ -75,22 +92,23 @@ function parseWkt(wkt: string): LngLat[] {
   return inner.split(',').map((p) => p.trim().split(/\s+/).map(Number) as LngLat)
 }
 
-function bufferedBounds(ring: LngLat[], metres: number) {
+/**
+ * The ortho request was the parcel's bounding box plus a 10 m buffer, and
+ * Vexcel returns a square image: the box is padded to a square around its
+ * centre (cars come out the right shape only with padding, not stretching).
+ */
+function orthoBoundsFor(ring: LngLat[], metres: number) {
   const lats = ring.map((p) => p[1])
   const lngs = ring.map((p) => p[0])
   const midLat = (Math.min(...lats) + Math.max(...lats)) / 2
-  const dLat = metres / 111_320
-  const dLng = metres / (111_320 * Math.cos((midLat * Math.PI) / 180))
-  return {
-    west: Math.min(...lngs) - dLng,
-    east: Math.max(...lngs) + dLng,
-    south: Math.min(...lats) - dLat,
-    north: Math.max(...lats) + dLat,
-  }
+  const mPerLng = 111_320 * Math.cos((midLat * Math.PI) / 180)
+  const w = (Math.max(...lngs) - Math.min(...lngs)) * mPerLng + 2 * metres
+  const h = (Math.max(...lats) - Math.min(...lats)) * 111_320 + 2 * metres
+  const half = Math.max(w, h) / 2
+  const cx = (Math.max(...lngs) + Math.min(...lngs)) / 2
+  const cy = (Math.max(...lats) + Math.min(...lats)) / 2
+  return { west: cx - half / mPerLng, east: cx + half / mPerLng, south: cy - half / 111_320, north: cy + half / 111_320 }
 }
-
-const parcel = parseWkt(aerialJson.parcel_wkt)
-const orthoBounds = bufferedBounds(parcel, 10)
 
 /** Pixel fraction (0..1) on the ortho image for a lon/lat. */
 export function orthoXY(b: Building, [lng, lat]: LngLat): [number, number] {
@@ -98,31 +116,44 @@ export function orthoXY(b: Building, [lng, lat]: LngLat): [number, number] {
   return [(lng - o.west) / (o.east - o.west), (o.north - lat) / (o.north - o.south)]
 }
 
-/** Lon/lat for a pixel fraction on the ortho image. */
-function fromOrtho(fx: number, fy: number): LngLat {
-  const o = orthoBounds
+/** Lon/lat for a pixel fraction on an ortho image. */
+function fromOrtho(o: Building['orthoBounds'], fx: number, fy: number): LngLat {
   return [o.west + fx * (o.east - o.west), o.north - fy * (o.north - o.south)]
 }
 
+/** A point `east`/`north` metres from a lon/lat. */
+function offset([lng, lat]: LngLat, east: number, north: number): LngLat {
+  return [lng + east / (111_320 * Math.cos((lat * Math.PI) / 180)), lat + north / 111_320]
+}
+
+const laParcel = parseWkt(laAerial.parcel_wkt)
+const laBounds = orthoBoundsFor(laParcel, 10)
+const wtParcel = parseWkt(wtAerial.parcel_wkt)
+const wtRec = wtRecord as CostarRecord
+// Williams Tower's centre in the OpenStreetMap footprint (the CoStar point is inside it).
+const wtCentre: LngLat = [-95.46134, 29.73727]
+
 const louisiana: Building = {
   id: '233928',
-  record: recordJson as CostarRecord,
-  graph: graphJson as BuildingGraph,
-  ortho: orthoUrl,
-  obliques: { north: obliqueNorth, east: obliqueEast, south: obliqueSouth, west: obliqueWest },
-  obliqueCaptured: aerialJson.images['oblique-north']?.captured ?? null,
+  record: laRecord as CostarRecord,
+  graph: laGraph as BuildingGraph,
+  ortho: laOrtho,
+  obliques: { north: laNorth, east: laEast, south: laSouth, west: laWest },
+  obliqueCaptured: laAerial.images['oblique-north']?.captured ?? null,
   obliqueNotes: {
     east: 'The rounded glass tower in front is a neighbour. 1415 Louisiana is the dark brown tower behind it, on the left.',
   },
   obliqueFocus: { east: '22% 55%' },
-  collection: aerialJson.collection,
-  parcel,
-  orthoBounds,
+  collection: laAerial.collection,
+  parcel: laParcel,
+  orthoBounds: laBounds,
+  imageryMatches: true,
+  demoGoal: 'phone_door',
   // The graph's entrance positions are estimates (see GRAPH_NOTES.md); these
   // map pins are placed by eye on the Vexcel ortho to match.
   markers: [
-    { node: 'st_main', label: 'Louisiana St main entrance', at: fromOrtho(0.69, 0.66), estimated: true },
-    { node: 'gar1', label: 'Parking garage lobby', at: fromOrtho(0.3, 0.44), estimated: true },
+    { node: 'st_main', label: 'Louisiana St main entrance', at: fromOrtho(laBounds, 0.69, 0.66), estimated: true },
+    { node: 'gar1', label: 'Parking garage lobby', at: fromOrtho(laBounds, 0.3, 0.44), estimated: true },
   ],
   matterport: [
     { id: 'LJn59uoV759', title: 'Regus Suite 1800', subtitle: 'Reception and phone room, floor 18', destination: true },
@@ -134,7 +165,37 @@ const louisiana: Building = {
   ],
 }
 
-const buildings: Record<string, Building> = { [louisiana.id]: louisiana }
+const williams: Building = {
+  id: '233903',
+  record: wtRec,
+  graph: wtGraph as BuildingGraph,
+  ortho: wtOrtho,
+  obliques: { north: wtNorth, east: wtEast, south: wtSouth, west: wtWest },
+  obliqueCaptured: wtAerial.images['oblique-north']?.captured ?? null,
+  obliqueNotes: {},
+  obliqueFocus: {},
+  collection: wtAerial.collection,
+  parcel: wtParcel,
+  orthoBounds: orthoBoundsFor(wtParcel, 10),
+  // The Vexcel parcel in this snapshot is centred about 95 m north of the
+  // tower, on the ~110 m neighbour: the CoStar point sits inside Williams
+  // Tower's OpenStreetMap footprint (275 m), and the obliques centre on the
+  // neighbouring white building.
+  imageryMatches: false,
+  imageryNote: 'The Vexcel imagery in this snapshot is of the neighbouring building, so it is hidden until it is pulled again for Williams Tower.',
+  // Entrances placed on the tower's OpenStreetMap footprint: Post Oak Blvd
+  // runs along the east side; the garage is to the west. Both estimated.
+  markers: [
+    { node: 'st_main', label: 'Post Oak Blvd main entrance', at: offset(wtCentre, 30, 0), estimated: true },
+    { node: 'gar1', label: 'Parking garage lobby', at: offset(wtCentre, -28, 8), estimated: true },
+  ],
+  matterport: [
+    { id: 'eJKnR3x44eh', title: 'Titan Global Advisory, Suite 5600', subtitle: 'Reception and offices, floor 56', destination: true },
+  ],
+  demoGoal: 'room29',
+}
+
+const buildings: Record<string, Building> = { [louisiana.id]: louisiana, [williams.id]: williams }
 
 export function buildingById(id: string | null | undefined): Building | null {
   return (id && buildings[id]) || null
@@ -159,9 +220,14 @@ export function parcelCentre(b: Building): LngLat {
   return [ring.reduce((t, p) => t + p[0], 0) / ring.length, ring.reduce((t, p) => t + p[1], 0) / ring.length]
 }
 
-/** Which side of the building a point is on (largest offset from the parcel centre). */
+/** Centre of the building: the parcel when its imagery matches, else the CoStar point. */
+export function siteCentre(b: Building): LngLat {
+  return b.imageryMatches ? parcelCentre(b) : [b.record.longitude, b.record.latitude]
+}
+
+/** Which side of the building a point is on (largest offset from the building centre). */
 export function sideOf(b: Building, at: LngLat): Direction {
-  const [cx, cy] = parcelCentre(b)
+  const [cx, cy] = siteCentre(b)
   const east = (at[0] - cx) * Math.cos((cy * Math.PI) / 180)
   const north = at[1] - cy
   if (Math.abs(east) > Math.abs(north)) return east > 0 ? 'east' : 'west'

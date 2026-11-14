@@ -7,7 +7,7 @@ import SiteImagery from '../components/site/SiteImagery'
 import { createIncident } from '../lib/api'
 import { buildingById, buildingForRoute, patientFloor, type Building } from '../lib/buildings'
 import type { IncidentRow, PlanStepRow, RouteRow } from '../lib/contracts'
-import { useDemoReason, useExitDemo, useIncidentParam, type DemoReason } from '../lib/demo'
+import { useDemoBuilding, useDemoReason, useExitDemo, useIncidentParam, type DemoReason } from '../lib/demo'
 import { graphFor, parsedNote, recordsResult } from '../lib/incident'
 import { formatSeconds, nodeMap } from '../lib/route'
 import { useIncidentLive } from '../lib/useIncidentLive'
@@ -18,7 +18,7 @@ export default function Dispatch() {
   const reason = useDemoReason()
   const demo = reason !== null
   const [incidentId, setIncidentId] = useIncidentParam()
-  const live = useIncidentLive(incidentId, demo)
+  const live = useIncidentLive(incidentId, demo, useDemoBuilding())
   const started = live.source === 'fixtures' || incidentId !== null
   const building = buildingById(live.incident?.building_id)
     ?? buildingForRoute(live.route?.steps.flatMap((s) => [s.from_node, s.to_node]) ?? [])
@@ -33,7 +33,7 @@ export default function Dispatch() {
         {building ? (
           <>
             <SiteImagery building={building} entranceNode={live.route?.entrance_node ?? null}
-              patientFloor={patientFloor(building, live.incident?.parsed ?? null)} />
+              patientFloor={patientFloor(building, live.incident?.parsed ?? null)} steps={live.route?.steps} />
             <div className="grid gap-5 md:grid-cols-2">
               <CostarCard building={building} incident={live.incident} steps={live.planSteps} />
               <RouteSummary route={live.route} started={started} />

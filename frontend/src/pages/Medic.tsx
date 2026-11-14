@@ -1,27 +1,30 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import CueIcon from '../components/CueIcon'
 import FloorMap from '../components/FloorMap'
 import FindDoor from '../components/site/FindDoor'
 import MatterportTour from '../components/site/MatterportTour'
-import { buildingById, buildingForRoute } from '../lib/buildings'
+import { buildingById, buildingForRoute, patientFloor } from '../lib/buildings'
 import type { Cue, RouteStep } from '../lib/contracts'
-import { useDemo, useIncidentParam } from '../lib/demo'
+import { useDemo, useDemoBuilding, useIncidentParam } from '../lib/demo'
 import { closures, graphFor } from '../lib/incident'
 import { useRouteReplay } from '../lib/replay'
 import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint } from '../lib/route'
 import { useIncidentLive } from '../lib/useIncidentLive'
 
+// MapLibre is large, so the 3D route view loads only when opened.
+const SiteFlyover = lazy(() => import('../components/site/SiteFlyover'))
+
 export default function Medic() {
   const demo = useDemo()
   const [incidentId] = useIncidentParam()
-  const live = useIncidentLive(incidentId, demo)
+  const live = useIncidentLive(incidentId, demo, useDemoBuilding())
   const route = live.route
   const steps = route?.steps ?? []
   const graph = graphFor(steps)
   const replay = useRouteReplay(route, graph, live.source === 'fixtures')
   const position = replay?.position ?? live.position
   const [pickedFloor, setPickedFloor] = useState<number | null>(null)
-  const [view, setView] = useState<'plan' | 'scan'>('plan')
+  const [view, setView] = useState<'plan' | 'route3d' | 'scan'>('plan')
 
   // The Matterport scan of the destination suite, when this building has one.
   const site = buildingById(live.incident?.building_id) ?? buildingForRoute(steps.flatMap((s) => [s.from_node, s.to_node]))
@@ -63,7 +66,7 @@ export default function Medic() {
   return (
     <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
       <div className="min-w-0 space-y-4">
-        {site && entranceMarker && stepIndex === 0 && !arrived && !doorHidden && (
+        {site?.imageryMatches && entranceMarker && stepIndex === 0 && !arrived && !doorHidden && (
           <FindDoor building={site} entrance={entranceMarker} onDismiss={() => setDoorHidden(true)} />
         )}
         <NextTurn cue={cue} distance={distance} text={text} offRoute={offRoute}
@@ -94,20 +97,20 @@ export default function Medic() {
 
       <section className="min-w-0 self-start rounded-2xl border border-line bg-card p-4 shadow-card">
         <header className="mb-3 flex items-center gap-2">
-          {scans.length ? (
+          {site ? (
             <div className="flex gap-0.5 rounded-full bg-sunk p-0.5">
-              {(['plan', 'scan'] as const).map((v) => (
+              {(['plan', 'route3d', ...(scans.length ? ['scan'] as const : [])] as const).map((v) => (
                 <button key={v} type="button" onClick={() => setView(v)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                     view === v ? 'bg-card text-azure shadow-card' : 'text-ink-2 hover:text-ink'}`}>
-                  {v === 'plan' ? 'Floor plan' : '3D scan'}
+                  {v === 'plan' ? 'Floor plan' : v === 'route3d' ? '3D route' : '3D scan'}
                 </button>
               ))}
             </div>
           ) : (
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Floor map</h2>
           )}
-          <div className={`ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5 ${view === 'scan' ? 'invisible' : ''}`}>
+          <div className={`ml-auto flex gap-0.5 rounded-full bg-sunk p-0.5 ${view !== 'plan' ? 'invisible' : ''}`}>
             {floors.map((f) => (
               <button key={f} type="button" onClick={() => setPickedFloor(f === currentFloor ? null : f)}
                 className={`min-w-10 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
@@ -117,7 +120,15 @@ export default function Medic() {
             ))}
           </div>
         </header>
-        {view === 'scan' && scans.length ? (
+        {view === 'route3d' && site ? (
+          <div className="aspect-[4/3] w-full overflow-hidden rounded-xl">
+            <Suspense fallback={<div className="grid h-full place-items-center bg-sunk text-sm text-ink-3">Loading 3D route…</div>}>
+              <SiteFlyover building={site} entranceNode={route.entrance_node} mode="medic"
+                patientFloor={patientFloor(site, live.incident?.parsed ?? null)}
+                steps={steps} currentStep={stepIndex} position={point} />
+            </Suspense>
+          </div>
+        ) : view === 'scan' && scans.length ? (
           <div className="aspect-[4/3] w-full overflow-hidden rounded-xl">
             <MatterportTour models={scans} compact />
           </div>
