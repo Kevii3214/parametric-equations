@@ -4,6 +4,7 @@ import re
 
 from langchain_core.tools import tool
 
+from app import notes
 from app.graph.router import NoRouteError, find_route
 from app.graph.schema import BuildingGraph
 
@@ -86,6 +87,30 @@ def make_records_tools(provider, db, incident_id: str) -> list:
         return {"suite": number, "tenant": tenant, "floor_guess": floor, "floor_basis": FLOOR_BASIS}
 
     return [resolve_building, get_building_record, find_suite]
+
+
+def make_notes_tools(db, embed) -> list:
+    """Crew notes: tips from earlier calls to the same building."""
+
+    @tool
+    async def search_notes(building_id: str, query: str) -> dict:
+        """Find tips crews saved from earlier calls to this building (lifts, doors, access). Call this once
+        the building is known and mention anything relevant in the briefing."""
+        try:
+            return {"notes": await notes.search_notes(db, embed, building_id, query)}
+        except Exception as error:  # noqa: BLE001 - the agent should carry on without notes
+            return {"error": f"Could not search notes: {error}"}
+
+    @tool
+    async def save_note(building_id: str, text: str) -> dict:
+        """Save a short tip about this building for future crews."""
+        try:
+            await notes.save_note(db, embed, building_id, text.strip())
+        except Exception as error:  # noqa: BLE001
+            return {"error": f"Could not save the note: {error}"}
+        return {"saved": True}
+
+    return [search_notes, save_note]
 
 
 MAX_BRIEFING = 600

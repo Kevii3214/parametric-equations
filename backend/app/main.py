@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import incidents, telemetry
+from app.api import events, incidents, telemetry
 from app.config import get_settings
 
 settings = get_settings()
@@ -18,6 +18,7 @@ app.add_middleware(
 
 app.include_router(incidents.router)
 app.include_router(telemetry.router)
+app.include_router(events.router)
 
 
 @app.get("/health")
