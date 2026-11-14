@@ -38,6 +38,8 @@ export function placeGraph(b: Building): Placer {
     gA = [anchors[0].g.x, anchors[0].g.y]
     mA = anchors[0].m
   }
+  // One anchor: rotation comes from the building (compass), at true scale.
+  if (anchors.length < 2 && b.graphRotationDeg) theta = (-b.graphRotationDeg * Math.PI) / 180
   if (anchors.length >= 2) {
     const gv = [anchors[1].g.x - gA[0], anchors[1].g.y - gA[1]]
     const mv = [anchors[1].m[0] - mA[0], anchors[1].m[1] - mA[1]]

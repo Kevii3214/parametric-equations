@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icon from '../Icon'
 import type { Building, Direction } from '../../lib/buildings'
 
 const ORDER: Direction[] = ['south', 'east', 'north', 'west']
@@ -52,7 +53,7 @@ export default function ObliqueTour({ building, start }: { building: Building; s
         ))}
         <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pause tour' : 'Play tour'}
           className="grid h-7 w-7 place-items-center rounded-full text-ink-2 hover:text-azure">
-          {playing ? '❚❚' : '▶'}
+          <Icon name={playing ? 'pause' : 'play'} className="h-3.5 w-3.5" />
         </button>
       </div>
       {playing && (

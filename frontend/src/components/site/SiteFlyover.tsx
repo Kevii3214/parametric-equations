@@ -1,10 +1,11 @@
 import maplibregl, { type GeoJSONSource, type Map as MlMap } from 'maplibre-gl'
+import Icon from '../Icon'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { siteCentre, type Building, type LngLat } from '../../lib/buildings'
+import { siteCentre, storiesOf, type Building, type LngLat } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import { bearing, placeGraph, routeFeatures, square } from '../../lib/geo3d'
-import { cueLabel, type Point } from '../../lib/route'
+import { cueLabel, tidy, type Point } from '../../lib/route'
 
 // Free vector tiles with building heights (OpenStreetMap data), no API key.
 const STYLE = 'https://tiles.openfreemap.org/styles/liberty'
@@ -46,6 +47,8 @@ interface Props {
   position?: Point | null
   /** 'dispatch' plays the city flyover on load; 'medic' frames the route and waits. */
   mode?: 'dispatch' | 'medic'
+  /** Change this number to start the route flythrough from outside. */
+  flyToken?: number
 }
 
 /**
@@ -53,7 +56,7 @@ interface Props {
  * drawn through the building (street to entrance, up the shaft, along the
  * floor), the crew's position, and camera flights over all of it.
  */
-export default function SiteFlyover({ building, entranceNode, patientFloor, steps = [], currentStep = 0, position, mode = 'dispatch' }: Props) {
+export default function SiteFlyover({ building, entranceNode, patientFloor, steps = [], currentStep = 0, position, mode = 'dispatch', flyToken = 0 }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const run = useRef(0)
@@ -63,7 +66,7 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
   const [phase, setPhase] = useState<Phase>('idle')
   const [caption, setCaption] = useState('')
 
-  const stories = building.record.stories_above_grade
+  const stories = storiesOf(building)
   const center: LngLat = siteCentre(building)
   const entrance = building.markers.find((m) => m.node === entranceNode) ?? building.markers[0]
   const placer = useMemo(() => placeGraph(building), [building])
@@ -146,7 +149,7 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
     })
     map.on('error', (e) => console.warn('map:', e.error?.message))
     // Any manual drag or zoom stops a running flight.
-    const stop = () => { run.current++; setPhase('idle'); setCaption('') }
+    const stop = () => { run.current++; setPhase('idle'); setCaption(''); if (mapRef.current) xray(mapRef.current, false) }
     map.on('dragstart', stop)
     map.on('wheel', stop)
     return () => { runs.current++; map.remove(); mapRef.current = null }
@@ -162,17 +165,20 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
    */
   function findTower(map: MlMap) {
     let done = false
-    const draw = (ring: Ring, height: number) => {
+    const draw = (ring: Ring, mapHeight: number) => {
       done = true
-      const perStorey = height / stories
+      // Low-rise buildings often carry only a placeholder height in the map.
+      const height = mapHeight > 30 ? mapHeight : stories * FLOOR_M
+      const above = stories - placer.groundFloor + 1 // storeys from the ground floor up
+      const perStorey = height / Math.max(1, above)
       map.addSource('tower', { type: 'geojson', data: poly(ring) })
       map.addLayer({ id: 'tower-wash', type: 'fill-extrusion', source: 'tower', paint: {
         'fill-extrusion-color': '#c4d4f6', 'fill-extrusion-height': height + 0.5, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.45 } })
       if (patientFloor) {
         map.addSource('patient-floor', { type: 'geojson', data: poly(grow(ring, 1.08)) })
         map.addLayer({ id: 'patient-floor', type: 'fill-extrusion', source: 'patient-floor', paint: {
-          'fill-extrusion-color': '#0e8a5f', 'fill-extrusion-base': (patientFloor - 1) * perStorey,
-          'fill-extrusion-height': patientFloor * perStorey, 'fill-extrusion-opacity': 0.55 } })
+          'fill-extrusion-color': '#0e8a5f', 'fill-extrusion-base': (patientFloor - placer.groundFloor) * perStorey,
+          'fill-extrusion-height': (patientFloor - placer.groundFloor + 1) * perStorey, 'fill-extrusion-opacity': 0.55 } })
       }
       map.addLayer({ id: 'route-3d', type: 'fill-extrusion', source: 'route-3d', paint: {
         'fill-extrusion-color': ['case', ['==', ['get', 'done'], 1], '#9fb7ef', '#2357d6'],
@@ -192,7 +198,7 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
         const h = Number(f.properties?.render_height ?? 0)
         for (const r of rings as Ring[]) if (inside(center, r) && (!best || h > best.height)) best = { ring: r, height: h }
       }
-      if (best && best.height > 30) {
+      if (best && best.height > 0) {
         draw(best.ring, best.height)
         map.off('sourcedata', tryFind)
       }
@@ -261,45 +267,69 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
   }
 
   /**
-   * Fly the route: through the entrance, up the shaft to the patient's
-   * floor, then along the corridor to the patient. The camera centre rises
-   * to each floor's height.
+   * Fade everything but the route while flying through it: the city's
+   * buildings and the tower go see-through so the indoor path stays visible.
+   */
+  function xray(map: MlMap, on: boolean) {
+    for (const layer of map.getStyle().layers ?? []) {
+      if (layer.type !== 'fill-extrusion' || ['route-3d', 'me', 'goal', 'patient-floor'].includes(layer.id)) continue
+      map.setPaintProperty(layer.id, 'fill-extrusion-opacity', on ? (layer.id === 'tower-wash' ? 0.12 : 0.18) : layer.id === 'tower-wash' ? 0.45 : 0.92)
+    }
+  }
+
+  /**
+   * Fly the whole route at walking height: from the entrance along every
+   * corridor, up the shaft to the patient's floor, and on to the patient.
+   * The camera centre rises to each floor's height and turns with the path.
    */
   async function flyRoute(id = ++run.current) {
     const map = mapRef.current
     if (!map || !steps.length) return
     const alive = () => run.current === id
     setPhase('route')
+    xray(map, true)
     const first = nodes.get(steps[0].from_node)
     if (!first) return
     let here = placer.at(first.x, first.y, first.floor)
-    let heading = map.getBearing()
-    setCaption(`Start at ${entrance?.label ?? 'the entrance'}`)
-    await move(map, () => map.flyTo({ center: here, elevation: alt(first.floor), zoom: 19.2, pitch: 64, duration: 2200, essential: true }))
+    const firstB = nodes.get(steps[0].to_node)
+    let heading = firstB ? bearing(here, placer.at(firstB.x, firstB.y, firstB.floor)) : map.getBearing()
+    const CLOSE = { zoom: 20.6, pitch: 74 }
+    setCaption(`Start at ${tidy(entrance?.label ?? 'the entrance')}`)
+    await move(map, () => map.flyTo({ center: here, elevation: alt(first.floor) + 1.5, bearing: heading, ...CLOSE, duration: 2600, essential: true }))
     for (const s of steps) {
-      if (!alive()) return
+      if (!alive()) break
       const a = nodes.get(s.from_node)
       const b = nodes.get(s.to_node)
       if (!a || !b) continue
       const there = placer.at(b.x, b.y, b.floor)
-      setCaption(`${s.index + 1}/${steps.length} · ${s.text}`)
+      setCaption(`${s.index + 1}/${steps.length} · ${tidy(s.text)}`)
       if (a.floor !== b.floor) {
-        // Pull back to watch the climb, rise with it, then close in on the floor.
-        await move(map, () => map.easeTo({ center: here, elevation: alt(a.floor), zoom: 17.6, pitch: 55, duration: 1200, essential: true }))
-        await move(map, () => map.easeTo({ center: there, elevation: alt(b.floor), zoom: 17.6, duration: 3200, essential: true }))
-        await move(map, () => map.easeTo({ zoom: 19.6, pitch: 66, duration: 1400, essential: true }))
+        // Pull back to watch the climb, rise with it, then drop back to walking height.
+        await move(map, () => map.easeTo({ center: here, elevation: alt(a.floor), zoom: 18.6, pitch: 58, duration: 1200, essential: true }))
+        await move(map, () => map.easeTo({ center: there, elevation: alt(b.floor), duration: 3400, essential: true }))
+        await move(map, () => map.easeTo({ elevation: alt(b.floor) + 1.5, ...CLOSE, duration: 1400, essential: true }))
       } else {
-        if (Math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-7) heading = bearing(here, there)
-        await move(map, () => map.easeTo({ center: there, elevation: alt(b.floor), bearing: heading, zoom: 19.6, pitch: 66,
-          duration: Math.max(1100, Math.min(3500, s.meters * 140)), essential: true }))
+        const turnTo = Math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-7 ? bearing(here, there) : heading
+        // Turn to face the next corridor first, then walk it.
+        if (Math.abs(((turnTo - heading + 540) % 360) - 180) > 20) {
+          await move(map, () => map.easeTo({ bearing: turnTo, duration: 700, essential: true }))
+        }
+        heading = turnTo
+        await move(map, () => map.easeTo({ center: there, elevation: alt(b.floor) + 1.5, bearing: heading, ...CLOSE,
+          duration: Math.max(1200, Math.min(5000, s.meters * 260)), easing: (t) => t, essential: true }))
       }
       here = there
     }
     if (alive()) {
-      setCaption(`${cueLabel.ARRIVE}: ${nodes.get(steps.at(-1)!.to_node)?.label ?? 'patient'}`)
+      setCaption(`${cueLabel.ARRIVE}: ${tidy(nodes.get(steps.at(-1)!.to_node)?.label ?? 'patient')}`)
       setPhase('done')
+      await pause(2500)
     }
+    if (mapRef.current === map) xray(map, false)
   }
+
+  // Start the flythrough when asked from outside (the medic's button).
+  useEffect(() => { if (ready && storey !== null && flyToken) void flyRoute() }, [flyToken, ready, storey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Dispatch starts its intro once the map is ready; the medic view waits.
   useEffect(() => { if (ready && mode === 'dispatch') void playIntro() }, [ready]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -329,14 +359,14 @@ export default function SiteFlyover({ building, entranceNode, patientFloor, step
         {steps.length > 0 && (
           <button type="button" onClick={() => void flyRoute()} disabled={!ready}
             className="flex items-center gap-2 rounded-full bg-azure py-1.5 pr-3.5 pl-1.5 text-sm font-semibold text-white shadow-card transition hover:bg-azure-deep disabled:opacity-50">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-white/20 text-xs">▶</span>
-            {phase === 'route' ? 'Restart route' : 'Fly the route'}
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-white/20"><Icon name="play" className="h-3.5 w-3.5" /></span>
+            {phase === 'route' ? 'Restart route' : 'Fly the indoor route'}
           </button>
         )}
         {mode === 'dispatch' && (
           <button type="button" onClick={() => void playIntro()} disabled={!ready}
             className="flex items-center gap-2 rounded-full bg-card py-1.5 pr-3.5 pl-1.5 text-sm font-semibold text-ink shadow-card transition hover:text-azure disabled:opacity-50">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-sunk text-xs">↺</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-sunk"><Icon name="restart" className="h-3.5 w-3.5" /></span>
             {busy && phase !== 'route' ? 'Restart flyover' : 'Replay flyover'}
           </button>
         )}

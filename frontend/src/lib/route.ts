@@ -51,3 +51,10 @@ export const cueLabel: Record<Cue, string> = {
   ARRIVE: 'Arrive',
   OFF_ROUTE: 'Off route',
 }
+
+/**
+ * Graph labels and step text can carry provenance notes in brackets
+ * ("Stairs (lower level; placed from the scan's opening view)"). Drop them
+ * for display; the data keeps them.
+ */
+export const tidy = (text: string) => text.replace(/\s*\([^)]*\)/g, '').replace(/\s+([.,])/g, '$1').trim()

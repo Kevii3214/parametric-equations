@@ -5,7 +5,7 @@ import { placeGraph } from './geo3d'
 const metres = (a: [number, number], b: [number, number]) =>
   Math.hypot((a[0] - b[0]) * 111_320 * Math.cos((a[1] * Math.PI) / 180), (a[1] - b[1]) * 111_320)
 
-describe.each(['233928', '233903'])('placeGraph for building %s', (id) => {
+describe.each(['233928', '233903', 'jrr'])('placeGraph for building %s', (id) => {
   const b = buildingById(id)!
   const p = placeGraph(b)
 
@@ -14,7 +14,8 @@ describe.each(['233928', '233903'])('placeGraph for building %s', (id) => {
   })
 
   it('keeps the elevator shaft vertical across floors', () => {
-    const lifts = b.graph.nodes.filter((n) => n.kind === 'elevator')
+    const kind = b.graph.nodes.some((n) => n.kind === 'elevator') ? 'elevator' : 'stairs'
+    const lifts = b.graph.nodes.filter((n) => n.kind === kind)
     expect(lifts.length).toBeGreaterThan(1)
     for (const l of lifts.slice(1)) expect(metres(p.node(l.id)!, p.node(lifts[0].id)!)).toBeLessThan(0.5)
   })
@@ -26,7 +27,7 @@ describe.each(['233928', '233903'])('placeGraph for building %s', (id) => {
 })
 
 describe('routeFeatures', () => {
-  it.each(['233928', '233903'])('builds one shape per step, with the shaft rising to the patient floor (%s)', async (id) => {
+  it.each(['233928', '233903', 'jrr'])('builds one shape per step, with the shaft rising to the patient floor (%s)', async (id) => {
     const { routeFeatures } = await import('./geo3d')
     const { scenarioFor } = await import('./scenario')
     const b = buildingById(id)!
@@ -39,7 +40,7 @@ describe('routeFeatures', () => {
     const shaft = fc.features.find((f) => f.properties.kind === 'shaft')!
     const top = Math.max(...b.graph.nodes.map((n) => n.floor))
     expect(shaft.properties.base).toBe(0)
-    expect(shaft.properties.top).toBeGreaterThan((top - 1) * storey)
+    expect(shaft.properties.top).toBeGreaterThan((top - p.groundFloor) * storey)
     expect(fc.features.filter((f) => f.properties.done === 1)).toHaveLength(2)
   })
 })

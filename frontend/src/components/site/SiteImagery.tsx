@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { obliqueShowing, sideOf, type Building } from '../../lib/buildings'
+import { entranceSide, obliqueShowing, type Building } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import MatterportTour from './MatterportTour'
 import ObliqueTour from './ObliqueTour'
@@ -51,7 +51,7 @@ export default function SiteImagery({ building, entranceNode, patientFloor, step
           </Suspense>
         )}
         {tab === 'overhead' && <OrthoView building={building} entranceNode={entranceNode} />}
-        {tab === 'approach' && <ObliqueTour building={building} start={entrance ? obliqueShowing(sideOf(building, entrance.at)) : undefined} />}
+        {tab === 'approach' && <ObliqueTour building={building} start={entrance ? obliqueShowing(entranceSide(building, entrance)) : undefined} />}
         {tab === 'interior' && <MatterportTour models={building.matterport} />}
       </div>
       <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-xs text-ink-3">

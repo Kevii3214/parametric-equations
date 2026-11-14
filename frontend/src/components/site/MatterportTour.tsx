@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from '../Icon'
 import { matterportThumb, matterportUrl, type MatterportModel } from '../../lib/buildings'
 
 /**
@@ -26,7 +27,7 @@ export default function MatterportTour({ models, compact = false }: { models: Ma
             <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/5" />
             <span className="absolute inset-0 grid place-items-center">
               <span className="flex items-center gap-2 rounded-full bg-card/95 py-2 pr-4 pl-2 text-sm font-semibold text-ink shadow-card transition group-hover:scale-105">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-azure text-white">▶</span>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-azure text-white"><Icon name="play" /></span>
                 Start 3D walkthrough
               </span>
             </span>
@@ -49,7 +50,7 @@ export default function MatterportTour({ models, compact = false }: { models: Ma
               <img src={matterportThumb(m.id)} alt="" loading="lazy" className="h-9 w-12 rounded-lg object-cover" />
               <span>
                 <span className={`block text-xs font-semibold ${m.id === model.id ? 'text-azure-deep' : 'text-ink'}`}>
-                  {m.title}{m.destination && <span className="ml-1 text-fern">●</span>}
+                  {m.title}{m.destination && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-fern align-middle" aria-label="patient location" />}
                 </span>
                 <span className="block text-[11px] text-ink-3">{m.subtitle}</span>
               </span>

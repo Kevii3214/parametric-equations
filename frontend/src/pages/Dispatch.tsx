@@ -1,15 +1,16 @@
 import { useState, type FormEvent } from 'react'
+import Icon from '../components/Icon'
 import AerialSite from '../components/AerialSite'
 import CueIcon from '../components/CueIcon'
 import Panel, { Chip } from '../components/Panel'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
 import { createIncident } from '../lib/api'
-import { buildingById, buildingForRoute, patientFloor, type Building } from '../lib/buildings'
+import { buildingById, buildingForRoute, inCostar, patientFloor, type Building } from '../lib/buildings'
 import type { IncidentRow, PlanStepRow, RouteRow } from '../lib/contracts'
 import { useDemoBuilding, useDemoReason, useExitDemo, useIncidentParam, type DemoReason } from '../lib/demo'
 import { graphFor, parsedNote, recordsResult } from '../lib/incident'
-import { formatSeconds, nodeMap } from '../lib/route'
+import { formatSeconds, nodeMap, tidy } from '../lib/route'
 import { useIncidentLive } from '../lib/useIncidentLive'
 
 const SAMPLE_NOTE = '65M chest pain, Suite 1800, 1415 Louisiana St, Houston, patient is in the phone room'
@@ -179,7 +180,7 @@ function RecordCard({ incident, steps, started }: { incident: IncidentRow | null
 
   return (
     <Panel title="CoStar building record"
-      aside={rec ? <Chip tone="fern">✓ records subagent</Chip> : null}>
+      aside={rec ? <Chip tone="fern"><Icon name="check" className="mr-1 h-3 w-3" />records subagent</Chip> : null}>
       {!has ? (
         <Empty>{started ? 'Waiting for the records subagent…' : 'Building facts appear after a call.'}</Empty>
       ) : (
@@ -210,35 +211,43 @@ function CostarCard({ building, incident, steps }: { building: Building; inciden
   const lifts = r.elevators.filter((e) => e.count).map((e) => `${e.count} ${e.type.toLowerCase()}`).join(' · ')
   const covered = r.parking.find((p) => p.type === 'Covered' && p.spaces)
   const fromAgent = recordsResult(steps) !== null
+  const costar = inCostar(building)
+  const rating = r.building_rating ?? null
 
   return (
-    <Panel title="CoStar building record" aside={fromAgent ? <Chip tone="fern">✓ records subagent</Chip> : <Chip>CoStar</Chip>}>
+    <Panel title={costar ? 'CoStar building record' : 'Building record'}
+      aside={!costar ? <Chip tone="amber">Not in CoStar · written by hand</Chip>
+        : fromAgent ? <Chip tone="fern"><Icon name="check" className="mr-1 h-3 w-3" />records subagent</Chip> : <Chip>CoStar</Chip>}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold leading-tight tracking-tight text-ink">{r.name}</p>
           <p className="text-sm text-ink-2">{r.address}, {r.city}, {r.state} {r.postcode}</p>
         </div>
-        <span className="shrink-0 rounded-xl bg-azure-soft px-2.5 py-1.5 text-center leading-none text-azure-deep">
-          <span className="block text-lg font-bold">{CLASS[r.building_class] ?? r.building_class}</span>
-          <span className="block text-[10px] font-medium">Class</span>
-        </span>
+        {r.building_class != null && (
+          <span className="shrink-0 rounded-xl bg-azure-soft px-2.5 py-1.5 text-center leading-none text-azure-deep">
+            <span className="block text-lg font-bold">{CLASS[r.building_class] ?? r.building_class}</span>
+            <span className="block text-[10px] font-medium">Class</span>
+          </span>
+        )}
       </div>
-      {suite && (
+      {(suite || floor) && (
         <div className="mt-3 flex items-center gap-3 rounded-xl border border-fern-line bg-fern-soft px-3 py-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-fern text-sm font-bold text-white">{floor ?? '?'}</span>
           <div className="min-w-0 text-sm">
-            <div className="font-semibold text-fern-deep">Suite {suite}{tenant?.company ? ` · ${tenant.company}` : ''}</div>
+            <div className="font-semibold text-fern-deep">
+              {suite ? `Suite ${suite}${tenant?.company ? ` · ${tenant.company}` : ''}` : String(note.location ?? 'Patient location')}
+            </div>
             <div className="text-fern-deep/80">Floor {floor ?? 'unknown'}{note.complaint ? ` · ${note.complaint}` : ''}</div>
           </div>
         </div>
       )}
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3.5">
         <Field label="Stories" value={r.stories_above_grade} />
-        <Field label="Rating" value={<span className="text-amber">{'★'.repeat(r.building_rating)}<span className="text-line-strong">{'★'.repeat(Math.max(0, 5 - r.building_rating))}</span></span>} />
-        <Field label="Elevators" value={lifts} />
+        <Field label="Rating" value={rating == null ? null : <span className="flex gap-0.5" aria-label={`${rating} of 5 stars`}>{[1, 2, 3, 4, 5].map((i) => <Icon key={i} name="star" className={`h-4 w-4 ${i <= rating ? 'text-amber' : 'text-line-strong'}`} />)}</span>} />
+        <Field label="Elevators" value={lifts || (costar ? null : 'None in the scan')} />
         <Field label="Parking" value={covered ? `${covered.spaces!.toLocaleString()} covered` : null} />
-        <Field label="Gross area" value={`${Math.round(r.gross_area_sqft).toLocaleString()} sq ft`} />
-        <Field label="Tenants" value={r.current_tenants.filter((t) => t.company).length} />
+        <Field label="Gross area" value={r.gross_area_sqft ? `${Math.round(r.gross_area_sqft).toLocaleString()} sq ft` : null} />
+        <Field label={costar ? 'Tenants' : 'Use'} value={costar ? r.current_tenants.filter((t) => t.company).length : r.property_type} />
       </dl>
       {r.data_quality_notes.length > 0 && (
         <details className="group mt-4">
@@ -295,7 +304,7 @@ function RouteSummary({ route, started, className }: { route: RouteRow | null; s
         <Stat label="Door to patient" value={formatSeconds(route.total_seconds)} big />
         <Stat label="Walking" value={`${meters} m`} />
         <Stat label="Floors" value={floors.join(' → ')} />
-        <Stat label="Entrance" value={nodes?.get(route.entrance_node)?.label ?? route.entrance_node} />
+        <Stat label="Entrance" value={tidy(nodes?.get(route.entrance_node)?.label ?? route.entrance_node)} />
       </div>
       {route.briefing && (
         <p className="mt-4 rounded-xl border border-azure-line bg-azure-soft p-3 text-sm text-azure-deep">{route.briefing}</p>
@@ -307,7 +316,7 @@ function RouteSummary({ route, started, className }: { route: RouteRow | null; s
               s.cue === 'ARRIVE' ? 'bg-fern-soft text-fern' : 'bg-azure-soft text-azure'}`}>
               <CueIcon cue={s.cue} className="h-4 w-4" />
             </span>
-            <span className="min-w-0 flex-1 text-sm text-ink">{s.text}</span>
+            <span className="min-w-0 flex-1 text-sm text-ink">{tidy(s.text)}</span>
             <span className="shrink-0 font-mono text-[11px] text-ink-3 tabular-nums">
               {s.meters ? `${s.meters} m · ` : ''}{s.seconds} s
             </span>
