@@ -1,5 +1,6 @@
 import time
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.api.device import get_sign_reader
@@ -11,6 +12,10 @@ from app.main import app
 from app.position.simulate import simulate
 from tests.test_device_api import DEVICE, INCIDENT, db, link, send, state  # noqa: F401
 from tests.test_telemetry_api import DEMO
+
+CAMERA_OFF = pytest.mark.skip(
+    reason="camera features are disabled in the backend for the demo (see device.py)"
+)
 
 NODES = [
     {"id": "door", "label": "Regus Suite 1800 entrance"},
@@ -65,6 +70,7 @@ def wait_for(condition, seconds=5):
     return False
 
 
+@CAMERA_OFF
 def test_a_photo_of_a_suite_sign_snaps_the_position_and_is_never_stored(db):  # noqa: F811
     seen = []
 
@@ -108,6 +114,7 @@ def test_bad_photo_bodies_still_get_an_answer(db):  # noqa: F811
     }
 
 
+@CAMERA_OFF
 def test_the_camera_starts_scanning_near_the_destination_once_and_stops_on_arrival(db):  # noqa: F811
     graph = BuildingGraph.model_validate_json(DEMO.read_text(encoding="utf-8"))
     route = find_route(graph, "st_main", "phone_door")
@@ -117,3 +124,26 @@ def test_the_camera_starts_scanning_near_the_destination_once_and_stops_on_arriv
         commands += send(events).json()["commands"]
     assert commands.count("SCAN ON") == 1
     assert commands.index("SCAN ON") < commands.index("ARRIVED") < commands.index("SCAN OFF")
+
+
+def test_with_the_camera_disabled_a_photo_is_ignored_and_scan_on_is_never_sent(db):  # noqa: F811
+    called = []
+
+    async def reader(image):
+        called.append(image)
+        return ["SUITE 1800"]
+
+    app.dependency_overrides[get_sign_reader] = lambda: reader
+    graph = BuildingGraph.model_validate_json(DEMO.read_text(encoding="utf-8"))
+    route = find_route(graph, "st_main", "phone_door")
+    link()
+    commands = []
+    with TestClient(app) as client:
+        for i, events in enumerate(telemetry_to_batches(simulate(route))):
+            commands += send(events).json()["commands"]
+            if i == 5:
+                assert photo(client).status_code == 200
+        time.sleep(0.3)
+    assert called == []
+    assert not [r for r in db.rows("device_events") if r["kind"] == "sign"]
+    assert "SCAN ON" not in commands and "ARRIVED" in commands
