@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useDemoReason, useExitDemo } from '../lib/demo'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+  `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors sm:px-3.5 ${
     isActive ? 'bg-card text-ink shadow-card' : 'text-ink-2 hover:text-ink'
   }`
 
@@ -21,13 +21,13 @@ export default function Layout() {
             <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">Pairatech</span>
           </span>
           <nav className="ml-2 flex gap-0.5 rounded-full bg-sunk p-0.5">
-            <NavLink to={{ pathname: '/dispatch', search }} className={linkClass}>Dispatch</NavLink>
-            <NavLink to={{ pathname: '/medic', search }} className={linkClass}>Medic</NavLink>
+            <NavLink to={{ pathname: '/pre-arrival', search }} className={linkClass}>Pre-arrival</NavLink>
+            <NavLink to={{ pathname: '/arrival', search }} className={linkClass}>Arrival</NavLink>
           </nav>
           {demo === 'param' ? (
             // ?demo=1 carries across pages, so make it loud and easy to leave.
-            <span className="ml-auto flex items-center gap-1 rounded-full bg-amber-soft py-0.5 pr-0.5 pl-2.5 text-xs font-semibold text-amber">
-              DEMO · sample data
+            <span className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-amber-soft py-0.5 pr-0.5 pl-2.5 text-xs font-semibold text-amber">
+              DEMO<span className="hidden sm:inline"> · sample data</span>
               <button type="button" onClick={exitDemo}
                 className="rounded-full bg-card px-2 py-0.5 font-medium text-ink shadow-card hover:text-azure">
                 Exit demo

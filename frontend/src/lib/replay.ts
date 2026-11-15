@@ -20,8 +20,8 @@ interface Walk {
  * pace (sped up) so the medic view can be seen moving with no server and no
  * wearable. Returns null when disabled.
  */
-export function useRouteReplay(route: RouteRow | null, graph: BuildingGraph | null, enabled: boolean) {
-  const [walk, setWalk] = useState<Walk>({ step: 0, elapsed: -ARRIVAL_HOLD, playing: true })
+export function useRouteReplay(route: RouteRow | null, graph: BuildingGraph | null, enabled: boolean, autoplay = false) {
+  const [walk, setWalk] = useState<Walk>({ step: 0, elapsed: -ARRIVAL_HOLD, playing: autoplay })
   const steps = route?.steps ?? []
   const running = enabled && walk.playing && steps.length > 0
 

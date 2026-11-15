@@ -103,6 +103,13 @@ export interface Building {
    * it: degrees clockwise from the plan's +y axis to true north.
    */
   graphRotationDeg?: number
+  /**
+   * Floors covered by a Matterport scan, keyed by graph floor: the scan model
+   * and its floor label. The graph for those floors uses the scan's frame.
+   */
+  floorPlans?: Record<number, { modelId: string; scanFloor?: string; scanFloorIndex?: number }>
+  /** Loads the building's interior.json on demand (it is large). */
+  loadInterior?: () => Promise<unknown>
 }
 
 function parseWkt(wkt: string): LngLat[] {
@@ -167,6 +174,8 @@ const louisiana: Building = {
   orthoBounds: laBounds,
   imageryMatches: true,
   demoGoal: 'phone_door',
+  floorPlans: { 18: { modelId: 'LJn59uoV759' } },
+  loadInterior: () => import('../../../fixtures/buildings/233928/interior.json').then((m) => m.default),
   // The graph's entrance positions are estimates (see GRAPH_NOTES.md); these
   // map pins are placed by eye on the Vexcel ortho to match.
   markers: [
@@ -211,6 +220,8 @@ const williams: Building = {
     { id: 'eJKnR3x44eh', title: 'Titan Global Advisory, Suite 5600', subtitle: 'Reception and offices, floor 56', destination: true },
   ],
   demoGoal: 'room29',
+  floorPlans: { 56: { modelId: 'eJKnR3x44eh' } },
+  loadInterior: () => import('../../../fixtures/buildings/233903/interior.json').then((m) => m.default),
 }
 
 // Rabinowitz Hall is not in the CoStar kit: the record is written by hand,
@@ -246,6 +257,11 @@ const rabinowitz: Building = {
     { id: 'P3S6VUTP3qB', title: 'Rabinowitz Hall', subtitle: 'Atrium hall and upper corridor', destination: true },
   ],
   demoGoal: 's20',
+  floorPlans: {
+    2: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 2', scanFloorIndex: 1 },
+    3: { modelId: 'P3S6VUTP3qB', scanFloor: 'Floor 3', scanFloorIndex: 2 },
+  },
+  loadInterior: () => import('../../../fixtures/buildings/jrr/interior.json').then((m) => m.default),
   graphRotationDeg: JR_ROT,
 }
 

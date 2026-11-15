@@ -4,6 +4,7 @@ import { matterportUrl, type Building } from '../../lib/buildings'
 import type { RouteStep } from '../../lib/contracts'
 import { tidy } from '../../lib/route'
 import {
+  departAt,
   calibrate, facingFor, gapPosition, matchSweep, moveFor, startInScan, stateAt, yawIsFlipped,
   type SdkPoint, type Tour,
 } from '../../lib/tour'
@@ -39,12 +40,18 @@ type Viewer =
  * `t_ms` and holding for `dwell_ms`. Unscanned (gap) stretches show the 3D
  * map instead and cut into the scan when it starts. The user only watches.
  */
-export default function TourPlayer({ tour: fullTour, building, steps, patientFloor }: {
+export default function TourPlayer({ tour: fullTour, building, steps, patientFloor, startStep }: {
   tour: Tour; building: Building; steps: RouteStep[]; patientFloor: number | null
+  /** Open at this route step instead of the start ("preview this step"). */
+  startStep?: number
 }) {
   // The tour opens inside the scan; the unscanned start (street, lobby, lift) is listed by the page, outside this box.
   const tour = useMemo(() => startInScan(fullTour).tour, [fullTour])
-  const [t, setT] = useState(0)
+  const [t, setT] = useState(() => {
+    if (startStep == null) return 0
+    const i = tour.keyframes.findIndex((k) => k.step_index >= startStep)
+    return i > 0 ? departAt(tour, i) : 0
+  })
   const [wantPlay, setPlaying] = useState(true)
   const [viewer, setViewer] = useState<Viewer>(SDK_KEY ? { kind: 'loading' } : { kind: 'plain', reason: 'no SDK key' })
   const [skipped, setSkipped] = useState(0)
