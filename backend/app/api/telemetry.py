@@ -9,7 +9,7 @@ from supabase import Client
 
 from app.agent.replan import replan
 from app.config import get_settings
-from app.db import get_db
+from app.db import get_db, is_invalid_id
 from app.graph.schema import RouteStep
 from app.models import Telemetry
 from app.position.engine import PositionEngine, Update
@@ -44,9 +44,14 @@ class EngineRegistry:
     async def knows(self, incident_id: str, db) -> bool:
         if incident_id in self._buildings:
             return True
-        rows = await asyncio.to_thread(
-            lambda: db.table("incidents").select("*").eq("id", incident_id).execute()
-        )
+        try:
+            rows = await asyncio.to_thread(
+                lambda: db.table("incidents").select("*").eq("id", incident_id).execute()
+            )
+        except Exception as error:
+            if is_invalid_id(error):
+                return False
+            raise
         if not rows.data:
             return False
         self._buildings[incident_id] = rows.data[0].get("building_id")

@@ -79,6 +79,11 @@ def test_unknown_incident_is_404(db):
     assert ask(incident="nope").status_code == 404
 
 
+def test_an_id_that_is_not_a_uuid_is_a_404_not_a_server_error(db):
+    db.strict_uuid = True
+    assert ask(incident="nope").status_code == 404
+
+
 def test_blank_question_is_422(db):
     assert ask("  ").status_code == 422
 

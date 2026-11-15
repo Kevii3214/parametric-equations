@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from app.api.events import get_embedder
-from app.db import get_db
+from app.db import get_db, is_invalid_id
 from app.models import AskIn
 from app.notes import Embedder, search_notes
 from app.providers.snapshot import SnapshotProvider
@@ -90,10 +90,15 @@ async def ask(
     embed: Annotated[Embedder, Depends(get_embedder)],
     provider: Annotated[SnapshotProvider, Depends(get_provider)],
 ) -> dict:
-    incident_rows = await asyncio.to_thread(
-        lambda: db.table("incidents").select("*").eq("id", body.incident_id).execute()
-    )
-    if not incident_rows.data:
+    try:
+        incident_rows = await asyncio.to_thread(
+            lambda: db.table("incidents").select("*").eq("id", body.incident_id).execute()
+        )
+    except Exception as error:
+        if not is_invalid_id(error):
+            raise
+        incident_rows = None  # not a UUID: no such incident
+    if incident_rows is None or not incident_rows.data:
         raise HTTPException(status_code=404, detail="Unknown incident")
     incident = incident_rows.data[0]
     building_id = incident.get("building_id")

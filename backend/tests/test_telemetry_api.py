@@ -62,6 +62,11 @@ def test_unknown_incident_is_a_404(db):
     assert post(0, 1000, incident="nope").status_code == 404
 
 
+def test_an_id_that_is_not_a_uuid_is_a_404_not_a_server_error(db):
+    db.strict_uuid = True  # the real database rejects it with an error
+    assert post(0, 1000, incident="nope").status_code == 404
+
+
 def test_samples_before_a_route_exists_are_accepted_and_ignored(db):
     db.rows("routes").clear()
     assert post(0, 1000).json() == {"ok": True}

@@ -2,6 +2,9 @@
 
 from itertools import count
 from types import SimpleNamespace
+from uuid import UUID
+
+from postgrest.exceptions import APIError
 
 
 class FakeSupabase:
@@ -9,6 +12,9 @@ class FakeSupabase:
         self.tables = {name: [dict(r) for r in rows] for name, rows in tables.items()}
         self.ids = count(1)
         self.fail_tables: set[str] = set()
+        self.strict_uuid = (
+            False  # like Postgres: an id that is not a UUID is an error, not "no rows"
+        )
         self.missing_columns: dict[
             str, set[str]
         ] = {}  # table -> columns the database does not have yet
@@ -44,6 +50,7 @@ class _Query:
     def execute(self):
         if self.name in self.db.fail_tables:
             raise RuntimeError(f"{self.name} is unavailable")
+        self._check_ids()
         rows = self.db.rows(self.name)
         matching = [r for r in rows if all(r.get(c) == v for c, v in self.filters)]
         if self.action == "insert":
@@ -58,3 +65,18 @@ class _Query:
                 row.update(self.payload)
             return SimpleNamespace(data=matching)
         return SimpleNamespace(data=matching)
+
+    def _check_ids(self):
+        if not self.db.strict_uuid:
+            return
+        for column, value in self.filters:
+            if column in ("id", "incident_id"):
+                try:
+                    UUID(str(value))
+                except ValueError:
+                    raise APIError(
+                        {
+                            "message": f'invalid input syntax for type uuid: "{value}"',
+                            "code": "22P02",
+                        }
+                    ) from None
