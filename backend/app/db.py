@@ -10,6 +10,12 @@ def normalize_supabase_url(url: str) -> str:
     return url.strip().rstrip("/").removesuffix("/rest/v1").rstrip("/")
 
 
+def is_invalid_id(error: Exception) -> bool:
+    """True when Postgres refused an id because it is not a valid UUID (code 22P02): that is an unknown
+    incident to the caller, not a server error."""
+    return getattr(error, "code", None) == "22P02"
+
+
 @lru_cache
 def get_db() -> Client:
     """Supabase client using the service-role key. Server only: never send this key to the browser."""

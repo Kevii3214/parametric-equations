@@ -46,6 +46,8 @@ def send(events, t=0, device=DEVICE):
 
 def test_linking_an_unknown_incident_is_a_404(db):
     assert link(incident="nope").status_code == 404
+    db.strict_uuid = True  # the real database rejects a non-UUID with an error
+    assert link(incident="nope").status_code == 404
 
 
 def test_an_unlinked_device_is_a_404(db):
