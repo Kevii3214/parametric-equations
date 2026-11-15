@@ -341,3 +341,55 @@ def test_skip_floor_does_nothing_away_from_the_lift_or_before_any_sample(walker,
     fresh = PositionEngine(route, tag_nodes={}, stride_m=0.7)
     fresh.skip_floor()  # no wearable sample yet: must not crash
     assert fresh.step_index == 0
+
+
+# ------------------------------------------------------------ recovering from off route
+
+
+def test_undoing_a_wrong_turn_brings_the_crew_back_on_route(walker):
+    walker.walk(12)
+    walker.feed(0, heading=180)  # turned right when LEFT was expected
+    assert walker.engine.off_route
+    walker.feed(0, heading=100)  # turned back, within 30 degrees of the original heading
+    assert not walker.engine.off_route and "recovered" in walker.effects
+    assert walker.positions[-1].off_route is False
+
+
+def test_making_the_missed_turn_late_brings_the_crew_back_on_route(walker):
+    walker.walk(12)
+    walker.walk(6)  # six metres past the corner: off route
+    assert walker.engine.off_route
+    walker.feed(0, heading=0)  # the LEFT turn, made late
+    assert not walker.engine.off_route and walker.engine.step_index == 2
+
+
+def test_walking_on_the_wrong_way_stays_off_route(walker):
+    walker.walk(12)
+    walker.feed(0, heading=180)
+    walker.walk(10, heading=180)
+    assert walker.engine.off_route
+
+
+def test_after_recovering_the_route_carries_on_and_reaches_the_lift(walker):
+    walker.walk(12)
+    walker.feed(0, heading=180)
+    walker.feed(0, heading=90)
+    walker.walk(1)
+    walker.feed(0, heading=0)  # the real left turn
+    walker.walk(9)
+    assert walker.engine.step_index >= 2 and not walker.engine.off_route
+
+
+def test_the_confirm_button_while_off_route_rejoins_from_the_start_of_the_step(walker):
+    walker.walk(12)
+    walker.walk(10)
+    assert walker.engine.off_route
+    walker.feed(0, btn=1)
+    assert not walker.engine.off_route and "rejoined" in walker.effects
+    assert walker.engine.progress_m == 0.0
+
+
+def test_rejoin_does_nothing_when_on_route(walker):
+    walker.walk(2)
+    walker.engine.rejoin()
+    assert walker.engine.step_index == 0 and not walker.engine.off_route

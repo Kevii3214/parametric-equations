@@ -50,14 +50,17 @@ async def events(
                 db.table("incidents").update({"status": "arrived"}).eq("id", incident_id).execute()
             )
         )
-    elif (
-        event.type == "skip_floor"
-    ):  # demo bypass for the lift: act as if the crew confirmed the ride
+    elif event.type in (
+        "skip_floor",
+        "rejoin",
+    ):  # as if the crew pressed confirm: at the lift, or after going astray
         tracked = await registry.get(incident_id, db)
         if tracked is None:
             raise HTTPException(status_code=409, detail="This incident has no route yet")
         async with tracked.lock:
-            await _save(db, incident_id, tracked.version, tracked.engine.skip_floor())
+            engine = tracked.engine
+            update = engine.skip_floor() if event.type == "skip_floor" else engine.rejoin()
+            await _save(db, incident_id, tracked.version, update)
     else:  # elevator_out or obstacle
         tracked = await registry.get(incident_id, db)
         if tracked is None or not building_id:

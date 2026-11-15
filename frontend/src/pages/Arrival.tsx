@@ -96,6 +96,15 @@ export default function Arrival() {
       <StepCard step={step} next={steps[i + 1]} offRoute={offRoute} fromFloor={from?.floor ?? step.floor}
         onNext={cursor.next} onBack={cursor.back} />
 
+      {/* Off route: the engine recovers by itself when the turn is made, this is the manual way back. */}
+      {offRoute && inc.live.source === 'supabase' && inc.incidentId && (
+        <button type="button"
+          onClick={() => { void sendEvent(inc.incidentId!, 'rejoin', null, false).catch(() => {}) }}
+          className="rounded-2xl border border-alert/40 bg-alert-soft px-4 py-3 text-sm font-semibold text-alert">
+          I am back on the route
+        </button>
+      )}
+
       {/* Demo bypass: nobody can ride a lift to another floor in a demo, so tell the server it was done. */}
       {isFloorChange(step.cue) && inc.live.source === 'supabase' && inc.incidentId && !arrived && (
         <button type="button"

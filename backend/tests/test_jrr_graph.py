@@ -91,9 +91,20 @@ def test_the_classroom_route_goes_in_the_glass_entrance_across_the_hall_and_up_t
     assert total_seconds(steps) < 70
 
 
-def test_there_are_five_patient_locations_on_two_levels(patients):
-    assert len(patients) == 5
+def test_there_are_five_scanned_patient_locations_and_two_lower_level_demo_stops(patients):
+    scanned = {k: n for k, n in patients.items() if not k.startswith("Demo stop")}
+    assert len(scanned) == 5 and len(patients) == 7
     assert {n.floor for n in patients.values()} == {2, 3}
+
+
+def test_the_demo_stops_give_a_straight_walk_with_one_right_and_one_left_turn_and_no_stairs(
+    graph, patients
+):
+    for name, turn in ("Demo stop A", "RIGHT"), ("Demo stop B", "LEFT"):
+        node = next(n for label, n in patients.items() if label.startswith(name))
+        steps = find_route(graph, "entrance1", node.id)
+        assert [s.cue for s in steps if s.cue in ("LEFT", "RIGHT", "UTURN")] == [turn]
+        assert node.floor == 2 and {s.floor for s in steps} == {2}
 
 
 def test_the_hall_is_reached_without_stairs_and_the_upper_level_with_one_climb(graph, patients):

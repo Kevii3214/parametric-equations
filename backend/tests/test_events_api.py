@@ -164,3 +164,11 @@ def test_skip_floor_moves_the_position_past_the_lift_and_saves_it(db):
 def test_skip_floor_without_a_route_is_a_409(db):
     db.rows("routes").clear()
     assert event("skip_floor").status_code == 409
+
+
+def test_rejoin_clears_off_route_and_saves_the_position(db):
+    db.tables.setdefault("positions", [])
+    engine = asyncio.run(app.dependency_overrides[get_registry]().get(INCIDENT, db)).engine
+    engine.off_route = True
+    assert event("rejoin").json() == {"ok": True}
+    assert engine.off_route is False and db.rows("positions")[-1]["off_route"] is False

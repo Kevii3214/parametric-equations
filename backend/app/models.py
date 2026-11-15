@@ -68,5 +68,5 @@ class AskIn(BaseModel):
 class EventIn(BaseModel):
     """Body of POST /incidents/{id}/events: something the crew reports."""
 
-    type: Literal["elevator_out", "obstacle", "note", "arrived", "skip_floor"]
+    type: Literal["elevator_out", "obstacle", "note", "arrived", "skip_floor", "rejoin"]
     text: str | None = Field(default=None, max_length=1000)

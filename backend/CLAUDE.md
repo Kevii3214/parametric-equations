@@ -2,7 +2,7 @@
 
 You are helping **Person 2**, who owns the server, the AI agent and the data for **Beeline**, a HackPrinceton Fall 2026 project (the web app is called **Pairatech**). Person 2 is new to this stack: explain what you are doing in plain words, keep changes small, and stop to ask when something is unclear.
 
-**Status (2026-11-15):** every ticket P2-0 to P2-12 is built, merged and deployed, plus: the device bridge (PR #27, reconciled with the real protocol in #33), the three-subagent agent (#29), the malformed-id 404 fix (#30) and the Photon crew chat (#31). 421 backend tests, 26 sidecar tests. **Next piece of work: the hardware** (`Hardware/` folder from the hardware team; the bridge now speaks their protocol, see the first open item for what is left). Read "Where things stand" and "Hard-won lessons" before doing anything.
+**Status (2026-11-15):** every ticket P2-0 to P2-12 is built, merged and deployed, plus: the device bridge (PR #27, reconciled with the real protocol in #33), the three-subagent agent (#29), the malformed-id 404 fix (#30) and the Photon crew chat (#31). 433 backend tests, 26 sidecar tests. **Next piece of work: the hardware** (`Hardware/` folder from the hardware team; the bridge now speaks their protocol, see the first open item for what is left). Read "Where things stand" and "Hard-won lessons" before doing anything.
 
 ## What Beeline is
 
@@ -71,6 +71,8 @@ backend/
 
 **The agent** (`create_deep_agent`, Gemini with fallbacks): `write_todos` → ONE step starting three subagents in parallel with `task`: `records` (resolve_building, get_building_record, find_suite), `site` (resolve_building, list_entrances, find_destination_nodes, `read_file` of the building's notes) and `crew-notes` (resolve_building, search_notes); each has a `response_format` (`app/agent/findings.py`: RecordsFindings, SiteFindings, NotesFindings) and may use `GEMINI_SUBAGENT_MODEL` (a faster model; defaults to the main one). Then `plan_route` (every entrance, in parallel) → `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note` stays on the main agent. About 5 main-agent model turns (a test locks it) and, with the building resolved in code before the agent starts (`_resolve_building`), 2 calls per subagent. **Measured 2026-11-14 (real Gemini, 2 runs x 3 buildings per config): this is NOT faster than the single-subagent flow** (both 14-23 s on `gemini-3.5-flash-lite`, 21-35 s on `gemini-3-flash-preview`); it adds depth and honest briefings (they now say what is estimated), not speed. It makes more model calls in total, so it uses more Gemini quota. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`; only the first `write_todos` becomes a `plan` row). Capped at 25 model calls per agent; model fallback applies to every subagent too; a failure after a route was saved is reported as "Route saved". **File system** (`app/agent/knowledge.py`): seeded read-only into the run's virtual file system (`files=`, `permissions` deny write): `/AGENTS.md` (the dispatch playbook, loaded as `memory`) and `/buildings/<id>/GRAPH_NOTES.md` (measured vs estimated, read by `site`, so briefings say what is an estimate). `execute` still has no shell and a test locks that in.
 
+**Off-route recovery** (`engine._try_recover`, `rejoin`): off route at a turn is not permanent. Making the missed turn late, or undoing a wrong-way turn (heading back within 30 degrees), brings the crew back; button 1 on the Pi, or the red "I am back on the route" button on Arrival (`POST /incidents/{id}/events` `{"type":"rejoin"}`), re-anchors at the start of the current step. A tag snap still clears it too. Walking on the wrong way stays off route.
+
 **Demo lift bypass:** nobody can ride a lift to another floor in a demo, so `POST /incidents/{id}/events` `{"type":"skip_floor"}` (a button on the Arrival page while the current step is a lift or stairs, and the Pi's button 1 at the lift) counts the ride as done via `engine.skip_floor()`; it does nothing anywhere else.
 
 **Position engine** (`app/position/engine.py`, pure): distance from steps × `STRIDE_M`; one cue within 6 m of a turn; turn confirmed by a ≥60° heading change; off route for a wrong-way turn or >5 m past a turn; floor change from a ≥35 Pa pressure change or the confirm button at a lift; RFID tag snaps the position and resets the heading baseline; button 2 = elevator_out; one `positions` row per second; the last step counts as done within 1 m (strides vary).
@@ -86,6 +88,7 @@ backend/
 | `233928` | 1415 Louisiana, Houston (CoStar) | Regus Suite 1800 on floor 18 (door positions from the scan) | street, lobby, elevators, floor corridor, all lift/stair times |
 | `233903` | Williams Tower, Houston (CoStar) | the whole floor-56 suite: every doorway and open gap | street, lobby, elevators, corridor outside the suite |
 | `jrr` | Rabinowitz Hall, Princeton (not in CoStar) | the two scanned levels, all 65 walkable camera positions | entrance and glass staircase placed from the scan's opening picture; stairs time; no elevator exists in the data |
+| `jrr` demo stops | Two lower-level destinations added for hardware demos (not real rooms): `s60` **Demo stop A (right turn)** and `s2` **Demo stop B (left turn)**, each a straight walk from the glass entrance with one turn, no stairs. The atrium is open, so the router's shortest paths have at most one turn on this level. Sample calls: patient is at demo stop A / B on the lower level | positions are scan camera points, not checked | |
 | `thea-2br` | THEA at Metropolis 2BR unit (kit scan) | whole unit, 15 rooms, auto-generated by `add_building.py` | nothing hand-checked |
 
 Sample calls (same as the website's buttons): Louisiana `65M chest pain, Suite 1800, 1415 Louisiana St, Houston, patient is in the phone room` (garage entrance, ~109 s); Williams `58F fall with head injury, Suite 5600, Williams Tower, 2800 Post Oak Blvd, Houston, patient is in the conference room` (~106 s); Rabinowitz `20M seizure, Rabinowitz Hall, Princeton University, patient is in the classroom on the upper level` (~51 s). Only Suite 1800 (Louisiana) has map nodes; other suites cannot be routed to.
@@ -112,7 +115,7 @@ The sidecar's own variables are in `photon-sidecar/.env.example` (`PHOTON_API_KE
 `uv` is not on PATH on this machine: use `python -m uv ...`.
 
 ```
-python -m uv run pytest -q                      # 421 tests
+python -m uv run pytest -q                      # 433 tests
 python -m uv run ruff format app tests tools    # NOT "ruff format ." : it reformats code blocks inside .md files
 python -m uv run ruff check .
 python -m uv run uvicorn app.main:app --port 8000
