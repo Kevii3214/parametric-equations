@@ -155,6 +155,10 @@ def test_the_first_text_links_the_chat_and_sends_the_route_that_already_exists(e
     assert sent["thread_id"] == "pho_spc_1" and "Garage entrance" in sent["text"]
     assert sent["url"].startswith(f"https://api.example.com/medic/{INCIDENT}?t=")
     assert sent["url"].endswith("&v=1")  # the route version, so the preview is fetched afresh
+    assert sent["image_url"].startswith(
+        f"https://api.example.com/medic/{INCIDENT}/card.png?t="
+    )  # the route picture
+    assert sent["image_url"].endswith("&v=1")
     assert resolve().json()["first_contact"] is False and len(env.sidecar.sent) == 1
 
 

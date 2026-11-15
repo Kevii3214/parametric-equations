@@ -26,7 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     webhookSecret: need('PHOTON_WEBHOOK_SECRET'),
     backendUrl: need('BACKEND_URL').replace(/\/+$/, ''),
     sharedSecret: need('PHOTON_SHARED_SECRET'),
-    port: Number(env.PORT ?? 8788),
+    port: Number(env.PORT?.trim() || 8788), // a blank PORT= line must not become 0 (a random port)
     photonBaseUrl: env.PHOTON_BASE_URL?.trim() || undefined,
   }
 }

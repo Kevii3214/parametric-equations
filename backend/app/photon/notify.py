@@ -6,7 +6,7 @@ import logging
 from app.agent.trace import PlanTrace
 from app.config import get_settings
 from app.photon.client import get_sidecar
-from app.photon.share import medic_url
+from app.photon.share import card_url, medic_url
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,9 @@ async def notify_route(
         routes = await asyncio.to_thread(
             lambda: db.table("routes").select("*").eq("incident_id", incident_id).execute()
         )
-        url = medic_url(incident_id, max((r["version"] for r in routes.data), default=None))
+        version = max((r["version"] for r in routes.data), default=None)
+        url = medic_url(incident_id, version)
+        image_url = card_url(incident_id, version)
         for member in members:
             try:
                 await asyncio.wait_for(
@@ -51,6 +53,7 @@ async def notify_route(
                         sender_id=member["photon_user_id"],
                         text=briefing,
                         url=url,
+                        image_url=image_url,
                     ),
                     SEND_TIMEOUT_S,
                 )

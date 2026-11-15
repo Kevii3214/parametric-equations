@@ -54,6 +54,9 @@ export function fakePhoton() {
     async sendText(...args) {
       calls.push({ kind: 'send', args })
     },
+    async sendImage(spaceId, senderId, png, filename) {
+      calls.push({ kind: 'image', args: [spaceId, senderId, png.byteLength, filename] })
+    },
     async assign(...args) {
       calls.push({ kind: 'assign', args })
       return { assignedPhoneNumber: '+15559990000', assignmentId: 'asg_1' }

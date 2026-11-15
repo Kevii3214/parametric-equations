@@ -32,15 +32,23 @@ class SidecarClient:
         return response.json()
 
     async def send(
-        self, *, incident_id: str, thread_id: str, sender_id: str, text: str | None, url: str | None
+        self,
+        *,
+        incident_id: str,
+        thread_id: str,
+        sender_id: str,
+        text: str | None,
+        url: str | None,
+        image_url: str | None = None,
     ) -> dict:
-        """Post into a crew member's chat: the text, then the link on its own so that it unfurls."""
+        """Post into a crew member's chat: the route card as a picture (if image_url), then the text with the link."""
         body = {
             "incident_id": incident_id,
             "thread_id": thread_id,
             "sender_id": sender_id,
             "text": text,
             "url": url,
+            "image_url": image_url,
         }
         return await self._post("/send", body)
 

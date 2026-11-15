@@ -13,6 +13,21 @@ interface Deps {
   /** Called for every verified inbound text, after the delivery has been acknowledged. */
   onInbound: (message: InboundText) => Promise<void>
   log?: (line: string) => void
+  /** Downloads the route card picture to attach. Replaceable in tests. */
+  fetchImage?: (url: string) => Promise<Uint8Array>
+}
+
+const MAX_IMAGE = 5_000_000
+
+/** Fetch a PNG over http(s): small, and it must really be an image. */
+export async function downloadImage(url: string): Promise<Uint8Array> {
+  if (!/^https?:\/\//.test(url)) throw new Error('image_url must be http(s)')
+  const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
+  if (!res.ok) throw new Error(`image answered ${res.status}`)
+  if (!(res.headers.get('content-type') ?? '').startsWith('image/png')) throw new Error('image is not a PNG')
+  const bytes = new Uint8Array(await res.arrayBuffer())
+  if (bytes.byteLength > MAX_IMAGE) throw new Error('image is too large')
+  return bytes
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -45,7 +60,7 @@ function reply(res: ServerResponse, status: number, body?: unknown): void {
   res.end(body === undefined ? undefined : JSON.stringify(body))
 }
 
-export function createApp({ config, photon, onInbound, log = console.log }: Deps): Server {
+export function createApp({ config, photon, onInbound, log = console.log, fetchImage = downloadImage }: Deps): Server {
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', 'http://sidecar')
@@ -86,12 +101,27 @@ export function createApp({ config, photon, onInbound, log = console.log }: Deps
         if (!threadId || !senderId) return reply(res, 422, { error: 'thread_id and sender_id are required' })
         const text = typeof body.text === 'string' ? body.text.trim() : ''
         const link = typeof body.url === 'string' ? body.url.trim() : ''
-        if (!text && !link) return reply(res, 422, { error: 'text or url is required' })
-        // The briefing first, then the link on its own: a message that is only a link unfurls into a card.
-        if (text) await photon.sendText(threadId, senderId, text)
-        if (link) await photon.sendText(threadId, senderId, link)
+        const imageUrl = typeof body.image_url === 'string' ? body.image_url.trim() : ''
+        if (!text && !link && !imageUrl) return reply(res, 422, { error: 'text, url or image_url is required' })
+        let sent = 0
+        // The route card first, as a real picture: iMessage on Photon 2.0 sends plain text only, so a bare link
+        // does not unfurl into a card. A picture that cannot be fetched or uploaded must not lose the briefing.
+        if (imageUrl) {
+          try {
+            await photon.sendImage(threadId, senderId, await fetchImage(imageUrl), 'route.png')
+            sent += 1
+          } catch (error) {
+            log(`route card not sent (${String(error)}); sending the text anyway`)
+          }
+        }
+        // then the briefing with the link under it, in one message
+        const message = [text, link].filter(Boolean).join('\n')
+        if (message) {
+          await photon.sendText(threadId, senderId, message)
+          sent += 1
+        }
         log(`sent to ${threadId} for incident ${String(body.incident_id ?? '?')}`)
-        return reply(res, 200, { ok: true, sent: (text ? 1 : 0) + (link ? 1 : 0) })
+        return reply(res, 200, { ok: true, sent })
       }
 
       reply(res, 404, { error: 'not found' })

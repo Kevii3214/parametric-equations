@@ -13,8 +13,8 @@ conversation: each crew member texts the line once, and after that we can messag
 dispatcher ──POST /incidents/{id}/crew──▶ backend ──POST /assign──▶ sidecar ──▶ Photon
    (crew member is given a number to text once)
 
-route saved ──▶ backend ──POST /send {thread_id, sender_id, text, url}──▶ sidecar ──▶ Photon ──▶ crew's iMessage
-                                                      the briefing, then the link on its own (so it unfurls)
+route saved ──▶ backend ──POST /send {thread_id, sender_id, text, url, image_url}──▶ sidecar ──▶ Photon ──▶ crew's iMessage
+                                    the route card as a picture, then the briefing with the link under it
 
 crew's reply ──▶ Photon ──signed webhook──▶ sidecar ──▶ backend /crew-threads/resolve + /incidents/{id}/crew-report
                                                     ◀── replies ── (posted back into the same chat)
@@ -51,7 +51,7 @@ crew's reply ──▶ Photon ──signed webhook──▶ sidecar ──▶ ba
 | | |
 | --- | --- |
 | `GET /health` | `{ok: true}` |
-| `POST /send` | `{incident_id, thread_id, sender_id, text?, url?}` → posts `text`, then `url` as its own message. Needs `X-Photon-Secret` |
+| `POST /send` | `{incident_id, thread_id, sender_id, text?, url?, image_url?}` → uploads the PNG at `image_url` and sends it as a picture, then one text message with `text` and `url`. A card that cannot be fetched or uploaded never loses the text. Needs `X-Photon-Secret` |
 | `POST /assign` | `{handle, name?}` → `{assigned_phone_number, assignment_id}`. Needs `X-Photon-Secret` |
 | `POST /photon/webhook` | Photon's signed `message.received` deliveries (Standard Webhooks). Answers 204 at once, handles the text after |
 
@@ -66,8 +66,9 @@ npm run dev         # tsx watch
 
 ## Honest limits
 
-- The Photon calls are checked against Photon's public OpenAPI contract and a stub, **not a live project**: nothing
-  here has sent a real iMessage yet. The first live run is the real test.
+- **Photon 2.0 iMessage sends plain text and images only: there is no rich-link message type**, so a link does not unfurl into a card on the crew's phone (iMessage previews are normally attached by the sender's device). The route card is therefore sent as a real picture. The link page still serves `og:` tags for apps that fetch them (Telegram, WhatsApp, Slack).
+
+- Live-tested against a real Photon 2.0 project (2026-11-15): assign, signed webhook, the briefing, the picture upload (multipart/related), YES-to-confirm re-plan, all delivered. Not tested: a deployed (non-tunnel) sidecar.
 - `202` from Photon means accepted, not delivered. A failed send is logged and shown to the dispatcher, never retried
   by the route code.
 - A crew member who has not texted the line yet cannot be messaged; the dispatcher's trail says so.

@@ -1,10 +1,10 @@
 import type { AddressInfo } from 'node:net'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createBackend } from '../src/backend.js'
 import { loadConfig } from '../src/config.js'
 import { createInbound } from '../src/inbound.js'
 import { createPhoton } from '../src/photon.js'
-import { createApp } from '../src/server.js'
+import { createApp, downloadImage } from '../src/server.js'
 import { verifyAndParse } from '../src/webhook.js'
 import { config, fakeBackend, fakePhoton, secret, signedDelivery } from './helpers.js'
 
@@ -19,6 +19,8 @@ describe('config', () => {
       PHOTON_SHARED_SECRET: 'x',
     }
     expect(loadConfig(env)).toMatchObject({ backendUrl: 'http://b', port: 8788 })
+    expect(loadConfig({ ...env, PORT: '' }).port).toBe(8788)
+    expect(loadConfig({ ...env, PORT: '9000' }).port).toBe(9000)
   })
 })
 
@@ -97,6 +99,102 @@ describe('what is sent to Photon (checked against the public API contract)', () 
   })
 })
 
+describe('assigning someone who already has a line', () => {
+  it('returns the line they already have instead of failing', async () => {
+    const urls: string[] = []
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      urls.push(`${request.method} ${new URL(request.url).pathname}`)
+      if (request.method === 'POST') {
+        return Response.json({ type: 'x', title: 'Assignment exists', status: 409, code: 'ASSIGNMENT_EXISTS' }, { status: 409 })
+      }
+      return Response.json({
+        assignments: [
+          { createdAt: '2026-11-15T00:00:00.000Z', updatedAt: '2026-11-15T00:00:00.000Z', platform: 'imessage', projectId: 'pho_prj_x', handle: '+15550000000', assignedPhoneNumber: '+16280000000', assignmentId: 'pho_asg_other', optIn: { state: 'received' } },
+          { createdAt: '2026-11-15T00:00:00.000Z', updatedAt: '2026-11-15T00:00:00.000Z', platform: 'imessage', projectId: 'pho_prj_x', handle: '+15551230000', assignedPhoneNumber: '+16283166196', assignmentId: 'pho_asg_mine', optIn: { state: 'received' } },
+        ],
+      })
+    }) as typeof fetch
+    const assigned = await createPhoton(config, fetchImpl).assign('+15551230000', 'Sam')
+    expect(assigned).toEqual({ assignedPhoneNumber: '+16283166196', assignmentId: 'pho_asg_mine' })
+    expect(urls).toHaveLength(2)
+  })
+
+  it('still fails for a handle that is not in the list, and for other errors', async () => {
+    const conflict = (async (input: RequestInfo | URL, init?: RequestInit) =>
+      new Request(input, init).method === 'POST'
+        ? Response.json({ title: 't', status: 409 }, { status: 409 })
+        : Response.json({ assignments: [] })) as typeof fetch
+    await expect(createPhoton(config, conflict).assign('+15551230000')).rejects.toThrow()
+    const down = (async () => Response.json({ title: 'x', status: 500 }, { status: 500 })) as typeof fetch
+    await expect(createPhoton(config, down).assign('+15551230000')).rejects.toThrow()
+  })
+})
+
+describe('sending an image to Photon', () => {
+  it('uploads multipart/related (JSON part, then the bytes) and then sends it as an attachment message', async () => {
+    const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 250, 251, 252])
+    const seen: { path: string; headers: Headers; raw: Buffer }[] = []
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      seen.push({ path: new URL(request.url).pathname, headers: request.headers, raw: Buffer.from(await request.arrayBuffer()) })
+      if (request.url.endsWith('/attachments')) {
+        const now = '2026-11-15T00:00:00.000Z'
+        return Response.json(
+          { id: 'pho_att_00000000000000000000000001', contentType: 'image/png', createdAt: now, updatedAt: now, projectId: 'pho_prj_x', sizeBytes: png.byteLength },
+          { status: 201 },
+        )
+      }
+      return Response.json({}, { status: 500 }) // only the request matters for the message
+    }) as typeof fetch
+    await createPhoton(config, fetchImpl).sendImage('pho_spc_1', 'pho_usr_line', png, 'route.png').catch(() => undefined)
+
+    const [upload, message] = seen
+    expect(upload?.path).toBe(`/v1/projects/${config.projectId}/attachments`)
+    const type = upload?.headers.get('content-type') ?? ''
+    const boundary = /^multipart\/related; boundary=(.+)$/.exec(type)?.[1]
+    expect(boundary).toBeTruthy()
+    expect(upload?.headers.get('idempotency-key')).toBeTruthy()
+    expect(upload?.headers.get('content-length')).toBe(String(upload?.raw.byteLength))
+
+    // exactly two parts: JSON with the true size, then the file bytes unchanged
+    const body = upload?.raw as Buffer
+    const blank = '\r\n\r\n'
+    const parts = body.toString('latin1').split(`--${boundary}`).filter((p) => p.trim() && p.trim() !== '--')
+    expect(parts).toHaveLength(2)
+    const json = JSON.parse(parts[0]!.split(blank)[1]!.trim()) as Record<string, unknown>
+    expect(json).toEqual({ contentType: 'image/png', sizeBytes: png.byteLength, filename: 'route.png' })
+    const marker = `content-type: image/png${blank}`
+    const fileStart = body.indexOf(Buffer.from(marker)) + marker.length
+    expect([...body.subarray(fileStart, fileStart + png.byteLength)]).toEqual([...png])
+
+    expect(message?.path).toBe(`/v1/projects/${config.projectId}/messages`)
+    expect(JSON.parse(message!.raw.toString())).toEqual({
+      content: { type: 'attachment', attachmentId: 'pho_att_00000000000000000000000001' },
+      senderId: 'pho_usr_line',
+      spaceId: 'pho_spc_1',
+    })
+  })
+})
+
+describe('downloading the route card', () => {
+  const answer = (init: ResponseInit, body: BodyInit = new Uint8Array([1, 2, 3])) =>
+    vi.stubGlobal('fetch', async () => new Response(body, init))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('accepts a small PNG and refuses everything else', async () => {
+    answer({ headers: { 'content-type': 'image/png' } })
+    expect([...(await downloadImage('https://x.test/c.png'))]).toEqual([1, 2, 3])
+    answer({ headers: { 'content-type': 'text/html' } })
+    await expect(downloadImage('https://x.test/c.png')).rejects.toThrow('not a PNG')
+    answer({ status: 404 })
+    await expect(downloadImage('https://x.test/c.png')).rejects.toThrow('404')
+    answer({ headers: { 'content-type': 'image/png' } }, new Uint8Array(5_000_001))
+    await expect(downloadImage('https://x.test/c.png')).rejects.toThrow('too large')
+    await expect(downloadImage('file:///etc/passwd')).rejects.toThrow('http(s)')
+  })
+})
+
 describe('the backend client', () => {
   it('sends the shared secret and treats a 404 as "not on an incident"', async () => {
     const seen: { url: string; secret: string | null }[] = []
@@ -148,7 +246,7 @@ describe('inbound texts', () => {
 })
 
 describe('the http server', () => {
-  async function start(known = true) {
+  async function start(known = true, fetchImage?: (url: string) => Promise<Uint8Array>) {
     const backend = fakeBackend(known)
     const photon = fakePhoton()
     const handled: Promise<void>[] = []
@@ -162,6 +260,7 @@ describe('the http server', () => {
         return done
       },
       log: () => undefined,
+      ...(fetchImage ? { fetchImage } : {}),
     })
     await new Promise<void>((resolve) => server.listen(0, resolve))
     const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
@@ -186,12 +285,38 @@ describe('the http server', () => {
     s.stop()
   })
 
-  it('/send posts the briefing, then the link on its own so it unfurls', async () => {
+  it('/send puts the briefing and the link in one text message', async () => {
     const s = await start()
     const body = { incident_id: 'inc-1', thread_id: 'pho_spc_1', sender_id: 'pho_usr_line', text: 'Go left', url: 'https://x.test/medic/inc-1?t=abc' }
     const res = await post(`${s.base}/send`, body, { 'x-photon-secret': 'shh' })
+    expect(await res.json()).toEqual({ ok: true, sent: 1 })
+    expect(s.photon.calls.map((c) => c.args[2])).toEqual(['Go left\nhttps://x.test/medic/inc-1?t=abc'])
+    s.stop()
+  })
+
+  it('/send sends the route card as a picture first, then the text', async () => {
+    const fetched: string[] = []
+    const s = await start(true, async (url) => {
+      fetched.push(url)
+      return new Uint8Array([1, 2, 3, 4])
+    })
+    const body = { thread_id: 'pho_spc_1', sender_id: 'pho_usr_line', text: 'Go left', url: 'https://x.test/m', image_url: 'https://x.test/card.png' }
+    const res = await post(`${s.base}/send`, body, { 'x-photon-secret': 'shh' })
     expect(await res.json()).toEqual({ ok: true, sent: 2 })
-    expect(s.photon.calls.map((c) => c.args[2])).toEqual(['Go left', 'https://x.test/medic/inc-1?t=abc'])
+    expect(fetched).toEqual(['https://x.test/card.png'])
+    expect(s.photon.calls.map((c) => c.kind)).toEqual(['image', 'send'])
+    expect(s.photon.calls[0]?.args).toEqual(['pho_spc_1', 'pho_usr_line', 4, 'route.png'])
+    s.stop()
+  })
+
+  it('a card that cannot be fetched or uploaded never loses the briefing', async () => {
+    const s = await start(true, async () => {
+      throw new Error('card is down')
+    })
+    const body = { thread_id: 'pho_spc_1', sender_id: 'pho_usr_line', text: 'Go left', image_url: 'https://x.test/card.png' }
+    const res = await post(`${s.base}/send`, body, { 'x-photon-secret': 'shh' })
+    expect(await res.json()).toEqual({ ok: true, sent: 1 })
+    expect(s.photon.calls.map((c) => c.kind)).toEqual(['send'])
     s.stop()
   })
 

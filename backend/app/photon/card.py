@@ -118,8 +118,11 @@ def _draw_floor(
                 font = _font(24)
                 width = draw.textlength(label, font=font)
                 # keep the label inside the box: to the left of the dot when there is no room on the right
-                label_x = x + 20 if x + 20 + width < right - 12 else x - 20 - width
-                draw.text((label_x, y - 14), label, font=font, fill=colour)
+                if x + 20 + width < right - 12:
+                    label_at = (x + 20, y - 14)
+                else:  # no room on the right: above the dot, where the route line is not
+                    label_at = (max(left + 12, min(x - width / 2, right - 12 - width)), y - 52)
+                draw.text(label_at, label, font=font, fill=colour)
 
 
 def render_route_card(

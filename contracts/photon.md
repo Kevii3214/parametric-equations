@@ -27,10 +27,12 @@ are texted. A crew tip is saved as a note, so `search_notes` finds it next time.
 
 ## Sidecar service
 
-`POST /send` `{ incident_id, thread_id, sender_id, text?, url? }`, `POST /assign` `{ handle, name? }`,
+`POST /send` `{ incident_id, thread_id, sender_id, text?, url?, image_url? }` (the picture first, then one text with the link), `POST /assign` `{ handle, name? }`,
 `POST /photon/webhook` (signed by Photon). See `photon-sidecar/README.md`.
 
 ## The link and its card
+
+Photon 2.0 iMessage has no rich-link message type, so the crew gets the card as a **picture** (`image_url`), then the briefing with the link; the link also serves `og:` tags for apps that fetch them.
 
 `GET /medic/{incident_id}?t=<token>[&v=<route version>]` returns HTML with `og:` and `twitter:` tags in the head
 (link-preview crawlers do not run JavaScript); a person's browser is sent on to `<PUBLIC_WEB_URL>/arrival?incident=…`.

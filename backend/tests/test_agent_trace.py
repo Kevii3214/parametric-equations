@@ -164,3 +164,36 @@ def test_a_subagent_reply_is_traced_as_its_message_text_not_a_command_dump():
     output = steps(db)[-1]["detail"]["output"]
     assert output == "Suite 1800 is Regus, floor 18."
     assert "Command(" not in steps(db)[-1]["title"]
+
+
+def test_two_traces_for_one_incident_share_one_numbering():
+    """The agent's trace and a crew-chat trace write at the same time: no number may be used twice."""
+    db = FakeSupabase()
+    agent = PlanTrace(db, INCIDENT)
+
+    async def go():
+        chat = await PlanTrace.resume(db, INCIDENT)
+        await agent.add("plan", "1")
+        await chat.add("crew", "2")
+        await agent.add("tool_call", "3")
+        await chat.add("crew", "4")
+        later = await PlanTrace.resume(
+            db, INCIDENT
+        )  # resuming again carries on, it does not restart
+        await later.add("final", "5")
+
+    run(go())
+    assert [r["seq"] for r in steps(db)] == [1, 2, 3, 4, 5]
+
+
+def test_numbering_is_per_incident_and_per_database():
+    other_db, db = FakeSupabase(), FakeSupabase()
+
+    async def go():
+        await PlanTrace(db, INCIDENT).add("plan", "a")
+        await PlanTrace(db, "inc-2").add("plan", "b")
+        await PlanTrace(other_db, INCIDENT).add("plan", "c")
+
+    run(go())
+    assert [r["seq"] for r in steps(db)] == [1, 1]  # one row for each incident
+    assert [r["seq"] for r in steps(other_db)] == [1]
