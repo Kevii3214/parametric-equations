@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import threading
+import weakref
 from uuid import UUID
 
 from langchain_core.callbacks import AsyncCallbackHandler
@@ -35,15 +36,35 @@ def _as_text(value) -> str:
     return value if isinstance(value, str) else json.dumps(value, default=str)
 
 
+# The last step number used for each incident, shared by every PlanTrace for it. The agent, a re-plan and the crew
+# chat can all write to one incident's trail at the same moment, and each used to count on its own, which gave two
+# rows the same number. Kept per database object, so tests with separate in-memory databases stay separate.
+_LAST_SEQ: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+_LAST_SEQ_BY_ID: dict = {}  # fallback for a database object that cannot be weakly referenced
+_SEQ_LOCK = threading.Lock()
+
+
+def _counters(db) -> dict:
+    try:
+        return _LAST_SEQ.setdefault(db, {})
+    except TypeError:
+        return _LAST_SEQ_BY_ID.setdefault(id(db), {})
+
+
+def _next_seq(db, incident_id: str, at_least: int = 0) -> int:
+    with _SEQ_LOCK:  # numbers each step; never held across an await
+        counters = _counters(db)
+        seq = max(counters.get(incident_id, 0), at_least) + 1
+        counters[incident_id] = seq
+        return seq
+
+
 class PlanTrace:
     """Writes numbered plan_steps rows for one incident. A failing database never stops the agent."""
 
     def __init__(self, db, incident_id: str):
         self._db = db
         self._incident_id = incident_id
-        self._seq = 0
-        # a thread lock, not asyncio.Lock: tool callbacks can arrive from a different event loop
-        self._lock = threading.Lock()
 
     @classmethod
     async def resume(cls, db, incident_id: str) -> "PlanTrace":
@@ -53,15 +74,16 @@ class PlanTrace:
             rows = await asyncio.to_thread(
                 lambda: db.table("plan_steps").select("*").eq("incident_id", incident_id).execute()
             )
-            trace._seq = max((r["seq"] for r in rows.data), default=0)
+            highest = max((r["seq"] for r in rows.data), default=0)
+            with _SEQ_LOCK:  # raise the shared counter to what is already saved, never lower it
+                counters = _counters(db)
+                counters[incident_id] = max(counters.get(incident_id, 0), highest)
         except Exception:
             logger.exception("Could not read existing plan steps for %s", incident_id)
         return trace
 
     async def add(self, kind: str, title: str, detail: dict | None = None) -> None:
-        with self._lock:  # numbers each step; never held across an await
-            self._seq += 1
-            seq = self._seq
+        seq = _next_seq(self._db, self._incident_id)
         row = {
             "incident_id": self._incident_id,
             "seq": seq,
@@ -72,7 +94,7 @@ class PlanTrace:
         try:
             await asyncio.to_thread(lambda: self._db.table("plan_steps").insert(row).execute())
         except Exception:
-            logger.exception("Could not write plan step %s", self._seq)
+            logger.exception("Could not write plan step %s", seq)
 
 
 class TraceHandler(AsyncCallbackHandler):

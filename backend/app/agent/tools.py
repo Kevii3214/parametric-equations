@@ -242,6 +242,10 @@ def make_route_tools(provider, db, incident_id: str) -> list:
         except Exception:
             logger.exception("Could not save the route for incident %s", incident_id)
             return {"error": "Could not save the route"}
+        # text the crew the briefing and the card link (does nothing unless PHOTON_ENABLED; never raises)
+        from app.photon.notify import notify_route
+
+        await notify_route(db, incident_id, row["briefing"])
         return {
             "route_version": version,
             "total_seconds": row["total_seconds"],

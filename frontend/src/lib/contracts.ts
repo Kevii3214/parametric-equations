@@ -21,6 +21,7 @@ export type PlanStepKind =
   | 'tool_call'
   | 'tool_result'
   | 'replan'
+  | 'crew'
   | 'final'
 
 export type EventType = 'elevator_out' | 'obstacle' | 'note' | 'arrived'

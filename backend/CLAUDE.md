@@ -2,7 +2,7 @@
 
 You are helping **Person 2**, who owns the server, the AI agent and the data for **Beeline**, a HackPrinceton Fall 2026 project (the web app is called **Pairatech**). Person 2 is new to this stack: explain what you are doing in plain words, keep changes small, and stop to ask when something is unclear.
 
-**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 348 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
+**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 401 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
 
 ## What Beeline is
 
@@ -46,7 +46,8 @@ fixtures/
 supabase/migrations/    0001_init.sql (9 tables, RLS, Realtime), 0002_route_tour.sql (routes.tour)
 backend/
   app/main.py config.py db.py models.py intake.py briefing.py notes.py tour.py
-  app/api/        incidents.py telemetry.py events.py ask.py device.py
+  app/api/        incidents.py telemetry.py events.py ask.py device.py crew.py
+  app/photon/     classify.py crew.py notify.py client.py share.py card.py (crew chat; see photon-sidecar/)
   app/device/     translate.py (Pi events <-> telemetry/commands) replay.py (reverse, for the fake device)
   app/agent/      agent.py subagents.py findings.py knowledge.py tools.py trace.py replan.py vision_hints.py
   app/graph/      schema.py router.py from_scan.py
@@ -54,13 +55,15 @@ backend/
   app/providers/  base.py (BuildingProvider) snapshot.py (reads fixtures)
   tools/          mock_wearable.py  mock_device.py  add_building.py
   notebooks/      costar_pull.ipynb, make_*.py (regenerate fixtures), rank_buildings.py
-  tests/          348 tests; fakes.py is an in-memory Supabase stand-in
+  tests/          401 tests; fakes.py is an in-memory Supabase stand-in
   data/ docs/     git-ignored: CoStar kit and Vexcel docs (not committed)
 ```
 
 **Endpoints:** `GET /health`, `POST /incidents` (parse the note with Gemini, save the row, start the agent in the background), `POST /incidents/{id}/telemetry`, `POST /incidents/{id}/events` (elevator_out, obstacle, note, arrived; elevator_out triggers a re-plan), `POST /ask`, plus the Pi bridge `PUT /api/device/{id}/link` and `POST /api/device/{id}/events`.
 
 **Device bridge** (`app/api/device.py`, `app/device/`, `contracts/device-protocol.md`, migration 0003): the hardware team's Raspberry Pi sends events (steps, turn, floor, button, fall, air) and gets commands (`CUE L`, `CUE UP`, ...) back. `DeviceState` turns each batch into one telemetry sample for `process_sample` (shared with `/telemetry`), so there is one position engine. Field names and command strings are **proposed from a summary of `wearable.py`, which has not been seen**: if it differs, change only `translate.py`. No RFID reader is used, so no `tag` events. Falls and air warnings go to `device_events` and are not shown on the web app yet. Test with `tools/mock_device.py`.
+
+**Crew chat (Photon)** (`app/photon/`, `app/api/crew.py`, `photon-sidecar/`, `contracts/photon.md`, migration 0004; off unless `PHOTON_ENABLED=true`): when a route is saved or re-planned the crew is texted the briefing and the route card as a picture and a link (Photon 2.0 iMessage has no rich-link type, so a link alone does not unfurl); their replies feed back. **Channel: iMessage on a shared Photon 2.0 (beta) line, one chat per crew member**: Photon's Stable `spectrum-ts` is a different product and has no SMS; a shared line cannot create groups or start a conversation (a crew member must text the line once, `POST /incidents/{id}/crew` returns the number); SMS needs an approved 10DLC campaign. The Node sidecar is the only thing holding Photon keys. `notify_route` (called from `choose_route` and from both re-plan functions) never raises. A crew text is labelled by Gemini (`classify.py`: blocker / destination_change / crew_tip / chatter); blockers and destination changes ask for YES and then use the existing `replan` / the new `replan_to_place` (the router picks the path; the place is found by label in code, never by the model); tips go to `save_note`; every line goes to `plan_steps` kind `crew`. The link is `/medic/{id}?t=<HMAC token>&v=<route version>` with server-rendered `og:` tags and a Pillow-drawn PNG (`card.py`, aerial-picture fallback). **Verified:** unit tests on both sides, the Photon requests against the public OpenAPI contract, a cross-process smoke test (real backend + real sidecar + a contract-shaped Photon stub), and Gemini labelling nine real texts. **Live-tested 2026-11-15** against a real Photon 2.0 project (tunnels): assign, signed webhook, briefing, picture upload, blocker + YES re-plan, all delivered. Fixed during that run: duplicate `plan_steps.seq` (all writers now share one counter per incident in `trace.py`). **Not verified:** a deployed sidecar, and the card image's look on the phone.
 
 **The agent** (`create_deep_agent`, Gemini with fallbacks): `write_todos` → ONE step starting three subagents in parallel with `task`: `records` (resolve_building, get_building_record, find_suite), `site` (resolve_building, list_entrances, find_destination_nodes, `read_file` of the building's notes) and `crew-notes` (resolve_building, search_notes); each has a `response_format` (`app/agent/findings.py`: RecordsFindings, SiteFindings, NotesFindings) and may use `GEMINI_SUBAGENT_MODEL` (a faster model; defaults to the main one). Then `plan_route` (every entrance, in parallel) → `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note` stays on the main agent. About 5 main-agent model turns (a test locks it) and, with the building resolved in code before the agent starts (`_resolve_building`), 2 calls per subagent. **Measured 2026-11-14 (real Gemini, 2 runs x 3 buildings per config): this is NOT faster than the single-subagent flow** (both 14-23 s on `gemini-3.5-flash-lite`, 21-35 s on `gemini-3-flash-preview`); it adds depth and honest briefings (they now say what is estimated), not speed. It makes more model calls in total, so it uses more Gemini quota. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`; only the first `write_todos` becomes a `plan` row). Capped at 25 model calls per agent; model fallback applies to every subagent too; a failure after a route was saved is reported as "Route saved". **File system** (`app/agent/knowledge.py`): seeded read-only into the run's virtual file system (`files=`, `permissions` deny write): `/AGENTS.md` (the dispatch playbook, loaded as `memory`) and `/buildings/<id>/GRAPH_NOTES.md` (measured vs estimated, read by `site`, so briefings say what is an estimate). `execute` still has no shell and a test locks that in.
 
@@ -101,7 +104,7 @@ DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost
 `uv` is not on PATH on this machine: use `python -m uv ...`.
 
 ```
-python -m uv run pytest -q                      # 348 tests
+python -m uv run pytest -q                      # 401 tests
 python -m uv run ruff format app tests tools    # NOT "ruff format ." : it reformats code blocks inside .md files
 python -m uv run ruff check .
 python -m uv run uvicorn app.main:app --port 8000

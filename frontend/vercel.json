@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://beeline-api-cbjp.onrender.com/:path*" },
+    { "source": "/medic/:id", "destination": "https://beeline-api-cbjp.onrender.com/medic/:id" },
+    { "source": "/medic/:id/card.png", "destination": "https://beeline-api-cbjp.onrender.com/medic/:id/card.png" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

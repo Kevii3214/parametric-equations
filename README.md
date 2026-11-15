@@ -21,6 +21,7 @@ Dispatcher / medic web app (frontend/)  ──HTTP──▶  FastAPI server (bac
 | `contracts/` | Frozen shared API and data shapes | both |
 | `fixtures/` | Saved snapshot of the demo building, so the demo runs offline | Person 2 |
 | `supabase/` | Database migration | Person 2 |
+| `photon-sidecar/` | Node service that texts the crew their route through Photon and carries replies back (optional) | Person 2 |
 
 ## Run the backend
 
