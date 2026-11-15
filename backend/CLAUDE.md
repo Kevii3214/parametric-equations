@@ -2,7 +2,7 @@
 
 You are helping **Person 2**, who owns the server, the AI agent and the data for **Beeline**, a HackPrinceton Fall 2026 project (the web app is called **Pairatech**). Person 2 is new to this stack: explain what you are doing in plain words, keep changes small, and stop to ask when something is unclear.
 
-**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 340 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
+**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 348 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
 
 ## What Beeline is
 
@@ -47,13 +47,13 @@ backend/
   app/main.py config.py db.py models.py intake.py briefing.py notes.py tour.py
   app/api/        incidents.py telemetry.py events.py ask.py device.py
   app/device/     translate.py (Pi events <-> telemetry/commands) replay.py (reverse, for the fake device)
-  app/agent/      agent.py subagents.py tools.py trace.py replan.py vision_hints.py
+  app/agent/      agent.py subagents.py findings.py knowledge.py tools.py trace.py replan.py vision_hints.py
   app/graph/      schema.py router.py from_scan.py
   app/position/   engine.py simulate.py
   app/providers/  base.py (BuildingProvider) snapshot.py (reads fixtures)
   tools/          mock_wearable.py  mock_device.py  add_building.py
   notebooks/      costar_pull.ipynb, make_*.py (regenerate fixtures), rank_buildings.py
-  tests/          340 tests; fakes.py is an in-memory Supabase stand-in
+  tests/          348 tests; fakes.py is an in-memory Supabase stand-in
   data/ docs/     git-ignored: CoStar kit and Vexcel docs (not committed)
 ```
 
@@ -61,7 +61,7 @@ backend/
 
 **Device bridge** (`app/api/device.py`, `app/device/`, `contracts/device-protocol.md`, migration 0003): the hardware team's Raspberry Pi sends events (steps, turn, floor, button, fall, air) and gets commands (`CUE L`, `CUE UP`, ...) back. `DeviceState` turns each batch into one telemetry sample for `process_sample` (shared with `/telemetry`), so there is one position engine. Field names and command strings are **proposed from a summary of `wearable.py`, which has not been seen**: if it differs, change only `translate.py`. No RFID reader is used, so no `tag` events. Falls and air warnings go to `device_events` and are not shown on the web app yet. Test with `tools/mock_device.py`.
 
-**The agent** (`create_deep_agent`, Gemini with fallbacks): `make_plan` → `records` subagent (resolve_building, get_building_record, find_suite) → `search_notes`, `list_entrances`, `find_destination_nodes`, `plan_route` (every entrance, in parallel), `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note`. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`). Capped at 25 model calls; model fallback applies to the subagent too; a failure after a route was saved is reported as "Route saved". Built-in deepagents `execute`/file tools are harmless (no sandbox, in-memory files) and a test locks that in.
+**The agent** (`create_deep_agent`, Gemini with fallbacks): `write_todos` → ONE step starting three subagents in parallel with `task`: `records` (resolve_building, get_building_record, find_suite), `site` (resolve_building, list_entrances, find_destination_nodes, `read_file` of the building's notes) and `crew-notes` (resolve_building, search_notes); each has a `response_format` (`app/agent/findings.py`: RecordsFindings, SiteFindings, NotesFindings) and may use `GEMINI_SUBAGENT_MODEL` (a faster model; defaults to the main one). Then `plan_route` (every entrance, in parallel) → `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note` stays on the main agent. About 5 main-agent model turns (a test locks it), 14 model calls in total, so it uses more Gemini quota per run than the old single-subagent flow (about 12). Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`; only the first `write_todos` becomes a `plan` row). Capped at 25 model calls per agent; model fallback applies to every subagent too; a failure after a route was saved is reported as "Route saved". **File system** (`app/agent/knowledge.py`): seeded read-only into the run's virtual file system (`files=`, `permissions` deny write): `/AGENTS.md` (the dispatch playbook, loaded as `memory`) and `/buildings/<id>/GRAPH_NOTES.md` (measured vs estimated, read by `site`, so briefings say what is an estimate). `execute` still has no shell and a test locks that in.
 
 **Position engine** (`app/position/engine.py`, pure): distance from steps × `STRIDE_M`; one cue within 6 m of a turn; turn confirmed by a ≥60° heading change; off route for a wrong-way turn or >5 m past a turn; floor change from a ≥35 Pa pressure change or the confirm button at a lift; RFID tag snaps the position and resets the heading baseline; button 2 = elevator_out; one `positions` row per second; the last step counts as done within 1 m (strides vary).
 
@@ -89,7 +89,7 @@ Python 3.11, `uv`, FastAPI + Pydantic v2, Supabase (Postgres, Realtime, pgvector
 ## Environment variables (`backend/.env.example`)
 
 ```
-SUPABASE_URL=  SUPABASE_SERVICE_ROLE_KEY=  GOOGLE_API_KEY=  GEMINI_MODEL=  GEMINI_FALLBACK_MODEL=  GEMINI_EMBEDDING_MODEL=
+SUPABASE_URL=  SUPABASE_SERVICE_ROLE_KEY=  GOOGLE_API_KEY=  GEMINI_MODEL=  GEMINI_FALLBACK_MODEL=  GEMINI_SUBAGENT_MODEL=  GEMINI_EMBEDDING_MODEL=
 MATTERPORT_API_KEY=  MATTERPORT_API_TOKEN=  MATTERPORT_SDK_KEY=  MATTERPORT_GRAPHQL_URL=  VEXCEL_API_KEY=  COSTAR_DATA_DIR=
 DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost:5173  WEB_ORIGIN_REGEX=
 ```
@@ -100,7 +100,7 @@ DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost
 `uv` is not on PATH on this machine: use `python -m uv ...`.
 
 ```
-python -m uv run pytest -q                      # 340 tests
+python -m uv run pytest -q                      # 348 tests
 python -m uv run ruff format app tests tools    # NOT "ruff format ." : it reformats code blocks inside .md files
 python -m uv run ruff check .
 python -m uv run uvicorn app.main:app --port 8000

@@ -65,18 +65,20 @@ def handler_with_trace():
     return TraceHandler(PlanTrace(db, INCIDENT)), db
 
 
-def test_make_plan_tool_becomes_a_plan_step():
+def test_write_todos_becomes_one_plan_step_and_later_updates_are_ignored():
     handler, db = handler_with_trace()
+    todos = [
+        {"content": "find building", "status": "pending"},
+        {"content": "find suite", "status": "pending"},
+    ]
 
     async def go():
-        run_id = uuid4()
-        await handler.on_tool_start(
-            {"name": "make_plan"},
-            "",
-            run_id=run_id,
-            inputs={"steps": ["find building", "find suite"]},
-        )
-        await handler.on_tool_end("Plan recorded.", run_id=run_id)
+        for _ in range(2):  # the second call only ticks items off
+            run_id = uuid4()
+            await handler.on_tool_start(
+                {"name": "write_todos"}, "", run_id=run_id, inputs={"todos": todos}
+            )
+            await handler.on_tool_end("Updated todo list", run_id=run_id)
 
     run(go())
     (row,) = steps(db)  # the tool's own reply is not repeated as a result

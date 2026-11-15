@@ -78,20 +78,28 @@ class PlanTrace:
 class TraceHandler(AsyncCallbackHandler):
     """Turns the agent's tool activity into plan_steps rows.
 
-    make_plan -> plan, task (a subagent call) -> subagent, every other tool -> tool_call then tool_result.
+    write_todos -> plan (the first call only; later calls just tick items off), task (a subagent call) ->
+    subagent, every other tool -> tool_call then tool_result.
     """
 
     def __init__(self, trace: PlanTrace):
         self._trace = trace
         self._names: dict[UUID, str] = {}
+        self._planned = False
 
     async def on_tool_start(self, serialized, input_str, *, run_id, inputs=None, **kwargs):
         name = (serialized or {}).get("name") or kwargs.get("name") or "tool"
         args = inputs if isinstance(inputs, dict) else {"input": input_str}
         self._names[run_id] = name
 
-        if name == "make_plan":
-            steps = args.get("steps") or []
+        if name == "write_todos":
+            if self._planned:
+                return  # a status update on the same list
+            self._planned = True
+            steps = [
+                str(t.get("content", t)) if isinstance(t, dict) else str(t)
+                for t in args.get("todos") or []
+            ]
             await self._trace.add("plan", "Plan: " + "; ".join(steps), {"steps": steps})
         elif name == "task":
             agent = args.get("subagent_type", "subagent")
@@ -107,7 +115,7 @@ class TraceHandler(AsyncCallbackHandler):
 
     async def on_tool_end(self, output, *, run_id, **kwargs):
         name = self._names.pop(run_id, "tool")
-        if name == "make_plan":
+        if name == "write_todos":
             return  # the plan step already says everything
         text = _as_text(output)
         await self._trace.add(

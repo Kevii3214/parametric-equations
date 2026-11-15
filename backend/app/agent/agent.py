@@ -3,10 +3,15 @@ import json
 import logging
 
 from deepagents import create_deep_agent
-from langchain.agents.middleware import ModelCallLimitMiddleware, ModelFallbackMiddleware
+from langchain.agents.middleware import (
+    ModelCallLimitMiddleware,
+    ModelFallbackMiddleware,
+    TodoListMiddleware,
+)
 
-from app.agent.subagents import records_subagent
-from app.agent.tools import make_notes_tools, make_plan_tool, make_route_tools
+from app.agent.knowledge import READ_ONLY, knowledge_files
+from app.agent.subagents import notes_subagent, records_subagent, site_subagent
+from app.agent.tools import make_notes_tools, make_route_tools
 from app.agent.trace import PlanTrace, TraceHandler
 from app.config import get_settings
 from app.intake import model_names
@@ -21,22 +26,21 @@ MODEL_TIMEOUT_S = 25
 
 MAIN_PROMPT = """You plan how an ambulance crew gets to a patient inside a building.
 You never invent the walking route: a separate, tested router computes it. You choose between router
-results and write the briefing.
+results and write the briefing. Your dispatch playbook is in your memory (/AGENTS.md).
 
-1. Call make_plan first, listing the real work steps you will take (not the act of planning itself).
-2. Delegate the building and suite lookup to the records subagent with the task tool, giving it the
-   street address and suite from the call.
-3. Once the building is known, call search_notes for it (query: "access, elevators, entrances, hazards") and
-   keep anything relevant for the briefing.
-4. Call list_entrances, then find_destination_nodes to pick the goal node. Use the most specific place the
-   call gives: a room beats a suite. If the call only names a suite, choose that suite's entrance and say
-   so in the briefing.
-5. Call plan_route for EVERY entrance in the same step (parallel tool calls, not one after another), then
-   compare total_seconds.
-6. Call choose_route for the fastest one, with a spoken briefing for the crew, 30 words at most (about ten seconds):
-   which entrance, the key turns and floor changes, and anything uncertain (such as a floor that is only
-   a guess).
-7. Finish with one or two sentences saying what was saved.
+1. Call write_todos first, listing the real work steps you will take (not the act of planning itself).
+2. In ONE step, start three subagents with the task tool at the same time (parallel tool calls, not one
+   after another), each given the street address and the room or suite from the call:
+   - records: the CoStar facts (floor, elevators, data-quality warnings),
+   - site: the building's entrances, the goal node for the patient, and which parts of the map are estimates,
+   - crew-notes: tips earlier crews saved for this building.
+   Each reports back as JSON.
+3. Call plan_route for EVERY entrance the site subagent listed, in the same step (parallel tool calls), with
+   its goal_node, then compare total_seconds. If the site subagent found no goal_node, say so and stop.
+4. Call choose_route for the fastest one, with a spoken briefing for the crew, 30 words at most (about ten
+   seconds): which entrance, the key turns and floor changes, anything relevant from the crew notes, and
+   anything uncertain (such as a floor that is only a guess, or the estimates the site subagent reported).
+5. Finish with one or two sentences saying what was saved.
 If a tool returns an error, say so plainly and stop; never invent a building, node, route or time."""
 
 
@@ -58,6 +62,22 @@ def default_models() -> tuple:
     return models[0], models[1:]
 
 
+def default_subagent_model(main):
+    """The model for the lookup subagents: a faster one if GEMINI_SUBAGENT_MODEL is set, else the main model."""
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
+    settings = get_settings()
+    if not settings.gemini_subagent_model:
+        return main
+    return ChatGoogleGenerativeAI(
+        model=settings.gemini_subagent_model,
+        google_api_key=settings.google_api_key,
+        temperature=0,
+        timeout=MODEL_TIMEOUT_S,
+        max_retries=0,
+    )
+
+
 def _guard_middleware(fallback_models) -> list:
     """Call limit plus model fallback. Each agent needs its own copy, subagents included."""
     middleware = [ModelCallLimitMiddleware(run_limit=RUN_CALL_LIMIT, exit_behavior="end")]
@@ -66,19 +86,28 @@ def _guard_middleware(fallback_models) -> list:
     return middleware
 
 
-def build_agent(*, model, fallback_models, provider, db, incident_id: str, embedder=None):
+def build_agent(
+    *, model, fallback_models, provider, db, incident_id: str, embedder=None, subagent_model=None
+):
+    embedder = embedder or default_embedder()
+    lookup_model = subagent_model or model  # the lookups are simple, so they may use a faster model
+    guard = _guard_middleware(fallback_models)
     return create_deep_agent(
         model=model,
+        # the route tools plus save_note: the lookup tools belong to the subagents
         tools=[
-            make_plan_tool(),
             *make_route_tools(provider, db, incident_id),
-            *make_notes_tools(db, embedder or default_embedder()),
+            *[t for t in make_notes_tools(db, embedder) if t.name == "save_note"],
         ],
         system_prompt=MAIN_PROMPT,
         subagents=[
-            records_subagent(provider, db, incident_id, model, _guard_middleware(fallback_models))
+            records_subagent(provider, db, incident_id, lookup_model, guard),
+            site_subagent(provider, db, incident_id, lookup_model, guard),
+            notes_subagent(provider, db, incident_id, lookup_model, embedder, guard),
         ],
-        middleware=_guard_middleware(fallback_models),
+        middleware=[TodoListMiddleware(), *guard],
+        memory=["/AGENTS.md"],  # the dispatch playbook, seeded into the virtual file system below
+        permissions=READ_ONLY,  # the model may read the seeded files, never change them
         name="beeline",
     )
 
@@ -97,7 +126,14 @@ def _last_text(messages) -> str:
 
 
 async def run_incident(
-    incident_id: str, *, db, provider=None, model=None, fallback_models=None
+    incident_id: str,
+    *,
+    db,
+    provider=None,
+    model=None,
+    fallback_models=None,
+    subagent_model=None,
+    embedder=None,
 ) -> None:
     """Run the agent for one incident, writing its trail to plan_steps. Never raises."""
     try:
@@ -116,15 +152,18 @@ async def run_incident(
     try:
         if model is None:
             model, fallback_models = default_models()
+            subagent_model = default_subagent_model(model)
         agent = build_agent(
             model=model,
             fallback_models=fallback_models or [],
             provider=provider or SnapshotProvider(),
             db=db,
             incident_id=incident_id,
+            subagent_model=subagent_model,
+            embedder=embedder,
         )
         result = await agent.ainvoke(
-            {"messages": [("user", _briefing(incident))]},
+            {"messages": [("user", _briefing(incident))], "files": knowledge_files()},
             config={"recursion_limit": RECURSION_LIMIT, "callbacks": [TraceHandler(trace)]},
         )
         answer = _last_text(result["messages"])
