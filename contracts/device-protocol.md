@@ -55,7 +55,14 @@ Every cue is followed by `TXT <first 16 characters of the cue text>` (harmless w
 **once**. A bind sends `RESET` first. **Proposal for the hardware team:** add `FLOOR U` / `FLOOR D` buzzer patterns; the
 server will then send them for FLOOR_UP / FLOOR_DOWN.
 
-Not built yet: `POST /api/device/{id}/photo` (door-sign position fix), `SCAN ON` near the destination.
+## 4. Photos: reading door signs
+
+`POST /api/device/{id}/photo` (multipart: `image` JPEG, `ts`, `n`, `reason`) answers `{ "commands": [...] }` at once; the
+sign is read in the background (Gemini reads the text, code decides). If the text names a point **on the current route**
+("SUITE 1800" matches "Regus Suite 1800 entrance", the shortest matching label wins, a tie matches nothing) the position
+snaps there, like an RFID tag would. The picture is never stored; only the sign text and the node are saved
+(`device_events`, `kind = sign`). When the destination is within 10 m the server sends `SCAN ON` (once); `SCAN OFF`
+comes with `ARRIVED`.
 
 ## Try it without the Pi
 
