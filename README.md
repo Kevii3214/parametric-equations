@@ -22,6 +22,7 @@ Dispatcher / medic web app (frontend/)  ──HTTP──▶  FastAPI server (bac
 | `fixtures/` | Saved snapshot of the demo building, so the demo runs offline | Person 2 |
 | `supabase/` | Database migration | Person 2 |
 | `photon-sidecar/` | Node service that texts the crew their route through Photon and carries replies back (optional) | Person 2 |
+| `Hardware/` | The wearable's Raspberry Pi firmware (`wearable.py`) and its backend integration brief | Hardware team |
 
 ## Run the backend
 
