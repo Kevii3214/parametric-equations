@@ -23,8 +23,8 @@ interface Props {
 type Pose = MpSdk.Camera.Pose
 
 /**
- * The floor seen from above in the Matterport scan itself (its floor-plan
- * view), with the route drawn over it. Route points are in the scan's own
+ * The floor in the Matterport scan's dollhouse view (the 3D model seen from
+ * above at an angle), with the route drawn over it. Route points are in the scan's own
  * frame, so each is projected to the screen with the SDK's worldToScreen on
  * every camera move, staying aligned while the user pans or zooms.
  */
@@ -62,7 +62,7 @@ export default function ScanPlan({ building, graph, floor, steps, currentStep, p
           new Promise((_, rej) => setTimeout(() => rej(new Error('the scan did not start in 20 s')), 20_000)),
         ])
         if (!alive) return
-        await sdk.Mode.moveTo(sdk.Mode.Mode.FLOORPLAN, { transition: sdk.Camera.TransitionType.INSTANT })
+        await sdk.Mode.moveTo(sdk.Mode.Mode.DOLLHOUSE, { transition: sdk.Camera.TransitionType.INSTANT })
         if (src.scanFloorIndex != null) await sdk.Floor.moveTo(src.scanFloorIndex).catch(() => undefined)
         sub = sdk.Camera.pose.subscribe((p) => { if (alive) setPose(p) })
         if (alive) setSdk(sdk)
@@ -108,7 +108,7 @@ export default function ScanPlan({ building, graph, floor, steps, currentStep, p
           src={`https://my.matterport.com/show/?${new URLSearchParams({
             m: src.modelId, play: '1', qs: '1', help: '0', brand: '0', mls: '0', title: '0', hr: '0',
             // Hide Matterport's own buttons and tips so the route stays visible.
-            dh: '0', gt: '0', hl: '0', mt: '0', f: '0', search: '0', vr: '0', pin: '0', portal: '0', tour: '0', nt: '1',
+            gt: '0', hl: '0', mt: '0', f: '0', search: '0', vr: '0', pin: '0', portal: '0', tour: '0', nt: '1',
             applicationKey: SCAN_PLAN_KEY,
           })}`} />
       )}
@@ -134,7 +134,7 @@ export default function ScanPlan({ building, graph, floor, steps, currentStep, p
         </svg>
       )}
       <div className="pointer-events-none absolute top-2 left-2 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-medium text-ink-2 shadow-card">
-        Floor {floor} · {ready ? 'scan from above' : 'loading the scan…'}
+        Floor {floor} · {ready ? '3D scan' : 'loading the scan…'}
       </div>
     </div>
   )

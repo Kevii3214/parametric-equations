@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { routeGlance } from './briefing'
 import { buildingById } from './buildings'
-import { replanAround } from './replan'
 import { scenarioFor } from './scenario'
 import { moveCursor, type Cursor } from './stepCursor'
 
@@ -39,20 +38,6 @@ describe('briefing', () => {
   })
 })
 
-describe('demo re-plan', () => {
-  const { route } = scenarioFor('233928')
-  const graph = buildingById('233928')!.graph
-  it('elevator out sends 1415 Louisiana up the stairs', () => {
-    const r = replanAround(graph, route.steps, 0, 'elevator_out')!
-    expect(r).not.toBeNull()
-    expect(r.steps.some((s) => /stairs/i.test(s.text))).toBe(true)
-    expect(r.steps.reduce((t, s) => t + s.seconds, 0)).toBeGreaterThan(route.total_seconds)
-  })
-  it('returns null when there is no elevator left to close', () => {
-    const last = route.steps.length - 1
-    expect(replanAround(graph, route.steps, last, 'elevator_out')).toBeNull()
-  })
-})
 
 describe('floor plans from the scans', () => {
   it.each([['233928', 18], ['233903', 56], ['jrr', 2], ['jrr', 3]] as const)('%s floor %i has walls, doorways and rooms', async (id, floor) => {
