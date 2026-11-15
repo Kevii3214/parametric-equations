@@ -325,3 +325,19 @@ def test_arrival_is_declared_within_a_metre_of_the_end_because_strides_vary(walk
 def test_more_than_a_metre_short_is_not_yet_arrived(walker):
     walk_all_but_the_last_metres(walker, 6)
     assert not walker.engine.arrived
+
+
+def test_skip_floor_at_the_lift_moves_on_like_the_confirm_button(walker):
+    reach_the_lift(walker)
+    update = walker.engine.skip_floor()
+    assert walker.engine.floor == 14 and walker.engine.step_index == 4
+    assert update.position is not None
+
+
+def test_skip_floor_does_nothing_away_from_the_lift_or_before_any_sample(walker, route):
+    walker.walk(2)
+    walker.engine.skip_floor()
+    assert walker.engine.floor == 1 and walker.engine.step_index == 0
+    fresh = PositionEngine(route, tag_nodes={}, stride_m=0.7)
+    fresh.skip_floor()  # no wearable sample yet: must not crash
+    assert fresh.step_index == 0

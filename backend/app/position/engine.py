@@ -66,6 +66,7 @@ class PositionEngine:
         self._heading_ref: float | None = None  # heading when the current turn cue was written
         self._pressure_ref: float | None = None
         self._last_position_t: int | None = None
+        self._last_sample: Telemetry | None = None
 
     @property
     def current_node(self) -> str:
@@ -75,6 +76,7 @@ class PositionEngine:
     # ------------------------------------------------------------------ public
 
     def update(self, sample: Telemetry) -> Update:
+        self._last_sample = sample
         cues: list[Cue] = []
         effects: list[str] = []
         if (
@@ -92,6 +94,19 @@ class PositionEngine:
         if not self.arrived and not self.off_route:
             self._advance(sample, cues, effects)
         return Update(cues=cues, position=self._position_row(sample.t), effects=effects)
+
+    def skip_floor(self) -> Update:
+        """Demo bypass: count the lift or stairs ride the crew is waiting at as done, as if they pressed confirm.
+
+        Does nothing unless the engine is waiting at a floor change. It reuses the same code as the confirm
+        button, fed with the last sample the wearable sent, so heading and step counts stay in step.
+        """
+        last = self._last_sample or Telemetry(
+            t=0, steps=0, heading=0.0, pressure=100000.0, btn=0, tag=None
+        )
+        return self.update(
+            last.model_copy(update={"btn": 1, "tag": None, "t": last.t + POSITION_INTERVAL_MS})
+        )
 
     # ----------------------------------------------------------------- walking
 

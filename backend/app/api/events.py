@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from app.agent.replan import replan
-from app.api.telemetry import EngineRegistry, get_registry
+from app.api.telemetry import EngineRegistry, _save, get_registry
 from app.db import get_db
 from app.models import EventIn
 from app.notes import Embedder, default_embedder, save_note
@@ -50,6 +50,14 @@ async def events(
                 db.table("incidents").update({"status": "arrived"}).eq("id", incident_id).execute()
             )
         )
+    elif (
+        event.type == "skip_floor"
+    ):  # demo bypass for the lift: act as if the crew confirmed the ride
+        tracked = await registry.get(incident_id, db)
+        if tracked is None:
+            raise HTTPException(status_code=409, detail="This incident has no route yet")
+        async with tracked.lock:
+            await _save(db, incident_id, tracked.version, tracked.engine.skip_floor())
     else:  # elevator_out or obstacle
         tracked = await registry.get(incident_id, db)
         if tracked is None or not building_id:

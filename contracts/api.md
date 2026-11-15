@@ -6,7 +6,7 @@ Base URL: `http://localhost:8000` locally, the Render/Railway URL when deployed.
 | --- | --- | --- |
 | `POST /incidents` | `{ "note": str }` | `{ "incident_id": uuid }`. The agent starts in the background; watch progress in Supabase |
 | `POST /incidents/{id}/telemetry` | Telemetry, see `telemetry.schema.json` | `{ "ok": true }` |
-| `POST /incidents/{id}/events` | `{ "type": "elevator_out" \| "obstacle" \| "note" \| "arrived", "text": str \| null }` | `{ "ok": true }` |
+| `POST /incidents/{id}/events` | `{ "type": "elevator_out" \| "obstacle" \| "note" \| "arrived" \| "skip_floor", "text": str \| null }` | `{ "ok": true }` |
 | `POST /ask` | `{ "incident_id": uuid, "question": str }` | `{ "answer": str }` |
 | `GET /health` | none | `{ "ok": true }` |
 
