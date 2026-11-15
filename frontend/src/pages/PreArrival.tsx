@@ -95,7 +95,7 @@ export default function PreArrival() {
 
       {/* The agent's plan trace stays on screen: a column beside the briefing on wide screens. */}
       {(live.planSteps.length > 0 || inc.working) && (
-        <aside className="mt-6 border-t border-line pt-5 lg:sticky lg:top-20 lg:mt-0 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-t-0 lg:pt-0">
+        <aside className="mt-6 rounded-xl border-2 border-azure bg-card p-4 lg:sticky lg:top-20 lg:mt-0 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
           <header className="mb-3 flex items-baseline justify-between">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Agent plan trace</h2>
             <span className="text-xs text-ink-3">{live.planSteps.length} steps</span>
