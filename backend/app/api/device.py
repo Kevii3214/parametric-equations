@@ -3,6 +3,8 @@ import logging
 import time
 from collections import OrderedDict, deque
 from datetime import UTC, datetime
+from email.parser import BytesParser
+from email.policy import default as email_policy
 from functools import lru_cache
 from typing import Annotated
 
@@ -13,6 +15,7 @@ from supabase import Client
 from app.api.telemetry import EngineRegistry, get_registry, process_sample
 from app.config import get_settings
 from app.db import get_db
+from app.device.signs import SignReader, match_sign
 from app.device.translate import (
     MOVEMENT_TYPES,
     NOT_STORED,
@@ -27,6 +30,7 @@ router = APIRouter()
 
 SEEN_LIMIT = 5000  # event keys remembered per device, to recognise a re-send
 TOUCH_EVERY_S = 10  # how often `last_seen_at` is written
+SCAN_WITHIN_M = 10  # the camera starts reading door signs this close to the destination
 AUTO_BIND_EVERY_S = 5  # how often the default wearable looks for a newer incident
 SENSOR_FIELDS = ("imu", "baro", "air", "lcd", "led", "cam")
 DONE_STATUSES = ("arrived", "closed", "cancelled")
@@ -41,6 +45,8 @@ class _Device:
         self.queue: deque[str] = deque()  # commands waiting for the device's next request
         self.seen: OrderedDict[tuple, None] = OrderedDict()
         self.touched_at = 0.0
+        self.scanning = False  # SCAN ON has been sent and SCAN OFF has not
+        self.scan_done = False  # the crew arrived: no more scanning for this route
         self.auto_checked_at = 0.0
 
     def remember(self, key: tuple) -> bool:
@@ -98,6 +104,7 @@ class DeviceRegistry:
         device = self._devices.get(device_id) or _Device(incident_id)
         device.incident_id, device.auto = incident_id, auto
         device.state = DeviceState()
+        device.scanning = device.scan_done = False
         device.queue_once("RESET")
         self._devices[device_id] = device
         return device
@@ -314,6 +321,9 @@ async def device_events(
                     update = await process_sample(db, registry, incident_id, sample)
                     out += commands(update)
                     status = "no_route" if update is None else "tracking"
+                    await _scan_near_the_end(device, registry, db, update)
+                    if "SCAN OFF" in out:
+                        device.scanning, device.scan_done = False, True
             out = device.drain() + out
     except Exception:
         logger.exception("Device %s: could not handle a batch", device_id)
@@ -326,3 +336,114 @@ async def device_events(
         (time.monotonic() - started) * 1000,
     )
     return {"commands": out, "incident_id": incident_id, "status": status}
+
+
+async def _scan_near_the_end(device: _Device, registry: EngineRegistry, db, update) -> None:
+    """Turn the camera on (SCAN ON) once the destination is close, so it can read the door signs."""
+    if (
+        device.scanning
+        or device.scan_done
+        or update is None
+        or update.position is None
+        or update.position.off_route
+    ):
+        return
+    tracked = await registry.get(device.incident_id, db)
+    if tracked is None:
+        return
+    steps, i = tracked.engine.steps, update.position.step_index
+    if i >= len(steps):
+        return
+    remaining = steps[i].meters - update.position.progress_m + sum(s.meters for s in steps[i + 1 :])
+    if remaining <= SCAN_WITHIN_M:
+        device.scanning = True
+        device.queue_once("SCAN ON")
+
+
+@lru_cache
+def get_sign_reader() -> SignReader:
+    return SignReader()
+
+
+def _picture_and_fields(content_type: str, body: bytes) -> tuple[bytes | None, dict[str, str]]:
+    """The JPEG and the text fields (ts, n, reason) of the Pi's multipart upload."""
+    message = BytesParser(policy=email_policy).parsebytes(
+        b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body
+    )
+    image, fields = None, {}
+    for part in message.iter_parts() if message.is_multipart() else []:
+        name = part.get_param("name", header="content-disposition")
+        payload = part.get_payload(decode=True) or b""
+        if name == "image":
+            image = payload
+        elif name:
+            fields[name] = payload.decode("utf-8", "replace")
+    return image, fields
+
+
+_background: set[asyncio.Task] = (
+    set()
+)  # tasks are kept here so they are not collected before they finish
+
+
+async def _fix_from_sign(
+    device_id, device, registry, db, reader, image: bytes, fields: dict[str, str]
+) -> None:
+    """Read the sign in the picture; if it names a point on the route, move the position there."""
+    texts = await reader(image)  # the picture goes out of scope here and is never kept
+    logger.info("device=%s photo sign text=%s", device_id, texts)
+    if not texts or not device.incident_id:
+        return
+    tracked = await registry.get(device.incident_id, db)
+    building_id = registry.building_of(device.incident_id)
+    if tracked is None or not building_id:
+        return
+    graph = await registry.provider.graph(building_id)
+    on_route = {s.from_node for s in tracked.engine.steps} | {
+        s.to_node for s in tracked.engine.steps
+    }
+    node = match_sign(texts, [n for n in graph["nodes"] if n["id"] in on_route])
+    await _store(
+        db,
+        device_id,
+        device.incident_id,
+        [{"t": "sign", "ts": int(float(fields.get("ts", 0) or 0)), "text": texts, "node": node}],
+    )
+    if node is None:
+        return
+    tag = f"SIGN:{node}"
+    tracked.engine.tag_nodes[tag] = node
+    async with device.lock:
+        sample = device.state.snapshot(int(time.time() * 1000), tag)
+        update = await process_sample(db, registry, device.incident_id, sample)
+        for command in commands(update):
+            device.queue_once(command)
+
+
+@router.post("/api/device/{device_id}/photo")
+async def device_photo(
+    device_id: str,
+    request: Request,
+    db: Annotated[Client, Depends(get_db)],
+    registry: Annotated[EngineRegistry, Depends(get_registry)],
+    devices: Annotated[DeviceRegistry, Depends(get_devices)],
+    reader: Annotated[SignReader, Depends(get_sign_reader)],
+) -> dict:
+    """Take a camera picture and answer at once; the sign is read in the background (a failed upload is not
+    retried by the Pi). The picture is never stored."""
+    out: list[str] = []
+    try:
+        device = await devices.resolve(device_id, db, get_settings().default_device_id)
+        image, fields = _picture_and_fields(
+            request.headers.get("content-type", ""), await request.body()
+        )
+        if image and device.incident_id:
+            task = asyncio.create_task(
+                _fix_from_sign(device_id, device, registry, db, reader, image, fields)
+            )
+            _background.add(task)
+            task.add_done_callback(_background.discard)
+        out = device.drain()
+    except Exception:
+        logger.exception("Device %s: could not handle a photo", device_id)
+    return {"commands": out}

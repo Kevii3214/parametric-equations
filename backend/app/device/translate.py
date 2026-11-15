@@ -68,6 +68,17 @@ class DeviceState:
     def total_floor(self) -> int:
         return self.floor_base + self.floor
 
+    def snapshot(self, ts: int, tag: str) -> Telemetry:
+        """The current position as a sample that also carries a position fix (a sign read by the camera)."""
+        return Telemetry(
+            t=ts,
+            steps=self.steps,
+            heading=self.heading,
+            pressure=START_PRESSURE - PASCALS_PER_FLOOR * self.total_floor,
+            btn=0,
+            tag=tag,
+        )
+
     def apply(self, events: list[dict]) -> Telemetry | None:
         """One telemetry sample for these events, or None if none of them is about movement."""
         moved, btn, last_ts = False, 0, 0
