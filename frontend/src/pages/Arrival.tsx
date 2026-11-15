@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import AlertBanner from '../components/AlertBanner'
 import CueIcon from '../components/CueIcon'
 import FloorPlan from '../components/FloorPlan'
 import Icon from '../components/Icon'
@@ -77,6 +78,7 @@ export default function Arrival() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-3 pb-6">
+      <AlertBanner alerts={inc.live.alerts} />
       {/* Where we are */}
       <div className="flex items-center gap-2 text-xs font-medium text-ink-2">
         <span className="truncate">{inc.site?.record.name ?? 'Building'}</span>

@@ -29,8 +29,8 @@ CUE_COMMANDS = {
     "UTURN": ["CUE U"],
     "ARRIVE": ["ARRIVED", "SCAN OFF"],
     "OFF_ROUTE": ["WRONG"],
-    "FLOOR_UP": [],  # the Pi has no floor command yet: the TXT line below is all it gets
-    "FLOOR_DOWN": [],
+    "FLOOR_UP": ["FLOOR U"],
+    "FLOOR_DOWN": ["FLOOR D"],
 }
 
 # Events that move the position engine; the rest (hello, air, fall, photo, ack, ...) are only stored.

@@ -46,7 +46,7 @@ MESSAGES (same as the Arduino version, so the server needs no changes)
        photo        {"t":"photo","n":3,"reason":"scan","bytes":41230}   a webcam picture was sent
   Status LED: solid = running and online | slow blink = turn cue | fast blink = wrong way or fall
               short flash every 2 s = no connection to the server
-  In:  CUE L|R|S|U, ARRIVED, WRONG, CLEAR, RESET, CAL, TXT <text>, PING,
+  In:  CUE L|R|S|U, FLOOR U|D (take the lift/stairs up/down), ARRIVED, WRONG, CLEAR, RESET, CAL, TXT <text>, PING,
        SNAP (take one picture), SCAN ON / SCAN OFF (a picture every 2 s, e.g. near the patient's door)
   Server link: POST {SERVER_URL}/api/device/{DEVICE_ID}/events  {"events":[...]}
                reply {"commands":["CUE L", ...]}
@@ -112,6 +112,7 @@ FLOOR_CHANGE_FRAC = 0.7 # altitude must move this fraction of a floor (held 3 s)
 VIB_LEFT, VIB_RIGHT, VIB_UTURN, VIB_STRAIGHT = [350], [150, 150, 150], [120, 120, 120, 120, 120], [60]
 BEEP_CLICK, BEEP_ARRIVED, BEEP_FLOOR = [40], [600, 200, 600], [80, 80, 80]
 BEEP_WRONG = [80, 60] * 4 + [80]
+BEEP_FLOOR_UP, BEEP_FLOOR_DOWN = [70, 60, 70, 60, 250], [250, 60, 70, 60, 70]  # rising / falling
 BEEP_AIR = [300, 100, 300, 100, 300]
 BEEP_FALL = [1000, 200, 1000, 200, 1000]
 BEEP_LEFT, BEEP_RIGHT, BEEP_UTURN = [150], [150, 150, 150], [120, 120, 120, 120, 120]
@@ -715,6 +716,9 @@ def main():
                 motor.play({"L": VIB_LEFT, "R": VIB_RIGHT, "S": VIB_STRAIGHT, "U": VIB_UTURN}[k])
             elif BUZZ_TURNS and k != "S":
                 buzzer.play({"L": BEEP_LEFT, "R": BEEP_RIGHT, "U": BEEP_UTURN}[k])
+        elif up in ("FLOOR U", "FLOOR D"):
+            buzzer.play(BEEP_FLOOR_UP if up == "FLOOR U" else BEEP_FLOOR_DOWN)
+            s["led_event_mode"], s["led_event_until"] = "slow", time.monotonic() + 4
         elif up == "ARRIVED":
             display.cue("A")
             buzzer.play(BEEP_ARRIVED)
