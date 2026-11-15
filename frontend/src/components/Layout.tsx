@@ -38,12 +38,7 @@ export default function Layout() {
               title="This build has no VITE_SUPABASE_* values, so live updates cannot be shown">
               DEMO · Supabase not configured
             </span>
-          ) : (
-            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-fern-soft px-2.5 py-1 text-xs font-medium text-fern-deep">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fern" />
-              Live
-            </span>
-          )}
+          ) : null}
         </div>
       </header>
       <main className="flex-1 px-4 py-5">
@@ -53,19 +48,17 @@ export default function Layout() {
   )
 }
 
-/** Logo: a route line ending in a destination dot, blue into green. */
+/**
+ * Logo: two routes between the same two points (the original edge mirrored
+ * across the diagonal), blue main route and green alternative, on beige.
+ */
 function Mark() {
   return (
     <svg viewBox="0 0 28 28" className="h-7 w-7" aria-hidden="true">
-      <defs>
-        <linearGradient id="mark-g" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="var(--color-azure)" />
-          <stop offset="1" stopColor="var(--color-fern)" />
-        </linearGradient>
-      </defs>
-      <rect width="28" height="28" rx="8" fill="url(#mark-g)" />
-      <path d="M8 20V13a3 3 0 0 1 3-3h7" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-      <circle cx="19.5" cy="10" r="2.6" fill="white" />
+      <rect width="28" height="28" rx="8" fill="#e8dec6" />
+      <path d="M8 20V12a3 3 0 0 1 3-3h8" fill="none" stroke="var(--color-azure)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 20h8a3 3 0 0 0 3-3V9" fill="none" stroke="var(--color-fern)" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="19" cy="9" r="2.3" fill="var(--color-ink)" />
     </svg>
   )
 }
