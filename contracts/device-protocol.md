@@ -55,7 +55,11 @@ Every cue is followed by `TXT <first 16 characters of the cue text>` (harmless w
 **once**. A bind sends `RESET` first. `FLOOR U` / `FLOOR D` were added to `Hardware/wearable.py` by Person 2 (the hardware team is no longer
 available): copy the new file to the Pi.
 
-## 4. Photos: reading door signs
+## 4. Photos: reading door signs (**disabled in the backend for the demo**)
+
+The demo only shows route detection, so the server ignores camera pictures (the endpoint still answers 200) and never sends
+`SCAN ON`. The code is commented out at two places in `backend/app/api/device.py`; the description below is what happens
+when they are switched back on.
 
 `POST /api/device/{id}/photo` (multipart: `image` JPEG, `ts`, `n`, `reason`) answers `{ "commands": [...] }` at once; the
 sign is read in the background (Gemini reads the text, code decides). If the text names a point **on the current route**

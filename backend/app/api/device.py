@@ -321,7 +321,8 @@ async def device_events(
                     update = await process_sample(db, registry, incident_id, sample)
                     out += commands(update)
                     status = "no_route" if update is None else "tracking"
-                    await _scan_near_the_end(device, registry, db, update)
+                    # CAMERA DISABLED for the demo (route detection is what is being shown): no SCAN ON.
+                    # await _scan_near_the_end(device, registry, db, update)
                     if "SCAN OFF" in out:
                         device.scanning, device.scan_done = False, True
             out = device.drain() + out
@@ -429,20 +430,22 @@ async def device_photo(
     devices: Annotated[DeviceRegistry, Depends(get_devices)],
     reader: Annotated[SignReader, Depends(get_sign_reader)],
 ) -> dict:
-    """Take a camera picture and answer at once; the sign is read in the background (a failed upload is not
-    retried by the Pi). The picture is never stored."""
+    """Take a camera picture and answer at once. Camera features are disabled for the demo: the picture is
+    thrown away unread (when enabled, the sign is read in the background and the picture is never stored)."""
     out: list[str] = []
     try:
         device = await devices.resolve(device_id, db, get_settings().default_device_id)
-        image, fields = _picture_and_fields(
-            request.headers.get("content-type", ""), await request.body()
-        )
-        if image and device.incident_id:
-            task = asyncio.create_task(
-                _fix_from_sign(device_id, device, registry, db, reader, image, fields)
-            )
-            _background.add(task)
-            task.add_done_callback(_background.discard)
+        # CAMERA DISABLED for the demo: the picture is not read, kept or used. To turn sign reading back on,
+        # uncomment this block (the reader, matcher and tests are intact).
+        # image, fields = _picture_and_fields(
+        #     request.headers.get("content-type", ""), await request.body()
+        # )
+        # if image and device.incident_id:
+        #     task = asyncio.create_task(
+        #         _fix_from_sign(device_id, device, registry, db, reader, image, fields)
+        #     )
+        #     _background.add(task)
+        #     task.add_done_callback(_background.discard)
         out = device.drain()
     except Exception:
         logger.exception("Device %s: could not handle a photo", device_id)
