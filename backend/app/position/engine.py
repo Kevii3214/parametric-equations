@@ -14,6 +14,9 @@ ARRIVAL_TOLERANCE_M = 1.0  # strides vary, so the last step counts as done this 
 OVERSHOOT_M = 5.0  # walking this far past a turn without turning means off route
 TURN_DEGREES = 60.0  # a heading change this big, in the expected direction, confirms a turn
 UTURN_DEGREES = 150.0
+RECOVER_DEGREES = (
+    30.0  # back within this of the heading they should have kept: a wrong turn was undone
+)
 FLOOR_PASCALS = 35.0  # about one floor of pressure change
 POSITION_INTERVAL_MS = 1000  # at most one positions row per second
 PRESSURE_SMOOTHING = 0.1
@@ -34,6 +37,19 @@ class Position:
     progress_m: float
     floor: int
     off_route: bool
+
+
+@dataclass
+class _OffRoute:
+    """Why the crew went off route at a turn, so that turning the right way afterwards can bring them back."""
+
+    step: int
+    cue: str
+    heading_ref: float
+    progress_m: float
+    wrong_way: (
+        bool  # they turned the wrong way (undoing it recovers); False = they walked past the turn
+    )
 
 
 @dataclass
@@ -67,6 +83,7 @@ class PositionEngine:
         self._pressure_ref: float | None = None
         self._last_position_t: int | None = None
         self._last_sample: Telemetry | None = None
+        self._off: _OffRoute | None = None
 
     @property
     def current_node(self) -> str:
@@ -91,9 +108,49 @@ class PositionEngine:
             effects.append("elevator_out")
         if sample.tag:
             self._snap_to_tag(sample, cues, effects)
+        if self.off_route and not self.arrived:
+            if sample.btn == 1:
+                self._rejoin(sample, effects)
+            else:
+                self._try_recover(sample, effects)
         if not self.arrived and not self.off_route:
             self._advance(sample, cues, effects)
         return Update(cues=cues, position=self._position_row(sample.t), effects=effects)
+
+    def _try_recover(self, s: Telemetry, effects: list[str]) -> None:
+        """Off route at a turn is not for ever: making the missed turn, or undoing the wrong one, brings the crew back."""
+        off = self._off
+        if off is None or off.step != self.step_index:
+            return
+        delta = angle_diff(s.heading, off.heading_ref)
+        direction = TURN_DIRECTION[off.cue]
+        if direction == 0:
+            turned = abs(delta) >= UTURN_DEGREES
+        else:
+            turned = delta * direction >= TURN_DEGREES  # the right turn, made late
+        if turned:
+            self.off_route, self._off = False, None
+            self._start_step(off.step + 1, s.steps)
+            effects.append("recovered")
+        elif off.wrong_way and abs(delta) <= RECOVER_DEGREES:
+            self.off_route, self._off = False, None
+            self._origin = (
+                s.steps - off.progress_m / self.stride_m
+            )  # carry on from where the wrong turn began
+            effects.append("recovered")
+
+    def _rejoin(self, s: Telemetry, effects: list[str]) -> None:
+        """The crew says they are back on the route (button 1, or the web app): trust them and carry on from the
+        start of the current step, counting steps and turns from now."""
+        self.off_route, self._off = False, None
+        self._origin = s.steps
+        self.progress_m = 0.0
+        self._heading_ref = None
+        effects.append("rejoined")
+
+    def rejoin(self) -> Update:
+        """Same as the confirm button while off route; does nothing when the crew is on route."""
+        return self._press_confirm()
 
     def skip_floor(self) -> Update:
         """Demo bypass: count the lift or stairs ride the crew is waiting at as done, as if they pressed confirm.
@@ -101,12 +158,15 @@ class PositionEngine:
         Does nothing unless the engine is waiting at a floor change. It reuses the same code as the confirm
         button, fed with the last sample the wearable sent, so heading and step counts stay in step.
         """
+        return self._press_confirm()
+
+    def _press_confirm(self) -> Update:
+        """Replay the wearable's last sample as if button 1 was pressed (demo bypasses and the web app use it)."""
         last = self._last_sample or Telemetry(
             t=0, steps=0, heading=0.0, pressure=100000.0, btn=0, tag=None
         )
-        return self.update(
-            last.model_copy(update={"btn": 1, "tag": None, "t": last.t + POSITION_INTERVAL_MS})
-        )
+        press = {"btn": 1, "tag": None, "t": last.t + POSITION_INTERVAL_MS}
+        return self.update(last.model_copy(update=press))
 
     # ----------------------------------------------------------------- walking
 
@@ -151,6 +211,10 @@ class PositionEngine:
             confirmed, wrong = delta * direction >= TURN_DEGREES, delta * direction <= -TURN_DEGREES
         if wrong or (not confirmed and overshoot > OVERSHOOT_M):
             self._go_off_route(cues)
+            if self._off is None:
+                self._off = _OffRoute(
+                    self.step_index, cue, self._heading_ref, self.progress_m, wrong_way=wrong
+                )
             return False
         return confirmed
 
@@ -228,7 +292,7 @@ class PositionEngine:
             self._go_off_route(cues)
             effects.append(f"off_route_tag:{node}")
             return
-        self.off_route = False
+        self.off_route, self._off = False, None
         self._origin = s.steps
         self._heading_ref = s.heading  # the gyroscope drifts; count turns from this heading now
         self._pressure_ref = s.pressure
