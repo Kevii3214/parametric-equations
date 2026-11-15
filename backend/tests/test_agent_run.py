@@ -115,7 +115,6 @@ THREE_TASKS = calls(
     ("task", {"subagent_type": "crew-notes", "description": "Tips for 1415 Louisiana St"}),
 )
 RECORDS_SCRIPT = [
-    tool_call("resolve_building", ADDRESS, "r1"),
     calls(
         ("get_building_record", {"building_id": "233928"}),
         ("find_suite", {"building_id": "233928", "suite": "1800"}),
@@ -127,7 +126,6 @@ RECORDS_SCRIPT = [
     ),
 ]
 SITE_SCRIPT = [
-    tool_call("resolve_building", ADDRESS, "s1"),
     calls(
         ("list_entrances", {"building_id": "233928"}),
         ("find_destination_nodes", {"building_id": "233928", "text": "phone room"}),
@@ -145,7 +143,6 @@ SITE_SCRIPT = [
     ),
 ]
 CREW_SCRIPT = [
-    tool_call("resolve_building", ADDRESS, "c1"),
     tool_call("search_notes", {"building_id": "233928", "query": "access"}, "c2"),
     tool_call("NotesFindings", {"building_id": "233928", "tips": []}, "c3"),
 ]
@@ -187,7 +184,9 @@ def test_the_three_lookup_subagents_run_and_the_main_agent_saves_the_fastest_rou
     subagents = [s["detail"]["subagent"] for s in steps if s["kind"] == "subagent"]
     assert sorted(subagents) == ["crew-notes", "records", "site"]
     called = [s["detail"]["tool"] for s in steps if s["kind"] == "tool_call"]
-    assert called.count("resolve_building") == 3  # each subagent resolves the building itself
+    assert (
+        "resolve_building" not in called
+    )  # the building was found in code, before the agent started
     assert called.count("plan_route") == 2 and called[-1] == "choose_route"
     assert {
         "get_building_record",
@@ -211,7 +210,9 @@ def test_the_main_agent_needs_only_five_model_turns():
     assert (
         model.calls[MAIN] == 5
     )  # todos, the three subagents, every entrance, the choice, the summary
-    assert model.calls[RECORDS] == model.calls[SITE] == model.calls[CREW] == 3
+    assert (
+        model.calls[RECORDS] == model.calls[SITE] == model.calls[CREW] == 2
+    )  # lookups, then the report
 
 
 def test_the_site_subagent_reads_the_building_notes_from_the_virtual_file_system():
@@ -238,7 +239,6 @@ def test_the_playbook_is_loaded_as_memory():
 
 def test_no_goal_node_means_no_route_is_saved_and_the_agent_says_so():
     site_found_nothing = [
-        tool_call("resolve_building", ADDRESS, "s1"),
         tool_call(
             "SiteFindings",
             {"building_id": "233928", "entrances": [{"node_id": "gar1"}], "error": "no such room"},
@@ -380,3 +380,32 @@ def test_a_failure_after_the_route_was_saved_is_reported_as_saved():
     final = db.rows("plan_steps")[-1]
     assert final["kind"] == "final" and final["title"].startswith("Route saved")
     assert "error" in final["detail"]
+
+
+def test_the_building_is_found_in_code_saved_and_given_to_the_agent_before_it_starts():
+    seen = []
+
+    class Spy(Routed):
+        def _generate(self, messages, *args, **kwargs):
+            seen.append(" ".join(str(m.content) for m in messages))
+            return super()._generate(messages, *args, **kwargs)
+
+    db = new_db()
+    run(db, Spy(messages=iter([]), scripts={MAIN: [AIMessage(content="ok")]}))
+    assert db.rows("incidents")[0]["building_id"] == "233928"  # no model call was needed for it
+    assert "Building id: 233928 (already looked up" in seen[0]
+
+
+def test_an_unknown_building_is_left_for_the_subagents_to_report():
+    seen = []
+
+    class Spy(Routed):
+        def _generate(self, messages, *args, **kwargs):
+            seen.append(" ".join(str(m.content) for m in messages))
+            return super()._generate(messages, *args, **kwargs)
+
+    db = new_db()
+    db.rows("incidents")[0]["note"] = "65M chest pain, 1 Nowhere Lane, Atlantis"
+    run(db, Spy(messages=iter([]), scripts={MAIN: [AIMessage(content="ok")]}))
+    assert db.rows("incidents")[0]["building_id"] is None
+    assert "Building id: unknown: each subagent must call resolve_building" in seen[0]

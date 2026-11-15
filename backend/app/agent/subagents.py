@@ -10,10 +10,11 @@ from app.agent.tools import make_notes_tools, make_records_tools, make_route_too
 RECORDS_PROMPT = """You are the records specialist for an ambulance crew's route planner.
 Your job: from the call details you are given, find the building and the patient's suite and floor.
 
-1. Call resolve_building with the street address.
-2. Call get_building_record for its elevators, parking and warnings.
-3. If a suite NUMBER is given (like 1800), call find_suite. Do not call it for a room name such as a classroom,
-   or for a building name. Use only your own tools: there are no files to search.
+1. You are normally given the building id: use it and do not look it up again. Only if it is missing, call
+   resolve_building with the street address first.
+2. Call get_building_record for its elevators, parking and warnings and, if a suite NUMBER is given (like 1800),
+   find_suite, in the same step (parallel tool calls). Do not call find_suite for a room name such as a
+   classroom, or for a building name. Use only your own tools: there are no files to search.
 
 Say clearly when something is a guess, such as a floor worked out from a suite number (floor_is_guess).
 If a tool returns an error, put it in `error`; never invent a building, suite or floor."""
@@ -21,7 +22,8 @@ If a tool returns an error, put it in `error`; never invent a building, suite or
 SITE_PROMPT = """You are the site specialist for an ambulance crew's route planner. You read the building's
 indoor map: where the crew can get in and where the patient is.
 
-1. Call resolve_building with the street address.
+1. You are normally given the building id: use it and do not look it up again. Only if it is missing, call
+   resolve_building with the street address first.
 2. With the building id, call list_entrances, find_destination_nodes and read_file on
    /buildings/<building_id>/GRAPH_NOTES.md in the same step (parallel tool calls).
 3. For the goal node use the most specific place the call gives: a room beats a suite. Try the room name first
@@ -34,7 +36,8 @@ Use only your own tools. If a tool returns an error, put it in `error`."""
 NOTES_PROMPT = """You are the crew-notes specialist for an ambulance crew's route planner. Earlier crews save
 tips about buildings.
 
-1. Call resolve_building with the street address.
+1. You are normally given the building id: use it and do not look it up again. Only if it is missing, call
+   resolve_building with the street address first.
 2. Call search_notes with that building id and the query "access, elevators, entrances, hazards".
 3. Report only tips that matter for getting in. If there are none, return an empty list.
 Use only your own tools. If a tool returns an error, put it in `error`."""
@@ -61,7 +64,7 @@ def records_subagent(provider, db, incident_id: str, model, middleware=()) -> Su
     return _subagent(
         "records",
         "Looks up the building, the patient's suite and its floor, and the elevator and parking facts "
-        "from CoStar building data. Give it the street address and suite from the call.",
+        "from CoStar building data. Give it the building id, the street address and the suite from the call.",
         RECORDS_PROMPT,
         make_records_tools(provider, db, incident_id),
         RecordsFindings,
@@ -77,7 +80,7 @@ def site_subagent(provider, db, incident_id: str, model, middleware=()) -> SubAg
     return _subagent(
         "site",
         "Reads the building's indoor map: every entrance, the goal node for the patient's room or suite, "
-        "and which parts of the map are estimates. Give it the street address and the room or suite.",
+        "and which parts of the map are estimates. Give it the building id, the street address and the room or suite.",
         SITE_PROMPT,
         tools,
         SiteFindings,
@@ -93,7 +96,7 @@ def notes_subagent(provider, db, incident_id: str, model, embedder, middleware=(
     return _subagent(
         "crew-notes",
         "Searches tips that earlier crews saved for this building (lifts, doors, access, hazards). "
-        "Give it the street address.",
+        "Give it the building id and the street address.",
         NOTES_PROMPT,
         tools,
         NotesFindings,

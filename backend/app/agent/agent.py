@@ -30,7 +30,8 @@ results and write the briefing. Your dispatch playbook is in your memory (/AGENT
 
 1. Call write_todos first, listing the real work steps you will take (not the act of planning itself).
 2. In ONE step, start three subagents with the task tool at the same time (parallel tool calls, not one
-   after another), each given the street address and the room or suite from the call:
+   after another), each given the building id (when the call below gives it), the street address and the
+   room or suite from the call:
    - records: the CoStar facts (floor, elevators, data-quality warnings),
    - site: the building's entrances, the goal node for the patient, and which parts of the map are estimates,
    - crew-notes: tips earlier crews saved for this building.
@@ -112,10 +113,43 @@ def build_agent(
     )
 
 
-def _briefing(incident: dict) -> str:
+async def _resolve_building(provider, db, incident: dict) -> str | None:
+    """Find the building once, in code, so the three subagents do not each spend a model call on it."""
+    parsed = incident.get("parsed") or {}
+    building_id = None
+    for text in (parsed.get("address"), incident["note"]):
+        if not text:
+            continue
+        try:
+            building_id = await provider.resolve(text)
+            break
+        except LookupError:
+            continue
+    if building_id is None:
+        return None
+    try:  # the same write the resolve_building tool does
+        await asyncio.to_thread(
+            lambda: (
+                db.table("incidents")
+                .update({"building_id": building_id})
+                .eq("id", incident["id"])
+                .execute()
+            )
+        )
+    except Exception:
+        logger.exception("Could not save building_id on incident %s", incident["id"])
+    return building_id
+
+
+def _briefing(incident: dict, building_id: str | None = None) -> str:
     parsed = incident.get("parsed")
     fields = json.dumps(parsed) if parsed else "not available, so read the note yourself"
-    return f"Call note: {incident['note']}\nParsed fields: {fields}"
+    building = (
+        f"{building_id} (already looked up: give it to every subagent)"
+        if building_id
+        else "unknown: each subagent must call resolve_building with the street address"
+    )
+    return f"Call note: {incident['note']}\nParsed fields: {fields}\nBuilding id: {building}"
 
 
 def _last_text(messages) -> str:
@@ -153,17 +187,19 @@ async def run_incident(
         if model is None:
             model, fallback_models = default_models()
             subagent_model = default_subagent_model(model)
+        provider = provider or SnapshotProvider()
+        building_id = await _resolve_building(provider, db, incident)
         agent = build_agent(
             model=model,
             fallback_models=fallback_models or [],
-            provider=provider or SnapshotProvider(),
+            provider=provider,
             db=db,
             incident_id=incident_id,
             subagent_model=subagent_model,
             embedder=embedder,
         )
         result = await agent.ainvoke(
-            {"messages": [("user", _briefing(incident))], "files": knowledge_files()},
+            {"messages": [("user", _briefing(incident, building_id))], "files": knowledge_files()},
             config={"recursion_limit": RECURSION_LIMIT, "callbacks": [TraceHandler(trace)]},
         )
         answer = _last_text(result["messages"])
