@@ -82,7 +82,7 @@ cannot invent a corridor.
    notes file) and **crew-notes** (tips earlier crews saved). Each reports back as typed JSON and can use a faster
    model. The main agent then asks the router for a route from every entrance in parallel and saves the fastest with a
    briefing of about 30 words. The agent's file system is read-only and holds its playbook (`/AGENTS.md`, loaded as
-   memory) and each building's notes. About 5 sequential model turns instead of 12. Every plan step, subagent call,
+   memory) and each building's notes. About 5 sequential model turns instead of 12, but the same wall time (the model choice matters far more: see `backend/CLAUDE.md`). Every plan step, subagent call,
    tool call and tool result is written to `plan_steps`, which is the trail the web app shows live.
 3. **Router** (`app/graph/router.py`). A* over the graph, weight = seconds. It skips non-stretcher-safe edges and
    anything closed for the incident, and treats stairs as a last resort. Each step gets a cue (LEFT, RIGHT,
