@@ -1,13 +1,13 @@
 import { lazy, Suspense, type ReactNode } from 'react'
+import RouteTimeline from '../components/briefing/RouteTimeline'
 import CallIntake from '../components/call/CallIntake'
-import CueIcon from '../components/CueIcon'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
 import { routeGlance } from '../lib/briefing'
 import { buildingById } from '../lib/buildings'
 import { fixtureIncident } from '../lib/fixtures'
 import { parsedNote } from '../lib/incident'
-import { formatSeconds, tidy } from '../lib/route'
+import { formatSeconds } from '../lib/route'
 import { useIncident } from '../lib/useIncident'
 
 // The fly-through (Matterport SDK) and the 3D map are large: load on demand.
@@ -78,15 +78,7 @@ export default function PreArrival() {
               </Suspense>
             </div>
           ) : null}
-          <ol className="mt-3 divide-y divide-line">
-            {steps.map((s) => (
-              <li key={s.index} className="flex items-center gap-3 py-2 text-sm text-ink">
-                <CueIcon cue={s.cue} className="h-4 w-4 shrink-0 text-azure" />
-                <span className="min-w-0 flex-1">{tidy(s.text)}</span>
-                <span className="font-mono text-[11px] text-ink-3">{s.seconds} s</span>
-              </li>
-            ))}
-          </ol>
+          <RouteTimeline steps={steps} startFloor={inc.graph?.nodes.find((n) => n.id === steps[0]?.from_node)?.floor ?? steps[0]?.floor ?? 1} />
         </Section>
       )}
 

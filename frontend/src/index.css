@@ -79,3 +79,21 @@ body {
 /* MapLibre controls in the app's palette. */
 .maplibregl-ctrl-group { border-radius: 9999px !important; box-shadow: var(--shadow-card) !important; overflow: hidden; }
 .maplibregl-ctrl-attrib { font-size: 10px; background: rgb(255 253 248 / 0.8) !important; border-radius: 9999px; }
+
+/* Clickable things grow slightly under the cursor. Map and Matterport
+   controls keep their own behaviour; disabled buttons don't move. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):not(.maplibregl-ctrl button),
+  a[href],
+  summary {
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, color 150ms ease;
+  }
+  button:not(:disabled):not(.maplibregl-ctrl button):hover,
+  a[href]:hover,
+  summary:hover {
+    transform: scale(1.03);
+  }
+  button:not(:disabled):not(.maplibregl-ctrl button):active {
+    transform: scale(0.98);
+  }
+}
