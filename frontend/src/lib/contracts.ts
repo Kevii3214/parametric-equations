@@ -24,7 +24,7 @@ export type PlanStepKind =
   | 'crew'
   | 'final'
 
-export type EventType = 'elevator_out' | 'obstacle' | 'note' | 'arrived'
+export type EventType = 'elevator_out' | 'obstacle' | 'note' | 'arrived' | 'skip_floor'
 
 // ---- contracts/route.schema.json ----
 

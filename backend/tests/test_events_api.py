@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -147,3 +148,19 @@ def test_the_wearable_elevator_out_button_replans_too(db):
     assert client.post(f"/incidents/{INCIDENT}/telemetry", json=body).json() == {"ok": True}
     assert [c["node_or_edge"] for c in db.rows("closures")] == ["el1->el18"]
     assert max(r["version"] for r in db.rows("routes")) == 2
+
+
+def test_skip_floor_moves_the_position_past_the_lift_and_saves_it(db):
+    db.tables.setdefault("positions", [])
+    db.tables.setdefault("cues", [])
+    engine = asyncio.run(app.dependency_overrides[get_registry]().get(INCIDENT, db)).engine
+    lift = next(i for i in range(1, len(engine.steps)) if engine._is_floor_change(i))
+    engine.step_index = lift  # the crew is standing at the lift
+    assert event("skip_floor").json() == {"ok": True}
+    assert engine.step_index == lift + 1
+    assert db.rows("positions")[-1]["floor"] == engine.steps[lift].floor
+
+
+def test_skip_floor_without_a_route_is_a_409(db):
+    db.rows("routes").clear()
+    assert event("skip_floor").status_code == 409

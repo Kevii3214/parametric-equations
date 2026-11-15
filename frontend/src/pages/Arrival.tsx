@@ -5,6 +5,7 @@ import CueIcon from '../components/CueIcon'
 import FloorPlan from '../components/FloorPlan'
 import Icon from '../components/Icon'
 import type { RouteStep } from '../lib/contracts'
+import { sendEvent } from '../lib/api'
 import { useRouteReplay } from '../lib/replay'
 import { cueLabel, formatSeconds, isFloorChange, nodeMap, positionPoint, tidy, type Point } from '../lib/route'
 import { useStepCursor } from '../lib/stepCursor'
@@ -94,6 +95,15 @@ export default function Arrival() {
 
       <StepCard step={step} next={steps[i + 1]} offRoute={offRoute} fromFloor={from?.floor ?? step.floor}
         onNext={cursor.next} onBack={cursor.back} />
+
+      {/* Demo bypass: nobody can ride a lift to another floor in a demo, so tell the server it was done. */}
+      {isFloorChange(step.cue) && inc.live.source === 'supabase' && inc.incidentId && !arrived && (
+        <button type="button"
+          onClick={() => { void sendEvent(inc.incidentId!, 'skip_floor', null, false).catch(() => {}); cursor.next() }}
+          className="rounded-2xl border border-amber/40 bg-amber-soft px-4 py-3 text-sm font-semibold text-amber">
+          Skip the {/stairs/i.test(step.text) ? 'stairs' : 'lift'} ride (demo)
+        </button>
+      )}
 
 
       {/* Back / Next, in thumb reach */}
