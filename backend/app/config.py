@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     demo_building_id: str = ""
     use_snapshot: bool = False
     stride_m: float = 0.7
+    default_device_id: str = (
+        ""  # e.g. wearable-1: this wearable follows the newest active incident by itself
+    )
+    device_key: str = (
+        ""  # if set, a wearable request without a matching X-Device-Key is logged (not refused)
+    )
     web_origin: str = "http://localhost:5173"  # one origin, or several separated by commas
     # Photon crew chat (see photon-sidecar/). Off by default: the web app works without it.
     photon_enabled: bool = False

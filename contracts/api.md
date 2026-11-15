@@ -35,11 +35,11 @@ Each entry in `routes.steps` has a `cue`:
 
 ## Wearable device bridge
 
-The Raspberry Pi wearable does not send telemetry samples. It links to an incident with
-`PUT /api/device/{id}/link`, posts events to `POST /api/device/{id}/events` and gets cue commands (`CUE L`, `CUE UP`,
-...) in the response. The server turns the events into the same samples as `POST /incidents/{id}/telemetry`, so the web
+The Raspberry Pi wearable does not send telemetry samples. It is bound to an incident with
+`POST /incidents/{id}/device` (or by itself, see `DEFAULT_DEVICE_ID`), posts events to `POST /api/device/{id}/events`
+and gets commands (`CUE L`, `ARRIVED`, `WRONG`, ...) in the response. The server turns the events into the same samples as `POST /incidents/{id}/telemetry`, so the web
 app sees no difference. Full protocol: `device-protocol.md`. Additive; private tables `devices` and `device_events`
-(`supabase/migrations/0003_devices.sql`).
+(`supabase/migrations/0003_devices.sql`, `0005_device_status.sql`).
 
 ## Fly-through tour (`routes.tour`)
 

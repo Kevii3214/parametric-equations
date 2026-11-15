@@ -1,11 +1,13 @@
-"""Pretend to be the Raspberry Pi: link to an incident, walk its route and post wearable events.
+"""Pretend to be the Raspberry Pi: bind to an incident, walk its route and post wearable events.
 
 Run from backend/ once an incident has a route (the agent saves it):
 
-    python -m uv run python tools/mock_device.py <incident_id> [--device pi-01] [--base-url URL] [--speedup 4]
+    python -m uv run python tools/mock_device.py <incident_id> [--device wearable-1] [--base-url URL] [--speedup 4]
 
-Prints every command the server sends back (CUE L, CUE UP, ...). Reads the route with the server's own
-Supabase key, so run it on your machine. The real Pi only needs the two HTTP calls this makes.
+It speaks the real protocol (Hardware/BACKEND_BRIEF.md): `hello`, then `state` / `step` / `turn` / `floor` / `btn`
+with heading and floor relative to the start, and prints every command the server sends back (RESET, CUE L,
+ARRIVED, TXT ...). Reads the route with the server's own Supabase key, so run it on your machine. The real Pi
+only needs the two HTTP calls this makes.
 """
 
 import argparse
@@ -28,24 +30,26 @@ def main() -> None:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("incident_id")
-    parser.add_argument("--device", default="pi-01")
+    parser.add_argument("--device", default="wearable-1")
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--speedup", type=float, default=4.0, help="1 = real walking pace")
-    parser.add_argument("--no-tags", action="store_true", help="do not scan RFID tags on the way")
+    parser.add_argument("--no-bind", action="store_true", help="the device is already bound")
     args = parser.parse_args()
 
-    steps, tags = asyncio.run(load(args.incident_id))
-    base = f"{args.base_url}/api/device/{args.device}"
+    steps, _tags = asyncio.run(load(args.incident_id))
     sent = 0
-    with httpx.Client(timeout=30) as client:
-        client.put(f"{base}/link", json={"incident_id": args.incident_id}).raise_for_status()
-        print(f"Linked {args.device} to {args.incident_id}; walking {len(steps)} steps")
-        for batch in telemetry_to_batches(simulate(steps, tags_at=None if args.no_tags else tags)):
-            response = client.post(f"{base}/events", json=batch.model_dump(exclude_none=True))
+    with httpx.Client(timeout=30, base_url=args.base_url) as client:
+        if not args.no_bind:
+            client.post(
+                f"/incidents/{args.incident_id}/device", json={"device_id": args.device}
+            ).raise_for_status()
+            print(f"Bound {args.device} to {args.incident_id}; walking {len(steps)} steps")
+        for events in telemetry_to_batches(simulate(steps), start_ts=int(time.time() * 1000)):
+            response = client.post(f"/api/device/{args.device}/events", json={"events": events})
             response.raise_for_status()
             sent += 1
             for command in response.json()["commands"]:
-                print(f"  t={batch.t / 1000:5.1f}s  <- {command}")
+                print(f"  ts={events[0]['ts'] % 1_000_000}  <- {command}")
             time.sleep(0.2 / args.speedup)
     print(f"Done: {sent} batches sent.")
 
