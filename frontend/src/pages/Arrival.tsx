@@ -52,7 +52,12 @@ export default function Arrival() {
     : from ? { x: from.x, y: from.y, floor: from.floor } : null
   const floor = point?.floor ?? from?.floor ?? step.floor
   const last = i === steps.length - 1
-  const scanned = !!SCAN_KEY && !!inc.site?.floorPlans?.[floor]
+  // The dollhouse shows the current floor when it is scanned; otherwise the next scanned floor ahead
+  // on the route (where the medic is heading), so the 3D scan is on screen from the first step.
+  const plans = inc.site?.floorPlans ?? {}
+  const aheadFloor = steps.slice(i).map((s) => s.floor).find((f) => plans[f]) ?? steps.map((s) => s.floor).findLast((f) => plans[f])
+  const scanFloor = plans[floor] ? floor : aheadFloor ?? null
+  const scanned = !!SCAN_KEY && scanFloor != null
 
 
 
@@ -106,7 +111,8 @@ export default function Arrival() {
         <section className="overflow-hidden rounded-2xl border border-line bg-card shadow-card">
           {scanned && !scanFailed && inc.site ? (
             <Suspense fallback={<div className="grid aspect-[4/3] w-full place-items-center bg-sunk text-sm text-ink-3">Loading the scan…</div>}>
-              <ScanPlan key={`${inc.site.id}:${floor}`} building={inc.site} graph={graph} floor={floor} steps={steps}
+              <ScanPlan key={`${inc.site.id}:${scanFloor}`} building={inc.site} graph={graph} floor={scanFloor!} steps={steps}
+                heading={scanFloor !== floor}
                 currentStep={i} position={point} className="aspect-[4/3] w-full"
                 onFail={() => setScanFailed(true)} />
             </Suspense>

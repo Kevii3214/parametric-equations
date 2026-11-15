@@ -17,6 +17,8 @@ interface Props {
   position?: Point | null
   /** Called if the scan cannot be shown, so the page can fall back to the drawn plan. */
   onFail: (reason: string) => void
+  /** True when this floor is ahead on the route, not the floor the medic is on. */
+  heading?: boolean
   className?: string
 }
 
@@ -28,7 +30,7 @@ type Pose = MpSdk.Camera.Pose
  * frame, so each is projected to the screen with the SDK's worldToScreen on
  * every camera move, staying aligned while the user pans or zooms.
  */
-export default function ScanPlan({ building, graph, floor, steps, currentStep, position, onFail, className }: Props) {
+export default function ScanPlan({ building, graph, floor, steps, currentStep, position, onFail, heading, className }: Props) {
   const src = building.floorPlans?.[floor]
   const frame = useRef<HTMLIFrameElement>(null)
   const box = useRef<HTMLDivElement>(null)
@@ -134,7 +136,7 @@ export default function ScanPlan({ building, graph, floor, steps, currentStep, p
         </svg>
       )}
       <div className="pointer-events-none absolute top-2 left-2 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-medium text-ink-2 shadow-card">
-        Floor {floor} · {ready ? '3D scan' : 'loading the scan…'}
+        Floor {floor} · {ready ? (heading ? "where you're heading" : '3D scan') : 'loading the scan…'}
       </div>
     </div>
   )
