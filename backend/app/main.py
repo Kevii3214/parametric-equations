@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import ask, device, events, incidents, telemetry
+from app.api import ask, crew, device, events, incidents, telemetry
 from app.config import get_settings
 
 settings = get_settings()
@@ -21,6 +21,7 @@ app.include_router(incidents.router)
 app.include_router(telemetry.router)
 app.include_router(events.router)
 app.include_router(device.router)
+app.include_router(crew.router)
 app.include_router(ask.router)
 
 

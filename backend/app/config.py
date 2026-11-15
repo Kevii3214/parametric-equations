@@ -21,6 +21,15 @@ class Settings(BaseSettings):
     use_snapshot: bool = False
     stride_m: float = 0.7
     web_origin: str = "http://localhost:5173"  # one origin, or several separated by commas
+    # Photon crew chat (see photon-sidecar/). Off by default: the web app works without it.
+    photon_enabled: bool = False
+    sidecar_url: str = ""  # where photon-sidecar runs, e.g. http://localhost:8788
+    photon_shared_secret: str = ""  # sent in X-Photon-Secret between the backend and the sidecar
+    public_api_url: str = (
+        ""  # this server's public address: the crew's link and its card come from it
+    )
+    public_web_url: str = "https://pairatech.vercel.app"  # the web app a tapped link opens
+    share_secret: str = ""  # signs the link token; if empty it is derived from the service-role key
     web_origin_regex: str = ""  # optional, e.g. https://beeline-.*\.vercel\.app for Vercel previews
 
 

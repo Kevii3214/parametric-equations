@@ -6,6 +6,7 @@ const kindStyle: Record<PlanStepKind, { label: string; dot: string; text: string
   tool_call: { label: 'Tool call', dot: 'bg-ink-3', text: 'text-ink-2' },
   tool_result: { label: 'Result', dot: 'bg-fern', text: 'text-fern-deep' },
   replan: { label: 'Replan', dot: 'bg-amber', text: 'text-amber' },
+  crew: { label: 'Crew', dot: 'bg-azure', text: 'text-azure-deep' },
   final: { label: 'Final', dot: 'bg-fern', text: 'text-fern-deep' },
 }
 
