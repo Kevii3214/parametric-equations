@@ -41,6 +41,22 @@ and gets commands (`CUE L`, `ARRIVED`, `WRONG`, ...) in the response. The server
 app sees no difference. Full protocol: `device-protocol.md`. Additive; private tables `devices` and `device_events`
 (`supabase/migrations/0003_devices.sql`, `0005_device_status.sql`).
 
+## Safety alerts (`alerts`) — proposed, needs Rex's OK
+
+The wearable's `fall` and `air` events become rows in a new table, `alerts` (`supabase/migrations/0006_alerts.sql`),
+readable with the anon key and published over Realtime like `cues`:
+
+| Column | Meaning |
+| --- | --- |
+| `incident_id`, `device_id` | Which call and which wearable |
+| `kind` | `fall` (the medic may have fallen) or `air` (smoke/fumes warning) |
+| `active` | `true` while the alert stands. A fall clears when the medic presses button 1 within 15 s; air clears when the reading drops |
+| `detail` | `air`: `{"v": <raw reading>}`; `{}` otherwise |
+| `created_at`, `cleared_at` | When it opened and when it cleared |
+
+Frontend: show a banner on `/medic` and `/dispatch` while a row with `active = true` exists for the incident, and hide it
+when the row turns `active = false`. At most one active row per incident and kind.
+
 ## Fly-through tour (`routes.tour`)
 
 Each `routes` row can carry a `tour` (jsonb, added by `supabase/migrations/0002_route_tour.sql`; it is `null` or missing

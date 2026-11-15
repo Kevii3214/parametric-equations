@@ -3,6 +3,7 @@ from app.device.translate import (
     PASCALS_PER_FLOOR,
     START_PRESSURE,
     DeviceState,
+    alert_changes,
     commands,
     event_key,
 )
@@ -109,3 +110,19 @@ def test_the_simulated_walk_speaks_the_real_protocol_and_the_engine_follows_it()
             cues += [c.cue for c in engine.update(sample).cues]
     assert engine.arrived
     assert cues[-1] == "ARRIVE" and "FLOOR_UP" in cues and ({"LEFT", "RIGHT"} & set(cues))
+
+
+def test_alert_changes_in_time_order():
+    events = [
+        {"t": "fall_cancel", "ts": 3},
+        {"t": "fall", "ts": 1},
+        {"t": "air", "ts": 2, "v": 3000, "warn": 1},
+        {"t": "air", "ts": 4, "warn": 0},
+        {"t": "step", "ts": 5, "n": 1},
+    ]
+    assert alert_changes(events) == [
+        ("fall", True, {}),
+        ("air", True, {"v": 3000}),
+        ("fall", False, {}),
+        ("air", False, {}),
+    ]

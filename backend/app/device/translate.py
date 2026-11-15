@@ -115,3 +115,22 @@ def commands(update: Update | None) -> list[str]:
         out += CUE_COMMANDS.get(cue.cue, [])
         out.append(f"TXT {cue.text[:TEXT_WIDTH]}")
     return out
+
+
+def alert_changes(events: list[dict]) -> list[tuple[str, bool, dict]]:
+    """Safety alerts to open or clear, as (kind, active, detail), in time order.
+
+    A `fall` opens a fall alert, `fall_cancel` (button 1 within 15 s) clears it; `air` with warn 1 opens an
+    air alert and warn 0 clears it.
+    """
+    changes: list[tuple[str, bool, dict]] = []
+    for e in sorted(events, key=lambda e: _number(e.get("ts"))):
+        kind = e.get("t")
+        if kind == "fall":
+            changes.append(("fall", True, {}))
+        elif kind == "fall_cancel":
+            changes.append(("fall", False, {}))
+        elif kind == "air":
+            detail = {"v": e["v"]} if "v" in e else {}
+            changes.append(("air", bool(_number(e.get("warn"))), detail))
+    return changes
