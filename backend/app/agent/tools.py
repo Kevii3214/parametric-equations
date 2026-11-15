@@ -15,15 +15,6 @@ logger = logging.getLogger(__name__)
 FLOOR_BASIS = "suite number (CoStar's own floor names are unreliable)"
 
 
-def make_plan_tool():
-    @tool
-    def make_plan(steps: list[str]) -> str:
-        """Write down your plan as a short list of steps. Call this first, before anything else."""
-        return "Plan recorded. Carry it out now."
-
-    return make_plan
-
-
 def make_records_tools(provider, db, incident_id: str) -> list:
     """The CoStar building-data tools the records subagent uses. Problems come back as {"error": ...}
     so the agent can react, instead of raising."""

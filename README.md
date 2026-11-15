@@ -77,10 +77,13 @@ cannot invent a corridor.
 1. **Intake** (`app/intake.py`). Gemini structured output turns the note into address, suite, floor, complaint
    and access notes. If Gemini fails the incident is still saved.
 2. **Agent** (`app/agent/`). A LangChain `deepagents` agent runs in the background with a call limit and model
-   fallbacks. It writes a plan, delegates the building and suite lookup to a **records** subagent (CoStar data),
-   checks crew notes for the building, lists the entrances, asks the router for a route from every entrance in
-   parallel, and saves the fastest with a briefing of about 30 words. Every plan step, subagent call, tool call and
-   tool result is written to `plan_steps`, which is the trail the web app shows live.
+   fallbacks. It writes a to-do list (`write_todos`), then starts **three subagents at once** in one step: **records**
+   (CoStar facts), **site** (entrances, the patient's goal node, and which parts of the map are estimates, read from a
+   notes file) and **crew-notes** (tips earlier crews saved). Each reports back as typed JSON and can use a faster
+   model. The main agent then asks the router for a route from every entrance in parallel and saves the fastest with a
+   briefing of about 30 words. The agent's file system is read-only and holds its playbook (`/AGENTS.md`, loaded as
+   memory) and each building's notes. About 5 sequential model turns instead of 12, but the same wall time (the model choice matters far more: see `backend/CLAUDE.md`). Every plan step, subagent call,
+   tool call and tool result is written to `plan_steps`, which is the trail the web app shows live.
 3. **Router** (`app/graph/router.py`). A* over the graph, weight = seconds. It skips non-stretcher-safe edges and
    anything closed for the incident, and treats stairs as a last resort. Each step gets a cue (LEFT, RIGHT,
    FLOOR_UP, ARRIVE...) from the heading change between consecutive edges. Pure, no I/O.
@@ -111,7 +114,7 @@ Rebuild the snapshot with `backend/notebooks/make_snapshot.py` and the graph wit
 - No scan covers the street, ground-floor lobby, elevator bank or floor-18 corridor. Those graph nodes and the
   elevator and stair times are **estimates** and must be checked by hand (`fixtures/buildings/233928/GRAPH_NOTES.md`).
   Only the Suite 1800 interior is measured.
-- Only the records layer is an LLM subagent. Aerial and interior data are processed ahead of time by scripts into the
-  snapshot and graph, not live by subagents.
+- The three subagents read saved building data. Aerial and interior data are processed ahead of time by scripts into
+  the snapshot and graph, not live by a vision subagent.
 - RFID tag ids in the demo graph are placeholders until matched to the hardware team's tags.
 - All data is synthetic or public building data; there is no patient information anywhere.

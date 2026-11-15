@@ -2,7 +2,7 @@
 
 You are helping **Person 2**, who owns the server, the AI agent and the data for **Beeline**, a HackPrinceton Fall 2026 project (the web app is called **Pairatech**). Person 2 is new to this stack: explain what you are doing in plain words, keep changes small, and stop to ask when something is unclear.
 
-**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 340 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
+**Status (2026-11-14):** every ticket P2-0 to P2-12 is built, merged and deployed, plus extras listed under "What exists". 348 tests pass. Read "Where things stand" and "Hard-won lessons" before doing anything.
 
 ## What Beeline is
 
@@ -32,6 +32,7 @@ Beeline gets a paramedic from the ambulance to the patient's door inside an unfa
 - **Live API:** https://beeline-api-cbjp.onrender.com (Render, free tier: sleeps after ~15 min idle, 30-60 s to wake; Root Directory `backend`; branch `main`; check **Auto-Deploy is on** and the repo link is connected after any repo move, or merges silently do not deploy). **Live site:** https://pairatech.vercel.app (Person 1). The Vercel project is **`rexthanh/pairatech`** in Rex's team, not Person 2's account: Person 2 cannot read or set its env vars from this machine. The site needs `VITE_MATTERPORT_SDK_KEY` (same value as `MATTERPORT_SDK_KEY`) set there and a redeploy, and the SDK key's allowed-domains list (managed by the CoStar/Matterport sponsors, from `/costar-keys`) must include `pairatech.vercel.app` and `localhost:5173`; otherwise the player shows "SDK key not allowed on <host>" and falls back to a basic embed.
 - **Render environment variables** must mirror `.env`: `SUPABASE_URL` (plain project address, no `/rest/v1`; the code also tolerates it), `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL`, `WEB_ORIGIN`(+`WEB_ORIGIN_REGEX`), plus Matterport/Vexcel keys if running tools there.
 - **Gemini models** (checked 2026-11-14; quotas and availability change daily, re-probe with a tiny `generateContent` call before trusting a name): `GEMINI_MODEL=gemini-3-flash-preview`, `GEMINI_FALLBACK_MODEL=gemini-flash-lite-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite`. `gemini-3.5-flash`, `gemini-3.6-flash` and `gemini-4-hydrogen` were rate-limited or too slow. Later the same day (17:00) the main model, `gemini-flash-lite-latest` and `gemini-3.5-flash-lite` were out of quota (429) while `gemini-3.1-flash-lite` and `gemini-3.5-flash` answered, and runs ended `Agent stopped: GoogleAPIError` (503 high demand, 504 deadline). Local `.env` fallback list is now `gemini-flash-lite-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-3.5-flash`; Render must have the same list (put working models first). The real error text is in `plan_steps.detail` of the `final` row. A full agent run takes ~15-30 s with the fast models; the first call after an idle Render sleep is slower.
+- **Model speed beats everything else** (same flow, same 3 buildings, wall time to a saved route): `gemini-3.5-flash-lite` 14-16 s, `gemini-3-flash-preview` 21-24 s, `gemini-3.5-flash` 39-44 s (a thinking model: 2-9 s per turn). The router result was identical every time (109/106/51 s). Using the lite model as `GEMINI_MODEL` (and on Render) is the cheapest speed-up. `GEMINI_SUBAGENT_MODEL` did not help. Bench: create incidents on a local server and time the first `routes` row; clean up after.
 - **Open items:** (1) The Matterport fly-through works and is merged (PR #25, 2026-11-14, watched working by Person 2 on the preview). Not checked: that Render redeployed `main` after that merge (compare its last deploy with `fcfc106`), so live-generated tours may still have the old pacing. (2) Entrance and stairs positions for Rabinowitz Hall are placed from the scan's opening picture (a few metres off); the real doors and stairs should be checked by walking the building. (3) Licensed data (CoStar, Vexcel, Matterport) is in the public repo: confirm the hackathon terms. (4) If Gemini has a bad moment a call can end without a route; the frontend shows "The agent finished without a route" and offers the demo route.
 
 ## What exists
@@ -47,13 +48,13 @@ backend/
   app/main.py config.py db.py models.py intake.py briefing.py notes.py tour.py
   app/api/        incidents.py telemetry.py events.py ask.py device.py
   app/device/     translate.py (Pi events <-> telemetry/commands) replay.py (reverse, for the fake device)
-  app/agent/      agent.py subagents.py tools.py trace.py replan.py vision_hints.py
+  app/agent/      agent.py subagents.py findings.py knowledge.py tools.py trace.py replan.py vision_hints.py
   app/graph/      schema.py router.py from_scan.py
   app/position/   engine.py simulate.py
   app/providers/  base.py (BuildingProvider) snapshot.py (reads fixtures)
   tools/          mock_wearable.py  mock_device.py  add_building.py
   notebooks/      costar_pull.ipynb, make_*.py (regenerate fixtures), rank_buildings.py
-  tests/          340 tests; fakes.py is an in-memory Supabase stand-in
+  tests/          348 tests; fakes.py is an in-memory Supabase stand-in
   data/ docs/     git-ignored: CoStar kit and Vexcel docs (not committed)
 ```
 
@@ -61,7 +62,7 @@ backend/
 
 **Device bridge** (`app/api/device.py`, `app/device/`, `contracts/device-protocol.md`, migration 0003): the hardware team's Raspberry Pi sends events (steps, turn, floor, button, fall, air) and gets commands (`CUE L`, `CUE UP`, ...) back. `DeviceState` turns each batch into one telemetry sample for `process_sample` (shared with `/telemetry`), so there is one position engine. Field names and command strings are **proposed from a summary of `wearable.py`, which has not been seen**: if it differs, change only `translate.py`. No RFID reader is used, so no `tag` events. Falls and air warnings go to `device_events` and are not shown on the web app yet. Test with `tools/mock_device.py`.
 
-**The agent** (`create_deep_agent`, Gemini with fallbacks): `make_plan` → `records` subagent (resolve_building, get_building_record, find_suite) → `search_notes`, `list_entrances`, `find_destination_nodes`, `plan_route` (every entrance, in parallel), `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note`. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`). Capped at 25 model calls; model fallback applies to the subagent too; a failure after a route was saved is reported as "Route saved". Built-in deepagents `execute`/file tools are harmless (no sandbox, in-memory files) and a test locks that in.
+**The agent** (`create_deep_agent`, Gemini with fallbacks): `write_todos` → ONE step starting three subagents in parallel with `task`: `records` (resolve_building, get_building_record, find_suite), `site` (resolve_building, list_entrances, find_destination_nodes, `read_file` of the building's notes) and `crew-notes` (resolve_building, search_notes); each has a `response_format` (`app/agent/findings.py`: RecordsFindings, SiteFindings, NotesFindings) and may use `GEMINI_SUBAGENT_MODEL` (a faster model; defaults to the main one). Then `plan_route` (every entrance, in parallel) → `choose_route` (saves the router's steps, a spoken briefing and the tour), `save_note` stays on the main agent. About 5 main-agent model turns (a test locks it) and, with the building resolved in code before the agent starts (`_resolve_building`), 2 calls per subagent. **Measured 2026-11-14 (real Gemini, 2 runs x 3 buildings per config): this is NOT faster than the single-subagent flow** (both 14-23 s on `gemini-3.5-flash-lite`, 21-35 s on `gemini-3-flash-preview`); it adds depth and honest briefings (they now say what is estimated), not speed. It makes more model calls in total, so it uses more Gemini quota. Every plan, subagent call, tool call and result goes to `plan_steps` (sort by `seq`; only the first `write_todos` becomes a `plan` row). Capped at 25 model calls per agent; model fallback applies to every subagent too; a failure after a route was saved is reported as "Route saved". **File system** (`app/agent/knowledge.py`): seeded read-only into the run's virtual file system (`files=`, `permissions` deny write): `/AGENTS.md` (the dispatch playbook, loaded as `memory`) and `/buildings/<id>/GRAPH_NOTES.md` (measured vs estimated, read by `site`, so briefings say what is an estimate). `execute` still has no shell and a test locks that in.
 
 **Position engine** (`app/position/engine.py`, pure): distance from steps × `STRIDE_M`; one cue within 6 m of a turn; turn confirmed by a ≥60° heading change; off route for a wrong-way turn or >5 m past a turn; floor change from a ≥35 Pa pressure change or the confirm button at a lift; RFID tag snaps the position and resets the heading baseline; button 2 = elevator_out; one `positions` row per second; the last step counts as done within 1 m (strides vary).
 
@@ -89,7 +90,7 @@ Python 3.11, `uv`, FastAPI + Pydantic v2, Supabase (Postgres, Realtime, pgvector
 ## Environment variables (`backend/.env.example`)
 
 ```
-SUPABASE_URL=  SUPABASE_SERVICE_ROLE_KEY=  GOOGLE_API_KEY=  GEMINI_MODEL=  GEMINI_FALLBACK_MODEL=  GEMINI_EMBEDDING_MODEL=
+SUPABASE_URL=  SUPABASE_SERVICE_ROLE_KEY=  GOOGLE_API_KEY=  GEMINI_MODEL=  GEMINI_FALLBACK_MODEL=  GEMINI_SUBAGENT_MODEL=  GEMINI_EMBEDDING_MODEL=
 MATTERPORT_API_KEY=  MATTERPORT_API_TOKEN=  MATTERPORT_SDK_KEY=  MATTERPORT_GRAPHQL_URL=  VEXCEL_API_KEY=  COSTAR_DATA_DIR=
 DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost:5173  WEB_ORIGIN_REGEX=
 ```
@@ -100,7 +101,7 @@ DEMO_BUILDING_ID=  USE_SNAPSHOT=false  STRIDE_M=0.7  WEB_ORIGIN=http://localhost
 `uv` is not on PATH on this machine: use `python -m uv ...`.
 
 ```
-python -m uv run pytest -q                      # 340 tests
+python -m uv run pytest -q                      # 348 tests
 python -m uv run ruff format app tests tools    # NOT "ruff format ." : it reformats code blocks inside .md files
 python -m uv run ruff check .
 python -m uv run uvicorn app.main:app --port 8000

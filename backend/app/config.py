@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
     gemini_model: str = ""
     gemini_fallback_model: str = ""
+    gemini_subagent_model: str = ""  # optional faster model for the lookup subagents
     gemini_embedding_model: str = "gemini-embedding-001"
     costar_api_key: str = ""
     costar_mcp_url: str = ""
