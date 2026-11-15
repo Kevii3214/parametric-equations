@@ -91,6 +91,7 @@ def test_cues_become_the_wearables_commands_each_with_a_short_text():
         "TXT Here",
         "WRONG",
         "TXT Wrong way",
+        "FLOOR U",
         "TXT Floor up",
     ]
 

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { upsertAlert } from './alerts'
 import type {
+  AlertRow,
   CueRow,
   IncidentRow,
   PlanStepRow,
@@ -17,6 +19,8 @@ export interface IncidentLive {
   route: RouteRow | null
   position: PositionRow | null
   cue: CueRow | null
+  /** Fall and air alerts from the wearable, open and cleared (see AlertBanner). */
+  alerts: AlertRow[]
   source: 'supabase' | 'fixtures'
 }
 
@@ -26,6 +30,7 @@ const empty: Omit<IncidentLive, 'source'> = {
   route: null,
   position: null,
   cue: null,
+  alerts: [],
 }
 
 /** Demo mode shows a real demo building (1415 Louisiana unless ?building= says otherwise). */
@@ -83,16 +88,19 @@ export function useIncidentLive(incidentId: string | null, demo = false, demoBui
         (p) => setLive((s) => ({ ...s, position: newer(s.position, p.new as PositionRow) })))
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cues', filter: byIncident },
         (p) => setLive((s) => ({ ...s, cue: newer(s.cue, p.new as CueRow) })))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts', filter: byIncident },
+        (p) => setLive((s) => ({ ...s, alerts: upsertAlert(s.alerts, p.new as AlertRow) })))
       .subscribe()
 
     // Initial read after subscribing, so nothing inserted in between is lost.
     void (async () => {
-      const [inc, steps, route, pos, cue] = await Promise.all([
+      const [inc, steps, route, pos, cue, alerts] = await Promise.all([
         db.from('incidents').select('*').eq('id', incidentId).maybeSingle(),
         db.from('plan_steps').select('*').eq('incident_id', incidentId).order('seq'),
         db.from('routes').select('*').eq('incident_id', incidentId).order('version', { ascending: false }).limit(1).maybeSingle(),
         db.from('positions').select('*').eq('incident_id', incidentId).order('id', { ascending: false }).limit(1).maybeSingle(),
         db.from('cues').select('*').eq('incident_id', incidentId).order('id', { ascending: false }).limit(1).maybeSingle(),
+        db.from('alerts').select('*').eq('incident_id', incidentId).order('id'),
       ])
       if (cancelled) return
       setLive((s) => ({
@@ -102,6 +110,7 @@ export function useIncidentLive(incidentId: string | null, demo = false, demoBui
         route: route.data ? newerRoute(s.route, route.data as RouteRow) : s.route,
         position: pos.data ? newer(s.position, pos.data as PositionRow) : s.position,
         cue: cue.data ? newer(s.cue, cue.data as CueRow) : s.cue,
+        alerts: ((alerts.data ?? []) as AlertRow[]).reduce(upsertAlert, s.alerts),
       }))
     })()
 

@@ -49,11 +49,11 @@ needed; `RESET` at bind is what anchors the start.
 | LEFT / RIGHT / STRAIGHT / UTURN | `CUE L` / `CUE R` / `CUE S` / `CUE U` |
 | ARRIVE | `ARRIVED`, `SCAN OFF` |
 | OFF_ROUTE | `WRONG` |
-| FLOOR_UP / FLOOR_DOWN | none yet (the Pi has no floor command) |
+| FLOOR_UP / FLOOR_DOWN | `FLOOR U` / `FLOOR D` (added to `wearable.py`: rising / falling buzzer pattern). An older firmware answers `error`, which is harmless |
 
 Every cue is followed by `TXT <first 16 characters of the cue text>` (harmless without a display). Each command is sent
-**once**. A bind sends `RESET` first. **Proposal for the hardware team:** add `FLOOR U` / `FLOOR D` buzzer patterns; the
-server will then send them for FLOOR_UP / FLOOR_DOWN.
+**once**. A bind sends `RESET` first. `FLOOR U` / `FLOOR D` were added to `Hardware/wearable.py` by Person 2 (the hardware team is no longer
+available): copy the new file to the Pi.
 
 ## 4. Photos: reading door signs
 

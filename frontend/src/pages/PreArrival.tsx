@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import RouteTimeline from '../components/briefing/RouteTimeline'
+import AlertBanner from '../components/AlertBanner'
 import CallIntake from '../components/call/CallIntake'
 import PlanTrace from '../components/PlanTrace'
 import SiteImagery from '../components/site/SiteImagery'
@@ -23,6 +24,7 @@ export default function PreArrival() {
   return (
     <div className="mx-auto max-w-6xl pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-8">
       <div className="min-w-0">
+      <AlertBanner alerts={live.alerts} />
       <CallIntake reason={inc.reason} onCreated={inc.setIncident} />
 
       {!live.incident && !inc.started && (

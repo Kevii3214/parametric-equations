@@ -122,6 +122,18 @@ export interface PositionRow {
   created_at: string
 }
 
+/** A safety alert from the wearable (supabase/migrations/0006_alerts.sql): shown while `active`. */
+export interface AlertRow {
+  id: number
+  incident_id: string
+  device_id: string | null
+  kind: 'fall' | 'air'
+  active: boolean
+  detail: { v?: number } | null
+  created_at: string
+  cleared_at: string | null
+}
+
 export interface CueRow {
   id: number
   incident_id: string
