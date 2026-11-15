@@ -13,6 +13,23 @@ logger = logging.getLogger(__name__)
 SEND_TIMEOUT_S = 12
 
 
+MAX_DIRECTIONS = 10  # a text message, not a manual: longer routes point to the link for the rest
+
+
+def directions_text(steps: list[dict], total_seconds: float) -> str:
+    """The router's own step texts, numbered. Never written by the model."""
+    texts = [s["text"] for s in steps if s.get("text")]
+    if not texts:
+        return ""
+    minutes, seconds = divmod(round(total_seconds), 60)
+    when = f"{minutes} min {seconds} s" if minutes else f"{seconds} s"
+    lines = [f"Directions (about {when}):"]
+    lines += [f"{i}. {text}" for i, text in enumerate(texts[:MAX_DIRECTIONS], 1)]
+    if len(texts) > MAX_DIRECTIONS:
+        lines.append(f"({len(texts) - MAX_DIRECTIONS} more steps: open the link)")
+    return "\n".join(lines)
+
+
 async def crew_who_joined(db, incident_id: str) -> list[dict]:
     """Crew members who have texted the line, so that Photon lets us message them."""
     rows = await asyncio.to_thread(
@@ -41,7 +58,14 @@ async def notify_route(
         routes = await asyncio.to_thread(
             lambda: db.table("routes").select("*").eq("incident_id", incident_id).execute()
         )
-        version = max((r["version"] for r in routes.data), default=None)
+        latest = max(routes.data, key=lambda r: r["version"], default=None)
+        version = latest["version"] if latest else None
+        directions = (
+            directions_text(latest.get("steps") or [], latest.get("total_seconds") or 0)
+            if latest
+            else ""
+        )
+        message = "\n\n".join(part for part in (briefing, directions) if part) or None
         url = medic_url(incident_id, version)
         image_url = card_url(incident_id, version)
         for member in members:
@@ -51,7 +75,7 @@ async def notify_route(
                         incident_id=incident_id,
                         thread_id=member["photon_space_id"],
                         sender_id=member["photon_user_id"],
-                        text=briefing,
+                        text=message,
                         url=url,
                         image_url=image_url,
                     ),

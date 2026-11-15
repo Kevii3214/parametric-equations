@@ -269,3 +269,35 @@ def test_extra_words_after_the_place_are_dropped_until_the_map_matches():
         "rec_a"
     ]  # an exact label wins
     assert crew.find_places(g, "the roof") == [] and crew.find_places(g, "  ") == []
+
+
+def test_asking_for_directions_resends_the_route_without_asking_gemini(db, registry, monkeypatch):
+    sidecar = FakeSidecar()
+    monkeypatch.setattr(notify, "get_sidecar", lambda: sidecar)
+    monkeypatch.setattr(notify, "get_settings", lambda: type("S", (), {"photon_enabled": True})())
+    classifier = FakeClassifier(CrewReport(category="blocker", summary="x"))
+    for ask in (
+        "directions",
+        "Directions?",
+        "route",
+        "send the route again",
+        "where do I go",
+        "resend",
+        "help",
+    ):
+        sidecar.sent.clear()
+        out = report(db, registry, classifier, ask)
+        assert out["category"] == "resend" and out["replies"] == [], ask
+        (sent,) = sidecar.sent
+        assert (
+            sent["thread_id"] == "pho_spc_1" and "Directions" in sent["text"] and sent["image_url"]
+        ), ask
+    assert classifier.seen == []  # a plain keyword, so no model call
+
+
+def test_a_sentence_that_only_mentions_the_route_is_still_classified(db, registry):
+    classifier = FakeClassifier(
+        CrewReport(category="blocker", summary="route blocked", elevator=False)
+    )
+    out = report(db, registry, classifier, "the route is blocked by a cart")
+    assert out["category"] == "blocker" and classifier.seen == ["the route is blocked by a cart"]

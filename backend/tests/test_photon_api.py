@@ -311,7 +311,7 @@ def test_saving_the_route_texts_the_briefing_and_link_to_the_crew(env):
     out = choose(env)
     assert out["route_version"] == 1
     (sent,) = env.sidecar.sent
-    assert sent["text"] == "Garage entrance, lift to 18." and "/medic/" in sent["url"]
+    assert sent["text"].startswith("Garage entrance, lift to 18.") and "/medic/" in sent["url"]
 
 
 def test_a_photon_outage_never_stops_the_route_being_saved(env):
@@ -326,3 +326,38 @@ def test_a_photon_outage_never_stops_the_route_being_saved(env):
     out = choose(env)
     assert out["route_version"] == 1 and len(env.db.rows("routes")) == 1
     assert env.db.rows("incidents")[0]["status"] == "en_route"
+
+
+# --------------------------------------------------------------- the directions
+
+
+def test_directions_are_the_routers_steps_numbered_with_the_total_time():
+    steps = [
+        {"text": "Walk 25 m to Elevators (floor 1)."},
+        {"text": "Take the elevator up to floor 18."},
+    ]
+    assert notify.directions_text(steps, 109) == (
+        "Directions (about 1 min 49 s):\n1. Walk 25 m to Elevators (floor 1).\n2. Take the elevator up to floor 18."
+    )
+    assert notify.directions_text(steps, 45).startswith("Directions (about 45 s):")
+    assert notify.directions_text([], 0) == ""
+
+
+def test_a_long_route_is_cut_short_and_points_to_the_link():
+    steps = [{"text": f"Step {i}."} for i in range(1, 16)]
+    text = notify.directions_text(steps, 200)
+    assert "10. Step 10." in text and "11. Step 11." not in text
+    assert text.endswith("(5 more steps: open the link)")
+
+
+def test_the_text_the_crew_gets_has_the_briefing_and_then_the_directions(env):
+    env.db.rows("routes").clear()
+    add_crew()
+    resolve()
+    choose(env, briefing="Garage entrance, lift to 18.")
+    (sent,) = env.sidecar.sent
+    assert sent["text"].startswith(
+        "Garage entrance, lift to 18.\n\nDirections (about 1 min 49 s):\n1. Walk "
+    )
+    assert "Take the elevator up to floor 18." in sent["text"]
+    assert sent["text"].rstrip().endswith("phone room (patient) is ahead.")

@@ -7,12 +7,14 @@ Every inbound and outbound line is written to plan_steps (kind "crew") so the di
 
 import asyncio
 import logging
+import re
 
 from app.agent.replan import replan, replan_to_place
 from app.agent.trace import PlanTrace
 from app.graph.schema import BuildingGraph
 from app.notes import save_note
 from app.photon.classify import CrewReport, is_no, is_yes
+from app.photon.notify import notify_route
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,18 @@ async def _set_pending(db, member: dict, pending: dict | None) -> None:
             .execute()
         )
     )
+
+
+# "directions", "send the route again", "where do I go": a plain keyword, so no model call and no waiting
+RESEND = re.compile(
+    r"^\W*(directions?|route|resend|repeat|again|help|where( do i go)?|which way|"
+    r"(send|give)( me)?( the)? (route|directions?)( again)?)\W*$",
+    re.IGNORECASE,
+)
+
+
+def is_resend(text: str) -> bool:
+    return bool(RESEND.match(text))
 
 
 FILLER = {"the", "a", "an", "in", "on", "at", "to", "into"}
@@ -89,6 +103,17 @@ async def handle_crew_report(
         for reply in replies:
             await trace.add("crew", f"texted crew: {reply}", {"to": sender, "channel": channel})
         return list(replies)
+
+    if is_resend(text):  # send the route (picture, briefing, directions, link) to this person again
+        rows = await _rows(db, "routes", incident_id=incident_id)
+        latest = max(rows, key=lambda r: r["version"], default=None)
+        if latest is None:
+            return {
+                "category": "resend",
+                "replies": await say("There is no route yet. I will text it as soon as there is."),
+            }
+        await notify_route(db, incident_id, latest.get("briefing"), only_handle=sender)
+        return {"category": "resend", "replies": []}
 
     pending = member.get("pending")
     if pending and is_yes(text):
