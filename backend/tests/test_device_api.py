@@ -188,3 +188,35 @@ def test_the_default_device_follows_the_newest_active_incident(db, monkeypatch):
         assert send([]).json()["incident_id"] == INCIDENT
     finally:
         get_settings.cache_clear()
+
+
+def test_a_fall_opens_an_alert_and_button_one_clears_it(db):
+    link()
+    send([{"t": "fall", "ts": 10}])
+    send([{"t": "fall", "ts": 11}])  # a second fall while one is open adds no second alert
+    (alert,) = db.rows("alerts")
+    assert (alert["kind"], alert["active"], alert["incident_id"], alert["device_id"]) == (
+        "fall",
+        True,
+        INCIDENT,
+        DEVICE,
+    )
+    send([{"t": "fall_cancel", "ts": 20}])
+    assert [(a["active"], bool(a["cleared_at"])) for a in db.rows("alerts")] == [(False, True)]
+
+
+def test_an_air_warning_opens_and_clears_an_alert_with_the_reading(db):
+    link()
+    send([{"t": "air", "ts": 10, "v": 2800, "warn": 1}])
+    assert [(a["kind"], a["active"], a["detail"]) for a in db.rows("alerts")] == [
+        ("air", True, {"v": 2800})
+    ]
+    send([{"t": "air", "ts": 20, "v": 900, "warn": 0}])
+    assert db.rows("alerts")[0]["active"] is False
+
+
+def test_an_alert_that_cannot_be_saved_does_not_stop_the_batch(db):
+    link()
+    db.fail_tables.add("alerts")
+    assert send([{"t": "fall", "ts": 1}]).status_code == 200
+    assert [r["kind"] for r in db.rows("device_events")] == ["fall"]

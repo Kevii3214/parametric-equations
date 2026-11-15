@@ -17,6 +17,7 @@ from app.device.translate import (
     MOVEMENT_TYPES,
     NOT_STORED,
     DeviceState,
+    alert_changes,
     commands,
     event_key,
 )
@@ -221,6 +222,45 @@ async def _store(db, device_id: str, incident_id: str | None, events: list[dict]
             logger.exception("Could not save a %s event", e["t"])
 
 
+async def _alerts(db, device_id: str, incident_id: str, events: list[dict]) -> None:
+    """Open or clear the incident's fall and air alerts the web app shows as a banner."""
+    for kind, active, detail in alert_changes(events):
+        try:
+            open_rows = await asyncio.to_thread(
+                lambda kind=kind: (
+                    db.table("alerts")
+                    .select("*")
+                    .eq("incident_id", incident_id)
+                    .eq("kind", kind)
+                    .eq("active", True)
+                    .execute()
+                )
+            )
+            if active and not open_rows.data:
+                row = {
+                    "incident_id": incident_id,
+                    "device_id": device_id,
+                    "kind": kind,
+                    "active": True,
+                    "detail": detail,
+                }
+                await asyncio.to_thread(lambda row=row: db.table("alerts").insert(row).execute())
+            elif not active and open_rows.data:
+                cleared = {"active": False, "cleared_at": datetime.now(UTC).isoformat()}
+                await asyncio.to_thread(
+                    lambda cleared=cleared, kind=kind: (
+                        db.table("alerts")
+                        .update(cleared)
+                        .eq("incident_id", incident_id)
+                        .eq("kind", kind)
+                        .eq("active", True)
+                        .execute()
+                    )
+                )
+        except Exception:
+            logger.exception("Could not save a %s alert", kind)
+
+
 async def _touch(db, device_id: str, device: _Device, events: list[dict]) -> None:
     """Remember when the device was last heard from and what its `hello` said (best effort)."""
     hello = next((e for e in events if e["t"] == "hello"), None)
@@ -265,6 +305,7 @@ async def device_events(
             await _touch(db, device_id, device, fresh)
             incident_id = device.incident_id
             if incident_id:
+                await _alerts(db, device_id, incident_id, fresh)
                 status = "no_route"
                 sample = device.state.apply(
                     [e for e in fresh if e["t"] in MOVEMENT_TYPES + ("hello", "ack")]

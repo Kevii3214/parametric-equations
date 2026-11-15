@@ -35,7 +35,8 @@ re-sends what it did not get a 2xx for. A request without a valid `X-Device-Key`
 | `btn` | `ev` `confirm` (1) or `elevator_out` (2, the server re-plans once per route) |
 | `hello` | Stored; `fw` and the sensor flags go on the `devices` row. Zeroes the server's counters, like RESET |
 | `ack` | `cmd: RESET` zeroes the server's counters (floors already climbed are kept) |
-| `fall`, `fall_cancel`, `air`, `sensor`, `photo`, `pong`, `error` | Stored in `device_events` (`kind` = `t`, `data` = the rest). Not shown on the web app yet (brief Task 5) |
+| `fall`, `fall_cancel`, `air` | Stored in `device_events`, and open/clear a row in `alerts` (see `api.md`) |
+| `sensor`, `photo`, `pong`, `error` | Stored in `device_events` (`kind` = `t`, `data` = the rest) |
 
 Distance is `steps × STRIDE_M` on the server (the Pi's `d` is not used), so a stride calibration changes only `STRIDE_M`.
 The server follows **changes** in steps, heading and floor, never absolute values, so no heading or floor offset is
@@ -54,8 +55,7 @@ Every cue is followed by `TXT <first 16 characters of the cue text>` (harmless w
 **once**. A bind sends `RESET` first. **Proposal for the hardware team:** add `FLOOR U` / `FLOOR D` buzzer patterns; the
 server will then send them for FLOOR_UP / FLOOR_DOWN.
 
-Not built yet: `POST /api/device/{id}/photo` (door-sign position fix), `SCAN ON` near the destination, alert rows for
-falls and air warnings the web app can show.
+Not built yet: `POST /api/device/{id}/photo` (door-sign position fix), `SCAN ON` near the destination.
 
 ## Try it without the Pi
 
